@@ -11,6 +11,7 @@
 
 from camfr import *
 #from numpy import *
+import math
 import numpy as np
 
 # Colormap codes.
@@ -149,7 +150,7 @@ def _create_scaled_matrix_plot(colormap, z, r_x=0, r_y=0,
     import Image
     
     def round(x):
-        return int(np.math.floor(x+.5))
+        return int(math.floor(x+.5))
 
     # Determine width and height of a pixel.
 
@@ -227,7 +228,7 @@ def _create_scaled_arrow_plot(px, pz, r_x=0, r_y=0,
 def _scale_function(z, r_x, r_y, min_area, scale):
 
     def round(x):
-        return int(np.math.floor(x+.5))
+        return int(math.floor(x+.5))
         
     height = z.shape[0]
     width  = z.shape[1]
@@ -241,7 +242,7 @@ def _scale_function(z, r_x, r_y, min_area, scale):
     else:           d_y = 1
 
     if (height * width * d_x * d_y  <  min_area):
-        scale = np.math.sqrt(min_area/(height*width*d_x*d_y))
+        scale = math.sqrt(min_area/(height*width*d_x*d_y))
 
     if d_x < d_y:
         scale_x = round(scale*d_x)
@@ -305,18 +306,17 @@ def _create_arrow(draw, p, dx, dy):
 def _create_matrix_plot(z_, r_x=0, r_y=0, colorcode=0,
                         min_area=100000, scale=1):
 
-    import numpy.oldnumeric.mlab as ml
         
     # Scale z and find appropriate colormap.
 
     z = z_.copy()
     
-    zmax = ml.max(ml.max(z))
-    zmin = ml.min(ml.min(z))
+    zmax = np.max(z)
+    zmin = np.min(z)
 
     if (zmin < 0) and (0 < zmax) and (not colorcode):
         colormap = create_bipolar_colormap()
-        zmax = ml.max(np.asarray([-zmin, zmax]))
+        zmax = np.max(np.asarray([-zmin, zmax]))
         z += zmax
         z *= (len(colormap)-1)/(2*zmax)
     else:
@@ -346,11 +346,10 @@ def _create_matrix_plot(z_, r_x=0, r_y=0, colorcode=0,
 
 def _create_arrow_plot(px, pz, r_x=0, r_y=0,
                        min_area=100000, scale=1):
-    import numpy.oldnumeric.mlab as ml
     
     # Scale pz & px
     
-    pmax    = np.max( ml.max(ml.max(np.abs(pz))), ml.max(ml.max(np.abs(px))))
+    pmax    = np.maximum(np.max(np.abs(pz)), np.max(np.abs(px)))
     if (pmax == 0): cst     = 0
     else:           cst     = ARROWSIZE/pmax
     pz      = pz*cst 
@@ -456,7 +455,6 @@ def plot_arrow(px, pz, r_x=0, r_z=0, filename=0):
 
 def _create_phasor_movie(z_, r_x=0, r_y=0, min_area=100000, scale=1, ln=0):
     
-    import numpy.oldnumeric.mlab as ml
     
     # Make movie memory.
     
@@ -478,7 +476,7 @@ def _create_phasor_movie(z_, r_x=0, r_y=0, min_area=100000, scale=1, ln=0):
         # the feeling of the image.. so not that correct.
         zcst    = 1e-8
 
-        zmax    = 2 * np.log(ml.max(ml.max(np.abs(z)))+ zcst)
+        zmax    = 2 * np.log(np.max(np.abs(z))+ zcst)
         zmin    = np.log(zcst)                 # Around -23.
         z_scale = (len(colormap)-1)/(zmax-zmin)
         
@@ -496,7 +494,7 @@ def _create_phasor_movie(z_, r_x=0, r_y=0, min_area=100000, scale=1, ln=0):
         
         # Scale factors for z.
 
-        zmax    = ml.max(ml.max(np.abs(z)))
+        zmax    = np.max(np.abs(z))
         if (zmax == 0):
             # in this case, z=0, the middle of the color palet
             #(z+zmax)*z_scale) should be = len(colormap)/2

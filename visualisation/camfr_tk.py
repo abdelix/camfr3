@@ -137,16 +137,16 @@ def plot_matrix(z, r_x=0, r_y=0, filename=0, colorcode=0):
     if filename:
         print("Saving to file not supported.")
 
-    import MLab, tkinter, ImageTk
+    import numpy as np, tkinter, ImageTk
         
     # Scale z and find appropriate colormap.
     
-    zmax = MLab.max(MLab.max(z))
-    zmin = MLab.min(MLab.min(z))
+    zmax = np.max(z)
+    zmin = np.min(z)
 
     if (zmin < 0) and (0 < zmax) :
         colormap = create_bipolar_colormap()
-        zmax = MLab.max([-zmin, zmax])
+        zmax = np.max([-zmin, zmax])
         z += zmax
         z *= (len(colormap)-1)/(2*zmax)
     else:
@@ -181,7 +181,7 @@ def phasormovie(z, r_x=0, r_y=0, filename=0):
     if filename:
         print("Saving to file not supported.")
         
-    import MLab, tkinter
+    import numpy as np, tkinter
     
     # Make movie memory.
     
@@ -191,7 +191,7 @@ def phasormovie(z, r_x=0, r_y=0, filename=0):
 
     # Scale factors for z.
 
-    zmax = MLab.max(MLab.max(abs(z)))
+    zmax = np.max(abs(z))
     z_scale = (len(colormap)-1)/(2*zmax)
 
     # Calculate each frame.

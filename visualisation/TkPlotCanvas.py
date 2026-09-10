@@ -8,8 +8,27 @@
 #
 
 from tkinter import *
-from Canvas import Line, CanvasText
-import string, numpy
+import numpy
+
+# The Tkinter 'Canvas' module (object wrappers around canvas items) was
+# removed in Python 3. Only item creation is used here. As in the old module,
+# an item converts to its canvas id, so it can be passed back to the canvas
+# (e.g. canvas.bbox(item), canvas.delete(item)).
+
+class CanvasItem:
+    def __init__(self, canvas, itemType, *args, **kw):
+        self.canvas = canvas
+        self.id = canvas._create(itemType, args, kw)
+    def __str__(self):
+        return str(self.id)
+
+class Line(CanvasItem):
+    def __init__(self, canvas, *args, **kw):
+        CanvasItem.__init__(self, canvas, 'line', *args, **kw)
+
+class CanvasText(CanvasItem):
+    def __init__(self, canvas, *args, **kw):
+        CanvasItem.__init__(self, canvas, 'text', *args, **kw)
 
 """This module provides a plot widget for Tk user interfaces.
 A plot widget acts like a canvas for special graphics objects
@@ -354,9 +373,9 @@ class PlotCanvas(Frame):
                              background=background)
         self.canvas.pack(fill=BOTH, expand=YES)
         border_w = self.canvas.winfo_reqwidth() - \
-                   string.atoi(self.canvas.cget('width'))
+                   int(self.canvas.cget('width'))
         border_h = self.canvas.winfo_reqheight() - \
-                   string.atoi(self.canvas.cget('height'))
+                   int(self.canvas.cget('height'))
         self.border = (border_w, border_h)
         self.canvas.bind('<Configure>', self.reconfigure)
         if self.zoom or self.selectfn is not None:
@@ -383,8 +402,8 @@ class PlotCanvas(Frame):
     def reconfigure(self, event):
         new_width = event.width-self.border[0]
         new_height = event.height-self.border[1]
-        width = string.atoi(self.canvas.cget('width'))
-        height = string.atoi(self.canvas.cget('height'))
+        width = int(self.canvas.cget('width'))
+        height = int(self.canvas.cget('height'))
         if new_width == width and new_height == height:
             return
         self.canvas.configure(width=new_width, height=new_height)
@@ -407,8 +426,8 @@ class PlotCanvas(Frame):
         return font
 
     def _setsize(self):
-        self.width = string.atoi(self.canvas.cget('width'))
-        self.height = string.atoi(self.canvas.cget('height'))
+        self.width = int(self.canvas.cget('width'))
+        self.height = int(self.canvas.cget('height'))
         self.plotbox_size = 0.97*numpy.array([self.width, -self.height])
         xo = 0.5*(self.width-self.plotbox_size[0])
         yo = self.height-0.5*(self.height+self.plotbox_size[1])

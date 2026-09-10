@@ -248,3 +248,38 @@ The submodules' own `from camfr import *` stays absolute, because it still works
 package is already in `sys.modules`, partially initialised with the `_camfr` names, just as on
 Python 2. There is one import cycle: `stack_plot` runs `from . import camfr_PIL` while `camfr_PIL`
 is still importing `stack_plot`. Python ≥ 3.7 resolves this from `sys.modules`.
+
+### 9. Modules removed from Python 3 and NumPy (visualisation)
+
+Commit: `fix(visualisation): replace Canvas, MLab and numpy.oldnumeric`
+
+**Issues.**
+
+- `TkPlotCanvas.py` imports `Line` and `CanvasText` from Tkinter's `Canvas` module, which Python 3
+  deleted. The import chain `camfr/__init__.py` → `camfr_PIL` → `slab_plot` → `TkPlotCanvas` means
+  this failure blocked `import camfr` entirely.
+- `string.atoi()` no longer exists; Python 3's `string` module has no functions.
+- `camfr_tk.py` uses `MLab` from Numeric, NumPy's pre-2006 predecessor. `camfr_PIL.py` uses
+  `numpy.oldnumeric.mlab`, removed in NumPy 1.9, and `np.math`, an alias of the stdlib `math`
+  module that NumPy 2.0 removed.
+- Latent bug: `_create_arrow_plot` calls `np.max(a, b)`, which passes the second value as the
+  `axis` argument. The intent is the larger of the two maxima.
+
+**Resolution.**
+
+- A minimal `CanvasItem`/`Line`/`CanvasText` shim in `TkPlotCanvas.py`. It creates the item via
+  `canvas._create()` and converts to the item id through `__str__`. That is all the module needs
+  (`canvas.bbox(item)`, `canvas.delete(item)`), because tkinter hands arbitrary objects to Tcl
+  via `str()`.
+- `string.atoi(x)` → `int(x)`.
+- `MLab.max(MLab.max(z))` and `ml.max(ml.max(z))` compute the maximum of the column maxima, i.e.
+  the global maximum, so they become `np.max(z)`; likewise for `min`.
+- `np.math.*` → `math.*`, and `np.max(a, b)` → `np.maximum(a, b)`.
+- `visualisation/camfr_matlab.py` is **not ported**. It is a MATLAB bridge built on `pymat` and
+  `MLab`, `pymat` has no Python 3 release, and the package never imports the module. It is still
+  installed, but it is unusable, as it would be on any modern system.
+
+**Issue during the port.** My replacement script expected 4 occurrences of `np.math.` in
+`camfr_PIL.py`, but there are 3. The script stopped at that assertion, after the earlier
+replacements had already been written. I checked the partial result, corrected the count and
+applied the remaining two steps.
