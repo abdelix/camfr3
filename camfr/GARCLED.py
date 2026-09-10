@@ -615,7 +615,9 @@ def radiation_profile(cav, source, steps=30,
     M = 1.4*(2.*pi/get_lambda() * n_mat).real
 
     figure(1)
-    pcolor(X, Y, P_TE.T, shading="flat", cmap=cm.hot)
+    # With shading="flat", Matplotlib < 3.3 silently ignored the last row and
+    # column of C when it had the same shape as X and Y; newer versions raise.
+    pcolor(X, Y, P_TE.T[:-1, :-1], shading="flat", cmap=cm.hot)
 
     axis('equal') # Only works when displaying the full data
     v = axis()    # For cropping, we need to save the aspect ratio.
@@ -629,7 +631,9 @@ def radiation_profile(cav, source, steps=30,
       savefig(fname+'_TE.png')
 
     figure(2)
-    pcolor(X, Y, P_TM.T, shading="flat", cmap=cm.hot)
+    # With shading="flat", Matplotlib < 3.3 silently ignored the last row and
+    # column of C when it had the same shape as X and Y; newer versions raise.
+    pcolor(X, Y, P_TM.T[:-1, :-1], shading="flat", cmap=cm.hot)
     axis([-M*ratio, M*ratio, -M, M])
     xlabel("kx")
     ylabel("ky")  
@@ -658,7 +662,7 @@ def radiation_profile(cav, source, steps=30,
 def integrate_2D(f, x0, x1, dx, y0, y1, dy):
   
   import scipy.integrate
-  simps = scipy.integrate.simps
+  simps = scipy.integrate.simpson  # simps was removed in SciPy 1.14
 
   xrange = arange(x0,x1+dx/2.,dx)
   yrange = arange(y0,y1+dy/2.,dy)

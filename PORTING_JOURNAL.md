@@ -615,3 +615,37 @@ Commit: `docs: update README and INSTALL for Python 3`
   - running the testsuite headless.
 
   It also warns that the macOS, MSVC and Gentoo templates have not been updated.
+
+### 21. SciPy and Matplotlib API changes in GARCLED
+
+Commit: `fix(garcled): use scipy.integrate.simpson and valid pcolor shapes`
+
+**Issues** (found by running `examples/other/OLED_grating.py`, after the import fix in entry 17):
+
+- `integrate_2D` uses `scipy.integrate.simps`, which SciPy 1.14 removed. The error was
+  `AttributeError: module 'scipy.integrate' has no attribute 'simps'. Did you mean: 'simpson'?`
+- `radiation_profile` calls `pcolor(X, Y, P.T, shading="flat")` with `P.T` the same shape as
+  the `meshgrid` arrays. With flat shading the colour array must be one smaller than the grid in
+  each direction. Old Matplotlib silently ignored the last row and column; current Matplotlib
+  raises `TypeError: Dimensions of C (146, 146) should be one smaller than X(146) and Y(146)`.
+
+**Resolution.**
+
+- `simps = scipy.integrate.simpson`. The call `simps(f, x, axis=0)` is compatible with the new
+  signature `simpson(y, x=None, *, dx, axis)`. For an odd number of samples both functions use
+  the same composite Simpson rule, and the default `steps=30` gives 31 samples. Only an even
+  sample count, which the old `simps` handled by averaging (`even='avg'`), could now give a
+  slightly different result.
+- Pass `P.T[:-1, :-1]` to `pcolor`, which is exactly what Matplotlib used to draw.
+
+`RCLED` uses `scipy.integrate.romb`, which still exists, so it needs no change.
+
+**Verification.** `OLED_grating.py` runs to completion in 65 s. It reports emitted power /
+extraction efficiency to the substrate / to the outside world of 0.067 / 0.158 / 0.015 for the
+vertical source, 0.029 / 0.734 / 0.360 for horizontal_x, and 0.042 / 0.427 / 0.176 averaged.
+There are no Python 2 reference values for this example, so this shows only that the code runs
+and gives physically sensible values.
+
+NumPy prints `ComplexWarning: Casting complex values to real discards the imaginary part` at
+`GARCLED.py:451-460`, where complex expressions are assigned into real arrays. NumPy has always
+discarded the imaginary part in this assignment, so I left the behaviour unchanged.
