@@ -51,3 +51,31 @@ for d in *.deb; do dpkg -x "$d" ../boost-root; done
 
 On a machine where you have root, `sudo apt install libboost-python-dev` gives the same
 library in `/usr`. The build configuration (entry 3) accepts either location.
+
+### 2. Build configuration for SCons 4 and Python 3
+
+Commit: `build: support Python 3 builds on Linux with SCons 4`
+
+**Issues.**
+
+1. `SConstruct` calls `env.Copy()`. SCons 4 no longer has it; `Environment.Clone()` replaced it.
+   The `py35_compat` branch made the same fix.
+2. The only Linux template, `machine_cfg.py.gcc`, hard-codes `/usr/include/python2.5`.
+   It also links against a library called `boost_python`, but current distributions ship one Boost.Python
+   per interpreter (e.g. `libboost_python314`). And it forces `-march=core2`.
+3. The Fortran flags were silently ignored. SCons 4 compiles `*.f` with the generic `FORTRAN`
+   tool (`$SHFORTRANFLAGS`), and `F77FLAGS` only applies to `*.f77` files. The 62
+   SLATEC/Jenkins–Traub objects were therefore built without optimisation.
+
+**Resolution.**
+
+- `env.Copy` → `env.Clone`. `FORTRAN`/`FORTRANFLAGS` are now passed as well as `F77`/`F77FLAGS`.
+- New template `machine_cfg.py.linux`. It gets the Python include directory and the
+  `py_version_nodot` suffix of the Boost.Python library name from the running interpreter
+  (`sysconfig`), and the NumPy headers from `numpy.get_include()`. Boost is found through
+  `BOOST_ROOT` (default `/usr`). When Boost is outside `/usr`, the template embeds an rpath so
+  `_camfr.so` loads without `LD_LIBRARY_PATH`. `-march=core2` is dropped for portability.
+
+**Result.** `cp machine_cfg.py.linux machine_cfg.py && BOOST_ROOT=… scons -j8` compiles every
+C, C++ and Fortran translation unit except `camfr_wrap.cpp` (entry 3). The gfortran command
+lines now include `-O3`. A full build takes about 70 s wall-clock on 8 cores.

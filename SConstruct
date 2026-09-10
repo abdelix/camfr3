@@ -12,11 +12,12 @@ env = Environment(CPPPATH = include_dirs,
 		  CC   = cc,   CCFLAGS   = flags,
 		  CXX  = cxx,  CXXFLAGS  = flags,
 		  F77  = f77,  F77FLAGS  = fflags,
+		  FORTRAN = f77, FORTRANFLAGS = fflags,
 		  LINK = link, LINKFLAGS = link_flags,
-		  LIBS = libs, SHLIBPREFIX = "", 
+		  LIBS = libs, SHLIBPREFIX = "",
 		  ENV  = os.environ)
 
-env_noopt = env.Copy(CCFLAGS = flags_noopt, CXXFLAGS = flags_noopt)
+env_noopt = env.Clone(CCFLAGS = flags_noopt, CXXFLAGS = flags_noopt)
 
 Export("env", "env_noopt")
 SConscript("camfr/SConscript")
