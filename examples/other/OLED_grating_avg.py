@@ -7,7 +7,7 @@
 #
 ######################################################################
 
-from GARCLED import *
+from camfr.GARCLED import *
 
 def calc(L, h, D, orders, wavelength=0.565):
 

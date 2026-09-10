@@ -6,7 +6,7 @@
 #
 ####################################################################
 
-from GARCLED import *
+from camfr.GARCLED import *
 
 # Set parameters.
   

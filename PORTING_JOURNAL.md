@@ -508,3 +508,31 @@ neighbouring layers.
 
 **Verification.** `TEM_field` passes. `|H2|` for the three slabs is 0.04819350420802844, 0.04819350420802844, 0.04819352718848203; the expected
 value is 0.0481935271885.
+
+### 17. Examples
+
+Commit: `fix(examples): use open() and package imports`
+
+**Issues.** I found these by running every script in `examples/` headless, from a scratch copy
+with `MPLBACKEND=Agg` and no `DISPLAY`:
+
+- `tutorial3`, `tutorial6` and `tutorial7` use the `file()` builtin, which raises `NameError`.
+- `other/OLED.py`, `OLED_grating.py` and `OLED_grating_avg.py` do `from RCLED import *` /
+  `from GARCLED import *`, which raises `ModuleNotFoundError`. These only worked on Python 2
+  because distutils' `extra_path = "camfr"` wrote a `camfr.pth` file. That file put
+  `site-packages/camfr/` itself on `sys.path`, making every module of the package importable as a
+  top-level module. The setuptools install from entry 11 doesn't do this, and I deliberately
+  didn't recreate it: it would inject generic module names such as `material`, `geometry` and
+  `gifmaker` into the global namespace.
+
+**Resolution.** `file()` → `open()`, and `from camfr.RCLED import *` / `from camfr.GARCLED import *`.
+
+**Verification.** Tutorials 3, 6 and 7 and `OLED.py` run to completion. For example, `OLED.py`
+reports emitted power 1.404 and extraction efficiencies of 0.380 to the substrate and 0.139 to the
+outside world. `OLED_grating*.py` now get past the import and fail later inside `GARCLED`
+(entry 18).
+
+Other example results, all expected in a headless run:
+
+- `tutorial2`, `tutorial4`, `other/{excitations,geometry,infstack,PhC_splitter,planar,SpE,VCSEL}`: run to completion.
+- `tutorial1`, `tutorial5`, `other/fieldplot`: open Tk windows, so they fail with `TclError: no display name`.

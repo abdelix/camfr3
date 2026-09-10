@@ -6,7 +6,7 @@
 #
 ####################################################################
 
-from RCLED import *
+from camfr.RCLED import *
 
 # Set parameters.
 

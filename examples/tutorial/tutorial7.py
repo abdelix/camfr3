@@ -44,7 +44,7 @@ slab = Slab(expr)
 
 # Compare continuous and staircase profile.
 
-outfile = file("tutorial7.out",'w')
+outfile = open("tutorial7.out",'w')
 
 steps2 = 100
 for i in range(steps2):

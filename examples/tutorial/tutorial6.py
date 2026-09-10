@@ -36,7 +36,7 @@ stack.set_inc_field(inc)
 
 # Save the field to a file.
 
-outfile = file("tutorial6.out",'w')
+outfile = open("tutorial6.out",'w')
 
 for x in arange(0.000, 2.250, 0.100):
     for z in arange(0.000, 0.500, 0.010):
