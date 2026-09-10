@@ -146,3 +146,19 @@ GCC 15 reported `-Wreturn-type` in two places:
 Flowing off the end of a non-void function is undefined behaviour, and GCC at `-O3` is free to
 exploit it. **Resolution:** both functions now end with the error idiom used throughout CAMFR,
 `py_error(...); exit(-1);`.
+
+### 5. `register` storage class
+
+Commit: `fix: drop register storage class removed in C++17`
+
+GCC 15 compiles C++17 by default. It warned `ISO C++17 does not allow 'register' storage class
+specifier [-Wregister]` 8 times, in `math/calculus/minimum/minimum.cpp` and
+`math/calculus/root/root.cpp`, and Clang treats this as an error. The keyword has had no effect
+for decades, so it was simply deleted.
+
+After this commit the CAMFR C++ sources compile without warnings. The remaining diagnostics come
+from third-party code, and I left them alone:
+
+- `std::auto_ptr` deprecation inside Boost.Python 1.90's own headers.
+- K&R-style function definitions (`-Wold-style-definition`) in the vendored C file
+  `math/bessel/slatec/machar.c`. I kept it untouched so the vendored SLATEC code stays pristine.

@@ -114,13 +114,13 @@ Real brent_root(Function1D<Real>& f, Real ax, Real bx, Real eps)
 
       if ( a==c ) // do linear interpolation
       {					        
-        register const Real t1 = fb/fa;
+        const Real t1 = fb/fa;
         p = cb*t1;
         q = 1.0 - t1;
       }
       else			// do quadratic inverse interpolation
       {
-        register const Real t1=fb/fc, t2=fb/fa;
+        const Real t1=fb/fc, t2=fb/fa;
         q = fa/fc;
         p = t2 * ( cb*q*(q-t1) - (b-a)*(t1-1.0) );
         q = (q-1.0) * (t1-1.0) * (t2-1.0);

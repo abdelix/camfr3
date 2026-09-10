@@ -106,9 +106,9 @@ Real brent_minimum(Function1D<Real>& f, Real ax, Real bx, Real eps)
     
     if ( abs(x-w) >= eps_act ) 
     {				
-      register Real p; 	
-      register Real q;
-      register Real t;
+      Real p; 	
+      Real q;
+      Real t;
 
       t = (x-w) * (fx-fv);
       q = (x-v) * (fx-fw);
@@ -143,8 +143,8 @@ Real brent_minimum(Function1D<Real>& f, Real ax, Real bx, Real eps)
     // Obtain the next approximation to min
     // and reduce the encompassing interval.
     
-    register const Real t = x + new_step;
-    register const Real ft = f(t);
+    const Real t = x + new_step;
+    const Real ft = f(t);
 
     if ( ft <= fx ) // t is a better approximation.
     {
