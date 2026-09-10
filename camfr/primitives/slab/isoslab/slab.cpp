@@ -1487,7 +1487,9 @@ void Slab_M::build_modeset(vector<Complex>& kt)
     if (materials.size() == 1)
       is_core = true;
 
-    if (i == 0)
+    // Note: a single layer has no neighbours to compare with.
+
+    else if (i == 0)
     {
       if (real(materials[i]->eps_mu()) > real(materials[i+1]->eps_mu()))
         is_core = true;

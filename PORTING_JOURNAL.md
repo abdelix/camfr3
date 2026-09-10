@@ -481,3 +481,30 @@ after them.
 A side observation: `metal_coupler` needed 47 s in the 6-way parallel run and 2 s on its own.
 Each process was running multithreaded OpenBLAS on 8 cores, so the machine was heavily
 oversubscribed. Later parallel runs set `OPENBLAS_NUM_THREADS=1`.
+
+### 16. Out-of-bounds read in single-layer slabs
+
+Commit: `fix(slab): avoid out-of-bounds read in single-layer Slab_M`
+
+**Issue.** `TEM_field` segfaulted. gdb showed the path `Slab_M::find_modes()` →
+`Slab_M::build_modeset()`, faulting on a `movsd 0x18(%rax)` load, i.e. dereferencing a bad
+`Material*`. The `Slab_M` constructor merges consecutive identical materials and drops
+zero-thickness layers. So each of the test's three slabs, `air(0)+GaAs(4)+air(0)`,
+`GaAs(2)+GaAs(2)` and `GaAs(4)`, ends up with a single layer. The core-detection loop then ran:
+
+```cpp
+if (materials.size() == 1)
+  is_core = true;
+
+if (i == 0)
+  if (real(materials[i]->eps_mu()) > real(materials[i+1]->eps_mu()))  // materials[1]: past the end
+```
+
+Reading past the end of a `std::vector` is undefined behaviour. With the original toolchain the
+stray read happened to be harmless; with GCC 15 at `-O3` it crashes.
+
+**Resolution.** The checks are now an `else if` chain, so a single-layer slab never looks at
+neighbouring layers.
+
+**Verification.** `TEM_field` passes. `|H2|` for the three slabs is 0.04819350420802844, 0.04819350420802844, 0.04819352718848203; the expected
+value is 0.0481935271885.
