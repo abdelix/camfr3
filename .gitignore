@@ -1,4 +1,16 @@
 .DS_Store
 *.pyc
 *.os
+__pycache__/
+
+# Build products
+*.o
+*.so
+.sconsign.dblite
+build/
+dist/
+*.egg-info/
+
+# Machine-specific build configuration (copy from a machine_cfg.py.* template)
+machine_cfg.py
 
