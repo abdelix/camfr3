@@ -300,3 +300,50 @@ a `str`, which a binary file object rejects on Python 3.
 - `from PIL import Image, ImageTk, …` at 8 import sites in 5 files.
 - In `gifmaker.makedelta`: `getheader(im)[0] + getdata(im)` and `fp.write(b";")`.
 - Dropped the unused `import string`.
+
+### 11. Packaging: distutils → setuptools
+
+Commit: `build: replace distutils setup.py with setuptools`
+
+**Issue.** `setup.py` imports `distutils`, which Python 3.12 removed from the standard library
+(`ModuleNotFoundError: No module named 'distutils'`). The script also leaned on distutils quirks:
+
+- it built through `os.system("scons")`, ignoring failures;
+- it installed the Python modules as *data files* under an `extra_path` and byte-compiled them by hand;
+- it installed `examples`, `testsuite` and `visualisation.examples` as top-level packages,
+  polluting `site-packages`;
+- it forgot `section_matplotlib.py`, even though `camfr/__init__.py` imports it.
+
+**Resolution.**
+
+- `setup.py` now uses setuptools. A `build_py` subclass runs `python -m SCons -j<ncpu>` with the
+  interpreter that runs the build, so `machine_cfg.py.linux` detects the right Python and NumPy.
+  It fails loudly when SCons fails or `machine_cfg.py` is missing. Its `find_package_modules`
+  adds the visualisation modules and `camfrversion.py` to the `camfr` package, which reproduces
+  the previous installed layout without moving any files in the repository. `_camfr.so` is
+  `package_data`.
+- A `Distribution` subclass returns `True` from `has_ext_modules()`, so wheels are tagged
+  platform-specific; they contain a compiled library.
+- New `pyproject.toml` declares the build requirements (`setuptools`, `numpy`, `scons`).
+- Runtime dependencies: `numpy`; `matplotlib`, imported through `pylab` when the package loads;
+  and `pillow`, imported by `camfr/geometry.py`. `scipy` is an optional extra, only imported lazily.
+- `examples/`, `testsuite/` and the PDF manual are no longer installed. Run or read them from the
+  source tree.
+- `makefile`: `python setup.py build/install/clean` → `python3 -m SCons` / `python3 -m pip install .`
+  / `rm -f -R *.egg-info`.
+
+**Verification.** In a fresh venv on Python 3.14, created with `--system-site-packages` to reuse
+NumPy 2.3.5, SciPy, Matplotlib and Pillow:
+
+```
+$ BOOST_ROOT=…/boost-root/usr pip install --no-build-isolation .
+Successfully installed camfr-20090406
+$ MPLBACKEND=Agg python -c "import camfr"
+CAMFR 20090406 - Copyright (C) 1998-2007 Peter Bienstman - Ghent University.
+```
+
+The installed `site-packages/camfr/` contains `__init__`, `_camfr.so`, `camfr_PIL`, `camfr_tk`,
+`camfr_matlab`, `camfrversion`, `geometry`, `geometry3d`, `GARCLED`, `RCLED`, `material`,
+`section_matplotlib`, `slab_plot`, `stack_plot`, `TkPlotCanvas`, `matrix_plot_canvas` and
+`gifmaker`. That is the set the Python 2 installer produced, plus the previously missing
+`section_matplotlib`.

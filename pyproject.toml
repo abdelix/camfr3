@@ -1,0 +1,5 @@
+[build-system]
+# The extension is compiled by SCons (driven from setup.py) against the NumPy
+# headers of the build environment.
+requires = ["setuptools>=64", "numpy", "scons"]
+build-backend = "setuptools.build_meta"

@@ -1,91 +1,95 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 
-# To Do:
-#   Must run the following command afterwards:
-#        mv /opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/camfr/_camfr.dylib  /opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/camfr/_camfr.so
+# Build and install CAMFR.
+#
+# The compiled extension _camfr.so is built with SCons, using the settings in
+# machine_cfg.py (copy one of the machine_cfg.py.* templates first). The
+# installed 'camfr' package is assembled from camfr/, the visualisation
+# modules and camfrversion.py.
+#
+#     cp machine_cfg.py.linux machine_cfg.py
+#     python3 -m pip install .
+
+import os
+import subprocess
+import sys
+
+from setuptools import Distribution, setup
+from setuptools.command.build_py import build_py
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from camfrversion import camfr_version
+
+# Modules that live outside camfr/ in the source tree but are installed
+# inside the camfr package.
+
+extra_modules = ["camfrversion.py",
+                 "visualisation/camfr_PIL.py",
+                 "visualisation/camfr_matlab.py",
+                 "visualisation/camfr_tk.py",
+                 "visualisation/section_matplotlib.py",
+                 "visualisation/slab_plot.py",
+                 "visualisation/stack_plot.py",
+                 "visualisation/TkPlotCanvas.py",
+                 "visualisation/matrix_plot_canvas.py",
+                 "visualisation/gifmaker.py"]
 
 
-from distutils.core import setup
-from distutils.util import byte_compile
-from distutils.command.build import build
-from distutils.command.install_data import install_data
 
-from machine_cfg import *
-from camfrversion import *
+# Build the extension with SCons before collecting the package files.
 
-# Make sure we build the libraries before running the standard build.
-# Also, after the build process, strip the library of debug symbols.
+class camfr_build_py(build_py):
 
-class camfr_build(build):
   def run(self):
 
-    import os
-    
-    #os.system("cd docs; make")
-     
-    os.system("scons")
-    os.system(strip_command)
+    if not os.path.exists("machine_cfg.py"):
+      sys.exit("machine_cfg.py not found: copy one of the machine_cfg.py.* "
+               "templates to machine_cfg.py and edit it for your system.")
 
-    return build.run(self)
+    subprocess.check_call([sys.executable, "-m", "SCons",
+                           "-j", str(os.cpu_count() or 1)])
+
+    return build_py.run(self)
+
+  def find_package_modules(self, package, package_dir):
+
+    modules = build_py.find_package_modules(self, package, package_dir)
+
+    if package == "camfr":
+      for path in extra_modules:
+        name = os.path.splitext(os.path.basename(path))[0]
+        modules.append((package, name, path))
+
+    return modules
 
 
 
-# Modified install_data, changing self.install_dir to the actual library dir.
-# Also byte-compiles *.py files that are outside of the regular package
-# hierarchy.
+# The package contains a compiled library, so wheels must be platform
+# specific.
 
-class camfr_install_data(install_data):
-  def run(self):
+class camfr_distribution(Distribution):
 
-    # Byte-compile Python files.
-
-    scripts = []
-          
-    for i in self.data_files:
-      for j in i[1]:
-        if j[-2:] == "py":
-          scripts.append(j)
-          i[1].append(j+'c')
-
-    byte_compile(scripts)
-      
-    # Change install dir to library dir.
-    
-    install_cmd = self.get_finalized_command('install')
-    self.install_dir = getattr(install_cmd, 'install_lib')
-
-    return install_data.run(self)
+  def has_ext_modules(self):
+    return True
 
 
 
 # Set up the module.
 
-setup(name         = "camfr",
-      version      =  camfr_version,
-      description  = "CAvity Modelling FRamework",
-      author       = "Peter Bienstman",
-      author_email = "Peter.Bienstman@UGent.be",
-      url          = "http://camfr.sourceforge.net",
-      extra_path   = "camfr",
-      packages     = ["examples.tutorial", "examples.other",
-                      "examples.contrib", "visualisation.examples",
-                      "testsuite"],
-      data_files   = [(".", ["COPYRIGHT", "camfrversion.py",
-                             "camfr/__init__.py",
-                             "camfr/_camfr" + dllsuffix,
-                             "camfr/geometry.py",
-                             "camfr/geometry3d.py",
-                             "camfr/material.py",
-                             "camfr/RCLED.py",
-                             "camfr/GARCLED.py",
-                             "visualisation/camfr_PIL.py",
-                             "visualisation/camfr_matlab.py",
-                             "visualisation/camfr_tk.py",
-                             "visualisation/slab_plot.py",
-                             "visualisation/stack_plot.py",
-                             "visualisation/TkPlotCanvas.py",
-                             "visualisation/matrix_plot_canvas.py",
-                             "visualisation/gifmaker.py"])] + extra_files,
-      cmdclass     = {"install_data" : camfr_install_data,
-                      "build"        : camfr_build},
+setup(name             = "camfr",
+      version          = camfr_version,
+      description      = "CAvity Modelling FRamework",
+      author           = "Peter Bienstman",
+      author_email     = "Peter.Bienstman@UGent.be",
+      url              = "https://github.com/demisjohn/CAMFR",
+      license          = "GPL-2.0-or-later",
+      packages         = ["camfr"],
+      package_data     = {"camfr": ["_camfr.so"]},
+      python_requires  = ">=3.8",
+      install_requires = ["numpy", "matplotlib", "pillow"],
+      extras_require   = {"scipy": ["scipy"]},
+      distclass        = camfr_distribution,
+      cmdclass         = {"build_py": camfr_build_py},
+      zip_safe         = False,
       )
