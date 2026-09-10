@@ -15,6 +15,7 @@ from math import *      # pretty sure this isn't used in this module
 from camfr import *
 #from numpy import *
 import numpy as np
+from functools import cmp_to_key
 
 import PIL.Image as Image
 import PIL.ImageFile as ImageFile
@@ -134,7 +135,7 @@ class Rectangle:
 
     def __init__(self, p1, p2, mat):
         p = [p1, p2]
-        p.sort(sort_point)
+        p.sort(key=cmp_to_key(sort_point))
         self.p1, self.p2 = p
         self.mat = mat
         self.type = "Rectangle"
@@ -210,7 +211,7 @@ class Triangle:
 
     def __init__(self, p1, p2, p3, mat):
         self.p = [p1, p2, p3]
-        self.p.sort(sort_point)
+        self.p.sort(key=cmp_to_key(sort_point))
         self.p1, self.p2, self.p3 = self.p
         self.mat = mat
         self.type = "Triangle"
@@ -540,7 +541,7 @@ def rescale_nearest(self, image, Xsteps, Zsteps):
     return image.resize((Xsteps,Zsteps),Image.NEAREST)    
 
 def rescale_antialias(image, Xsteps, Zsteps):
-    return image.resize((Xsteps,Zsteps),Image.ANTIALIAS )
+    return image.resize((Xsteps,Zsteps),Image.LANCZOS )
 
 def rescale_custom(image, x, z, Xsteps, Zsteps, method='AVERAGE'):
                        

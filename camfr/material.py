@@ -18,10 +18,9 @@ class Dispersive_Material_Factory:
 
   def __init__(self, filename):
 
-    import scipy.interpolate.interpolate
-    interp1d = scipy.interpolate.interpolate.interp1d
+    from scipy.interpolate import interp1d
 
-    f = file(filename)
+    f = open(filename)
 
     wavelength = []
     n = []
@@ -35,7 +34,7 @@ class Dispersive_Material_Factory:
 
   def __call__(self):
 
-    return Material(self.interpolate(get_lambda().real)[0])
+    return Material(self.interpolate(get_lambda().real).item())
 
 
 

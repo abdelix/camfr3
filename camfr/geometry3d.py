@@ -15,6 +15,7 @@ from camfr import *
 from .geometry import *
 # geometry.py imports numpy as np
 import numpy as np      # no harm in reimporting a module
+from functools import cmp_to_key
 
 ############################################################################
 #
@@ -121,7 +122,7 @@ class Box:
 
     def __init__(self, p1, p2, mat):
         p = [p1, p2]
-        p.sort(sort_point)
+        p.sort(key=cmp_to_key(sort_point))
         self.p1, self.p2 = p
         self.mat = mat
 

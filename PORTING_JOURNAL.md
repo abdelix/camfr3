@@ -372,8 +372,8 @@ settings (PML, walls, N) unreset for the next test. So I ran each of the 47 modu
 |---|---|---|---|
 | `taper` | ERROR | `list.sort(cmpfunc)` in `camfr/geometry.py` | 14 |
 | `w1reson` | ERROR | Python 2 integer division in `range()` | 13 |
-| `metal_coupler` | ERROR | `Waveguide.mode(numpy.int64)` rejected by Boost.Python | 16 |
-| `TEM_field` | SEGFAULT | out-of-bounds read in `Slab_M::build_modeset` | 15 |
+| `metal_coupler` | ERROR | `Waveguide.mode(numpy.int64)` rejected by Boost.Python | 15 |
+| `TEM_field` | SEGFAULT | out-of-bounds read in `Slab_M::build_modeset` | 16 |
 
 In the full sequential run `rods` also failed: its first effective index came out as
 `0.121-8.85j` against an expected `0.5206-8.889j`. Run alone, `rods` passes. The failure was
@@ -402,3 +402,38 @@ Some plot-scaling expressions in `camfr_PIL`/`camfr_tk` stay as true division, e
 `min_area/(height*width*d_x*d_y)`. There Python 2 floored only because the inputs happened to be
 integers, and the package's own `__init__.py` opting into true division shows what the authors
 intended.
+
+### 14. Python 2 builtins and removed library APIs in the core modules
+
+Commit: `fix: replace cmp sorting, file() and removed SciPy/Pillow APIs`
+
+**Issues.**
+
+- `list.sort(cmpfunc)`: Python 3's `sort()` only accepts `key=`. `Rectangle` and `Triangle` in
+  `geometry.py`, and `Box` in `geometry3d.py`, sort their corner points with the comparator
+  `sort_point`. This raised `TypeError: sort() takes no positional arguments` in testsuite `taper`.
+- The `file()` builtin is gone; `material.Dispersive_Material_Factory` used it.
+- `scipy.interpolate.interpolate` and `scipy.integrate.quadpack` are private SciPy modules.
+  SciPy 1.16.3 still imports them, but they are not part of the public API.
+- Called with a scalar, `interp1d(...)` returns a 0-d array (checked with SciPy 1.16.3), which
+  cannot be indexed with `[0]`. `Dispersive_Material_Factory()` therefore raised `IndexError`
+  and could not create a material at all.
+- Pillow 10 removed `Image.ANTIALIAS`, which was an alias of `Image.LANCZOS`. `geometry.py`
+  uses it by default (`rescaling='ANTIALIAS'`) when converting a bitmap picture into slabs.
+
+**Resolution.**
+
+- `sort(key=functools.cmp_to_key(sort_point))`. Python 2 ran the same stable sort with the same
+  comparator, so the ordering is identical.
+- `file()` → `open()`.
+- `from scipy.interpolate import interp1d`, `scipy.integrate.quad` and `scipy.integrate.dblquad`.
+- `.item()` instead of `[0]`, which works for both 0-d and 1-element arrays.
+- `Image.LANCZOS`. The user-facing option name `'ANTIALIAS'` is kept.
+
+**Verification.**
+
+- `taper` passes.
+- `Rectangle(Point(2,1), Point(0,3))` stores corner x = 0, 2, and a `Triangle` orders its
+  points x = 1, 2, 3.
+- `Dispersive_Material_Factory` on a two-point table (1000 nm: 1.45; 2000 nm: 1.44 − 0.001j) at
+  λ = 1.5 µm returns `n = 1.445 − 0.0005j`, the linear interpolation.

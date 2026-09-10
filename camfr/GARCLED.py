@@ -854,8 +854,8 @@ def calc(cav, sources=None, weights=None, steps=30, symmetric=False,
   
   else:
 
-    import scipy.integrate.quadpack
-    dblquad = scipy.integrate.quadpack.dblquad 
+    import scipy.integrate
+    dblquad = scipy.integrate.dblquad 
 
     for source in sources:
 

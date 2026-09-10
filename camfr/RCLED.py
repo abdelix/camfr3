@@ -301,9 +301,8 @@ def P(cav, source, kt, density='per_solid_angle'):
 
 def integrate_peaked_function(f, x0, x1, args=None, points=None,eps=0.1,N=10):
 
-  import scipy.integrate.quadpack
   import scipy.integrate
-  quad = scipy.integrate.quadpack.quad
+  quad = scipy.integrate.quad
   romb = scipy.integrate.romb
   
   limit = 250
