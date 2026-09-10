@@ -66,7 +66,7 @@ class SpE(unittest.TestCase):
        
         self.assertTrue(eta_pass)
 
-suite = unittest.makeSuite(SpE, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(SpE)        
 
 if __name__ == "__main__":
     unittest.main()

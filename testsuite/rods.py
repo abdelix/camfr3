@@ -61,7 +61,7 @@ class rods(unittest.TestCase):
 
         self.assertTrue(mode98_pass and mode99_pass)
 
-suite = unittest.makeSuite(rods, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(rods)        
 
 if __name__ == "__main__":
     unittest.main()

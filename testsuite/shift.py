@@ -46,7 +46,7 @@ class shift(unittest.TestCase):
            
         self.assertTrue(T_pass)
 
-suite = unittest.makeSuite(shift, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(shift)
 
 if __name__ == "__main__":
     unittest.main()

@@ -70,7 +70,7 @@ class grating3(unittest.TestCase):
         
         self.assertTrue(R_pass)
 
-suite = unittest.makeSuite(grating3, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(grating3)
 
 if __name__ == "__main__":
     unittest.main()

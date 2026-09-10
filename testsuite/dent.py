@@ -53,7 +53,7 @@ class dent(unittest.TestCase):
            
         self.assertTrue(R_pass)
 
-suite = unittest.makeSuite(dent, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(dent)
 
 if __name__ == "__main__":
     unittest.main()

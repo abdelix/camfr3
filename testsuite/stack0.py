@@ -47,7 +47,7 @@ class stack0(unittest.TestCase):
         
         self.assertTrue(E_pass)
 
-suite = unittest.makeSuite(stack0, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(stack0)        
 
 if __name__ == "__main__":
     unittest.main()

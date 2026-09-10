@@ -347,3 +347,34 @@ The installed `site-packages/camfr/` contains `__init__`, `_camfr.so`, `camfr_PI
 `section_matplotlib`, `slab_plot`, `stack_plot`, `TkPlotCanvas`, `matrix_plot_canvas` and
 `gifmaker`. That is the set the Python 2 installer produced, plus the previously missing
 `section_matplotlib`.
+
+### 12. unittest API removed in Python 3.12/3.13
+
+Commit: `test: port testsuite to the Python 3.13 unittest API`
+
+**Issue.** Every test module ends with `suite = unittest.makeSuite(cls, 'test')`.
+`unittest.makeSuite` was deprecated in Python 3.11 and removed in 3.13, so importing any test
+module raised `AttributeError`. The `failUnless` alias, removed in 3.12, had already been
+converted to `assertTrue` by 2to3's `fix_asserts` (entry 7).
+
+**Resolution.**
+
+- `unittest.defaultTestLoader.loadTestsFromTestCase(cls)` in all 51 test modules. The loader's
+  default method prefix is `'test'`, the same as the old second argument.
+- `testsuite/makefile`: `python` → `python3`.
+
+**First full run on Python 3.14.** `camfr_test.py` got through 20 modules, then segfaulted in
+`TEM_field`. One crash kills the whole run, and a test that errors halfway leaves CAMFR's global
+settings (PML, walls, N) unreset for the next test. So I ran each of the 47 modules in
+`alltests` in its own interpreter (6 in parallel): **43 pass, 3 error, 1 segfault.**
+
+| Module | Result | Cause | Entry |
+|---|---|---|---|
+| `taper` | ERROR | `list.sort(cmpfunc)` in `camfr/geometry.py` | 14 |
+| `w1reson` | ERROR | Python 2 integer division in `range()` | 13 |
+| `metal_coupler` | ERROR | `Waveguide.mode(numpy.int64)` rejected by Boost.Python | 16 |
+| `TEM_field` | SEGFAULT | out-of-bounds read in `Slab_M::build_modeset` | 15 |
+
+In the full sequential run `rods` also failed: its first effective index came out as
+`0.121-8.85j` against an expected `0.5206-8.889j`. Run alone, `rods` passes. The failure was
+caused by the preceding `taper` error, which skipped taper's cleanup (`set_upper_PML(0)`, …).

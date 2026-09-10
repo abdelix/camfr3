@@ -117,7 +117,7 @@ class PhC_splitter(unittest.TestCase):
         
         self.assertTrue(guided_kz_pass and R_pass and E_field_pass)
 
-suite = unittest.makeSuite(PhC_splitter, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(PhC_splitter)        
 
 if __name__ == "__main__":
     unittest.main()

@@ -88,7 +88,7 @@ class planar_VCSEL(unittest.TestCase):
 
         self.assertTrue(field_pass)
 
-suite = unittest.makeSuite(planar_VCSEL, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(planar_VCSEL)        
 
 if __name__ == "__main__":
     unittest.main()

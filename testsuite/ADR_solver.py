@@ -46,7 +46,7 @@ class ADR_solver(unittest.TestCase):
 
         self.assertTrue(mode0_pass)
 
-suite = unittest.makeSuite(ADR_solver, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(ADR_solver)        
 
 if __name__ == "__main__":
     unittest.main()

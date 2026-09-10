@@ -45,7 +45,7 @@ class precision(unittest.TestCase):
  
         self.assertTrue(R_pass)
 
-suite = unittest.makeSuite(precision, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(precision)
 
 if __name__ == "__main__":
     unittest.main()

@@ -54,7 +54,7 @@ class TEM_field(unittest.TestCase):
        
         self.assertTrue(f1_pass and f2_pass and f3_pass)
 
-suite = unittest.makeSuite(TEM_field, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(TEM_field)        
 
 if __name__ == "__main__":
     unittest.main()

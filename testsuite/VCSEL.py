@@ -97,7 +97,7 @@ class VCSEL(unittest.TestCase):
 
         self.assertTrue(wavelength_pass and gain_pass)
 
-suite = unittest.makeSuite(VCSEL, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(VCSEL)        
 
 if __name__ == "__main__":
     unittest.main()

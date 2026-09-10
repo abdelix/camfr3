@@ -47,7 +47,7 @@ class degenerate4(unittest.TestCase):
         
         self.assertTrue(R_pass)
 
-suite = unittest.makeSuite(degenerate4, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(degenerate4)
 
 if __name__ == "__main__":
     unittest.main()

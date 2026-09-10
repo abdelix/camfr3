@@ -103,7 +103,7 @@ class metal_splitter(unittest.TestCase):
 
         self.assertTrue(R_pass)
 
-suite = unittest.makeSuite(metal_splitter, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(metal_splitter)        
 
 if __name__ == "__main__":
     unittest.main()

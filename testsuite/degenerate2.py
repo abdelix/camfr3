@@ -50,7 +50,7 @@ class degenerate2(unittest.TestCase):
         
         self.assertTrue(T_pass)
 
-suite = unittest.makeSuite(degenerate2, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(degenerate2)
 
 if __name__ == "__main__":
     unittest.main()

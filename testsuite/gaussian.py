@@ -49,7 +49,7 @@ class gaussian(unittest.TestCase):
            
         self.assertTrue(T_pass)
 
-suite = unittest.makeSuite(gaussian, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(gaussian)
 
 if __name__ == "__main__":
     unittest.main()

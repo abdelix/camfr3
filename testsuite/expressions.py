@@ -73,7 +73,7 @@ class expressions(unittest.TestCase):
 
         self.assertTrue(1)
 
-suite = unittest.makeSuite(expressions, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(expressions)        
 
 if __name__ == "__main__":
     unittest.main()

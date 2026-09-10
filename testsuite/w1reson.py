@@ -107,7 +107,7 @@ class w1reson(unittest.TestCase):
         set_orthogonal(1)
         set_polarisation(TE)
 
-suite = unittest.makeSuite(w1reson, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(w1reson)        
 
 if __name__ == "__main__":
     unittest.main()

@@ -60,7 +60,7 @@ class section3(unittest.TestCase):
     
         self.assertTrue(n_eff_0_pass)
 
-suite = unittest.makeSuite(section3, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(section3)
 
 if __name__ == "__main__":
     unittest.main()

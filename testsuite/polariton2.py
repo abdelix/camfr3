@@ -65,7 +65,7 @@ class polariton2(unittest.TestCase):
         
         self.assertTrue(R_pass)
 
-suite = unittest.makeSuite(polariton2, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(polariton2)
 
 if __name__ == "__main__":
     unittest.main()

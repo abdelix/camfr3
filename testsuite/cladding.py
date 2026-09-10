@@ -41,7 +41,7 @@ class cladding(unittest.TestCase):
       
         self.assertTrue( E_field_pass )
 
-suite = unittest.makeSuite(cladding, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(cladding)        
 
 if __name__ == "__main__":
     unittest.main()

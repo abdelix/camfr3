@@ -54,7 +54,7 @@ class degenerate(unittest.TestCase):
            
         self.assertTrue(OK)
 
-suite = unittest.makeSuite(degenerate, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(degenerate)
 
 if __name__ == "__main__":
     unittest.main()

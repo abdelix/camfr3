@@ -47,7 +47,7 @@ class coupled(unittest.TestCase):
            
         self.assertTrue(n_eff_0_pass and n_eff_1_pass)
 
-suite = unittest.makeSuite(coupled, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(coupled)
 
 if __name__ == "__main__":
     unittest.main()

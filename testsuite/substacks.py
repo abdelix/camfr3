@@ -53,7 +53,7 @@ class substacks(unittest.TestCase):
         self.assertTrue(R_pass)
 
 
-suite = unittest.makeSuite(substacks, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(substacks)        
 
 
 if __name__ == "__main__":

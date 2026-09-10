@@ -47,7 +47,7 @@ class sudbo(unittest.TestCase):
 
         self.assertTrue(n_eff_pass)
 
-suite = unittest.makeSuite(sudbo, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(sudbo)        
 
 if __name__ == "__main__":
     unittest.main()

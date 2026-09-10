@@ -97,7 +97,7 @@ class taper(unittest.TestCase):
        
         self.assertTrue(R_pass)
 
-suite = unittest.makeSuite(taper, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(taper)        
 
 if __name__ == "__main__":
     unittest.main()

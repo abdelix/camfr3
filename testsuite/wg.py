@@ -43,7 +43,7 @@ class wg(unittest.TestCase):
        
         self.assertTrue(n_pass)
 
-suite = unittest.makeSuite(wg, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(wg)        
 
 if __name__ == "__main__":
     unittest.main()

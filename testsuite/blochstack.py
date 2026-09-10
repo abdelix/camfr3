@@ -85,7 +85,7 @@ class blochstack(unittest.TestCase):
 
         free_tmps()
 
-suite = unittest.makeSuite(blochstack, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(blochstack)        
 
 if __name__ == "__main__":
     unittest.main()

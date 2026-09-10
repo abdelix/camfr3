@@ -61,7 +61,7 @@ class polariton(unittest.TestCase):
            
         self.assertTrue(kz_pass)
 
-suite = unittest.makeSuite(polariton, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(polariton)
 
 if __name__ == "__main__":
     unittest.main()

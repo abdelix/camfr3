@@ -61,7 +61,7 @@ class backward3(unittest.TestCase):
         
         self.assertTrue(R_pass)
 
-suite = unittest.makeSuite(backward3, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(backward3)
 
 if __name__ == "__main__":
     unittest.main()

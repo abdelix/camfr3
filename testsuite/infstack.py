@@ -80,7 +80,7 @@ class infstack(unittest.TestCase):
 
         free_tmps()
 
-suite = unittest.makeSuite(infstack, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(infstack)        
 
 if __name__ == "__main__":
     unittest.main()

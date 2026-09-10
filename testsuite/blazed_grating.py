@@ -120,7 +120,7 @@ class blazed_grating(unittest.TestCase):
 
         self.assertTrue(R_pass and T_pass)
 
-suite = unittest.makeSuite(blazed_grating, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(blazed_grating)        
 
 if __name__ == "__main__":
     unittest.main()

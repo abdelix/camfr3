@@ -52,7 +52,7 @@ class planarTE(unittest.TestCase):
 
         self.assertTrue(R_pass and T_pass)
 
-suite = unittest.makeSuite(planarTE, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(planarTE)        
 
 if __name__ == "__main__":
     unittest.main()

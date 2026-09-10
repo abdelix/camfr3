@@ -71,7 +71,7 @@ class surface_plasmon(unittest.TestCase):
 
         self.assertTrue(n_eff_pass)
 
-suite = unittest.makeSuite(surface_plasmon, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(surface_plasmon)
 
 if __name__ == "__main__":
     unittest.main()

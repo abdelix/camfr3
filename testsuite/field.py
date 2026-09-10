@@ -54,7 +54,7 @@ class field(unittest.TestCase):
         
         self.assertTrue(f1_pass and f2_pass)
 
-suite = unittest.makeSuite(field, 'test')        
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(field)        
 
 if __name__ == "__main__":
     unittest.main()

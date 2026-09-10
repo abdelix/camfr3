@@ -112,7 +112,7 @@ class metal_coupler(unittest.TestCase):
 
         self.assertTrue(up_pass)
 
-suite = unittest.makeSuite(metal_coupler, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(metal_coupler)
 
 if __name__ == "__main__":
     unittest.main()

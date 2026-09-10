@@ -76,7 +76,7 @@ class plasmon_biosensor(unittest.TestCase):
 
         self.assertTrue(T_pass)
 
-suite = unittest.makeSuite(plasmon_biosensor, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(plasmon_biosensor)
 
 if __name__ == "__main__":
     unittest.main()

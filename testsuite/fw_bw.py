@@ -57,7 +57,7 @@ class fw_bw(unittest.TestCase):
            
         self.assertTrue(f_pass and b_pass)
 
-suite = unittest.makeSuite(fw_bw, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(fw_bw)
 
 if __name__ == "__main__":
     unittest.main()

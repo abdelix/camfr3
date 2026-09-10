@@ -46,7 +46,7 @@ class slab2(unittest.TestCase):
            
         self.assertTrue(f_pass)
 
-suite = unittest.makeSuite(slab2, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(slab2)
 
 if __name__ == "__main__":
     unittest.main()

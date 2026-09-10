@@ -47,7 +47,7 @@ class backward2(unittest.TestCase):
            
         self.assertTrue(n_eff_pass)
 
-suite = unittest.makeSuite(backward2, 'test')
+suite = unittest.defaultTestLoader.loadTestsFromTestCase(backward2)
 
 if __name__ == "__main__":
     unittest.main()    
