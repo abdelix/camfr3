@@ -674,3 +674,84 @@ The same headless run showed these results for the other visualisation examples:
   Tk windows.
 - `vis_matlab1`, `vis_matlab2` and `vis_matlab3` need `camfr_matlab` (MATLAB through `pymat`),
   which is not ported (entry 9), so I left them unchanged.
+
+### 23. Summary and status
+
+**Branch.** `python3-port`, on top of upstream `master` (`f00a092`). Commits, oldest first:
+
+1. `fe24d42` docs: add Python 3 porting journal
+2. `5306511` chore: ignore build products and local machine_cfg.py
+3. `1985771` build: support Python 3 builds on Linux with SCons 4
+4. `b3fe55b` fix(wrap): port NumPy C API usage to NumPy 2
+5. `63b41ad` fix: return on every path of non-void functions
+6. `7208042` fix: drop register storage class removed in C++17
+7. `f734e24` style: expand tab indentation to spaces
+8. `147c1e6` refactor: convert Python 2 syntax with 2to3
+9. `bc276c6` fix: use explicit relative imports inside the camfr package
+10. `9152e2a` fix(visualisation): replace Canvas, MLab and numpy.oldnumeric
+11. `08b9cc7` fix(visualisation): import PIL modules from the PIL namespace
+12. `de06813` build: replace distutils setup.py with setuptools
+13. `e507644` test: port testsuite to the Python 3.13 unittest API
+14. `a4434fd` fix: restore floor division where Python 2 divided integers
+15. `da2ba56` fix: replace cmp sorting, file() and removed SciPy/Pillow APIs
+16. `1d67a7e` fix(wrap): accept NumPy integers where C++ expects an int
+17. `cc0cf1f` fix(slab): avoid out-of-bounds read in single-layer Slab_M
+18. `450afc3` fix(examples): use open() and package imports
+19. `e324bed` fix(visualisation): pass int colours to Pillow and tolerate Agg
+20. `e204e6c` fix(slab): do not advance an erased iterator in SlabMatrixCache
+21. `15efce1` docs: update README and INSTALL for Python 3
+22. `fad7084` fix(garcled): use scipy.integrate.simpson and valid pcolor shapes
+23. `f775bbe` fix(examples): replace Numeric in the Tk visualisation examples
+
+Total diff against `master`, excluding this entry: 108 files changed, 2013 insertions(+), 1053 deletions(-).
+
+**Reproducing the build and tests** (Ubuntu 26.04, Python 3.14):
+
+```bash
+cp machine_cfg.py.linux machine_cfg.py
+BOOST_ROOT=/prefix/of/boost python3 -m pip install .   # omit BOOST_ROOT for a system Boost
+cd testsuite && MPLBACKEND=Agg python3 camfr_test.py
+```
+
+**Results.**
+
+| Check | Result |
+|---|---|
+| C++/Fortran build (GCC 15, Boost 1.90, NumPy 2.3.5) | OK. No compiler warnings in CAMFR's own C++ code; only Boost's `auto_ptr` deprecation and old-style definitions in vendored SLATEC C remain |
+| `pip install .` (isolated build) and `pip install --no-build-isolation .` | both OK |
+| `testsuite/camfr_test.py` (the official regression suite) | **47 tests, OK** (≈ 8–10 s) |
+| All 51 test modules, one process each | 48 pass. `ADR_solver` FAIL, `stack2` FAIL, `metal_splitter` ERROR |
+| Examples run to completion headless | tutorials 2, 3, 4, 6, 7; `other/{excitations, geometry, infstack, OLED, OLED_grating, PhC_splitter, planar, SpE, VCSEL}`; the contributed Silicon waveguide Section example |
+| Examples that reach their Tk window (headless: `TclError: no display name`) | tutorials 1 and 5; `other/fieldplot`; `contrib/omniguide`; `visualisation/examples/{plot_blochstack, plot_slab, plot_stack, vis_tk1, vis_tk2, vis_tk3}` |
+| PIL file output (`plot_field`/`plot_n` → PNG, `animate_field` → 16-frame GIF) | OK |
+
+The three test modules that don't pass are the ones upstream already leaves out of
+`camfr_test.py`. `stack2` and `PhC_splitter` are commented out (`PhC_splitter` does pass), and
+`ADR_solver` and `metal_splitter` were never listed. The testsuite ChangeLog records repeated
+attempts to "make stack2.py stable". `metal_splitter` calls `plot()`, which resolves to
+Matplotlib's `pylab.plot` and would need a GUI anyway. No Python 2 toolchain was available, so I
+could **not** confirm whether these three passed on Python 2.
+
+**Not verified, or not done.**
+
+- The interactive Tk GUI (`slab_plot`, `stack_plot`, `TkPlotCanvas`, and window output from
+  `camfr_PIL`/`camfr_tk`) has not been exercised. There was no headless X server (Xvfb is not
+  installed), and I didn't open windows on the user's desktop. Everything up to window creation
+  runs.
+- `examples/other/OLED_grating_avg.py` did not run to completion. After about 17 min it was
+  still working on its first source position, so I stopped it. The `GARCLED` code it uses is
+  exercised by `OLED_grating.py`.
+- `visualisation/camfr_matlab.py` and the `vis_matlab*` examples (MATLAB through `pymat`) are not
+  ported.
+- Only the Linux build template was updated; the macOS, MSVC and Gentoo templates are untouched.
+  Only Python 3.14 was tested; `python_requires=">=3.8"` is untested on older versions.
+- Numerical correctness was checked against the testsuite's stored reference values (relative
+  tolerance 1e-4), not by comparing Python 2 and Python 3 runs directly.
+- The `py35_compat` branch was not merged. This port was redone independently (see "Starting point").
+- Known and left unchanged: `SlabMatrixCache::deregister` does not free the cached matrices
+  (entry 19), and `GARCLED` emits `ComplexWarning`s (entry 21).
+
+**Issue while writing this entry.** The first attempt to stop the long-running example used
+`pkill -f` with a pattern that also matched the command line of the shell script running it.
+The script killed itself (exit status 144) before writing anything. No repository state changed;
+the entry was then written without pattern-based process matching.
