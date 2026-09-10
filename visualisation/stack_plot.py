@@ -12,7 +12,7 @@ from numpy import *
 from tkinter import *
 
 # win bug?? of toch ergens code die ik mis
-import camfr_PIL
+from . import camfr_PIL
 
 HELPCONTENT = """\
 CAMFR plot: some tips, oddities:
@@ -61,7 +61,7 @@ email:   Lieven.Vanholme@intec.ugent.be"""
 
 class StackPlot:
     
-    import camfr_PIL
+    from . import camfr_PIL
 
     # Stack values.
     N               = 0         # Number of modes in blochstack.
@@ -375,7 +375,7 @@ class StackPlot:
 
     def _makeFieldPlotWindow(self):
 
-        from matrix_plot_canvas import MatrixPlotCanvas
+        from .matrix_plot_canvas import MatrixPlotCanvas
         
         self.fieldPlotFrame = Frame()
         self.fieldPlotFrame.grid()
@@ -411,7 +411,7 @@ class StackPlot:
 
     def _makeStackIndexWindow(self):
 
-        from matrix_plot_canvas import MatrixPlotCanvas
+        from .matrix_plot_canvas import MatrixPlotCanvas
         
         self.stackIndexFrame = Frame()
         self.stackIndexFrame.grid()
@@ -892,7 +892,8 @@ class StackPlot:
    ###########################################################################
 
     def _save(self, saveas="CAMFRPICTURE"):
-        import tkinter.filedialog, tkinter.messagebox, os, gifmaker, Image, ImagePalette
+        import tkinter.filedialog, tkinter.messagebox, os, Image, ImagePalette
+        from . import gifmaker
         
         index   = self.indexFlag.get()
 

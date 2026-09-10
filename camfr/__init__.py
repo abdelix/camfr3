@@ -8,13 +8,13 @@ import os
 if not os.environ.get('NO_CAMFR_GRAPHICS'):
     from pylab import *
 
-from _camfr import *
-from camfr_PIL import *     # converted numpy* to np.*
-from geometry import *      # converted numpy* to np.*
-from geometry3d import *    # converted numpy* to np.*
-from material import *
-from section_matplotlib import *    # matplotlib functions for Section objects
-from camfrversion import *
+from ._camfr import *
+from .camfr_PIL import *     # converted numpy* to np.*
+from .geometry import *      # converted numpy* to np.*
+from .geometry3d import *    # converted numpy* to np.*
+from .material import *
+from .section_matplotlib import *    # matplotlib functions for Section objects
+from .camfrversion import *
 
 # Splash screen.
 

@@ -12,7 +12,7 @@
 ############################################################################
 
 from camfr import *
-from geometry import *
+from .geometry import *
 # geometry.py imports numpy as np
 import numpy as np      # no harm in reimporting a module
 

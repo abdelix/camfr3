@@ -11,7 +11,7 @@
 #
 ############################################################################
 
-from _camfr import *    # import the Section and Slab classes, in order to add functions to them.
+from ._camfr import *    # import the Section and Slab classes, in order to add functions to them.
 import numpy as np
 import matplotlib.pyplot as plt
 

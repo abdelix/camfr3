@@ -15,7 +15,7 @@ palet       = 3
 
 def _create_window_and_draw(drawobject):
 
-    from TkPlotCanvas import Frame, PlotCanvas, TOP, SUNKEN, BOTH, YES
+    from .TkPlotCanvas import Frame, PlotCanvas, TOP, SUNKEN, BOTH, YES
     
     window = Frame()
     window.pack(fill=BOTH, expand=YES)
@@ -39,7 +39,7 @@ def _create_window_and_draw(drawobject):
 
 def scatter_plot(x, y):
     
-    import TkPlotCanvas
+    from . import TkPlotCanvas
     
     v = []
     for i in range(len(x)):
@@ -57,7 +57,7 @@ def scatter_plot(x, y):
 
 def plot_vector(v):
 
-    import TkPlotCanvas
+    from . import TkPlotCanvas
     
     pass
     try:

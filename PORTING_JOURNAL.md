@@ -225,3 +225,26 @@ Python 3.14. I reviewed every non-`print` hunk. The conversions were:
 - modules that no longer exist (`Canvas`, `Image`, `MLab`, `Numeric`, `numpy.oldnumeric`);
 - `unittest.makeSuite`, removed in Python 3.13;
 - `distutils`, removed in Python 3.12.
+
+### 8. Implicit relative imports inside the package
+
+Commit: `fix: use explicit relative imports inside the camfr package`
+
+**Issue.** CAMFR installs as one flat package. `camfr/__init__.py`, `_camfr.so`, the modules from
+`camfr/`, the visualisation modules and `camfrversion.py` all end up in `site-packages/camfr/`.
+The modules imported each other with Python 2 implicit relative imports (`from _camfr import *`,
+`import slab_plot, stack_plot`, …). Python 3 treats those as absolute imports of top-level modules,
+which gives `ModuleNotFoundError: No module named '_camfr'`. 2to3's `import` fixer could not have
+caught these anyway. In the source tree the visualisation modules sit in a different directory from
+`camfr/__init__.py`, so the fixer cannot tell they are siblings, and it was disabled in entry 7.
+
+**Resolution.** I switched to explicit relative imports in the 7 modules that are installed inside
+the package: `camfr/__init__.py`, `camfr/geometry3d.py` and
+`visualisation/{camfr_PIL,camfr_tk,section_matplotlib,slab_plot,stack_plot}.py`. This includes
+the function-local imports (`from . import TkPlotCanvas`, `from .matrix_plot_canvas import
+MatrixPlotCanvas`, `from . import gifmaker`).
+
+The submodules' own `from camfr import *` stays absolute, because it still works on Python 3. The
+package is already in `sys.modules`, partially initialised with the `_camfr` names, just as on
+Python 2. There is one import cycle: `stack_plot` runs `from . import camfr_PIL` while `camfr_PIL`
+is still importing `stack_plot`. Python ≥ 3.7 resolves this from `sys.modules`.

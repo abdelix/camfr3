@@ -75,7 +75,7 @@ ARROW = np.array([ p1, p2, p3, p4, p5, p6, p7 ])
 
 def _create_window_and_draw(drawobject):
     
-    from TkPlotCanvas import Frame, PlotCanvas, TOP, SUNKEN, BOTH, YES
+    from .TkPlotCanvas import Frame, PlotCanvas, TOP, SUNKEN, BOTH, YES
     
     window = Frame()
     window.pack(fill=BOTH, expand=YES)
@@ -100,7 +100,7 @@ def _create_window_and_draw(drawobject):
 
 def scatter_plot(x, y):
     
-    import TkPlotCanvas
+    from . import TkPlotCanvas
     
     v = []
     for i in range(len(x)):
@@ -118,7 +118,7 @@ def scatter_plot(x, y):
 
 def plot_vector(v):
 
-    import TkPlotCanvas
+    from . import TkPlotCanvas
     
     pass
     try:
@@ -529,7 +529,8 @@ def _create_phasor_movie(z_, r_x=0, r_y=0, min_area=100000, scale=1, ln=0):
 
 def _output_movie(movie, filename):
 
-    import tkinter, ImageTk, gifmaker, os, sys
+    import tkinter, ImageTk, os, sys
+    from . import gifmaker
 
     frames = len(movie)
 
@@ -1251,7 +1252,7 @@ def animate_field(o, component, r1, r2, r3=0, filename=0, overlay_n=1,
 #
 ##############################################################################
 
-import slab_plot, stack_plot
+from . import slab_plot, stack_plot
 
 Slab.plot       = lambda self : slab_plot.SlabPlot(self)
 Stack.plot      = lambda self : stack_plot.StackPlot(self)
