@@ -15,8 +15,8 @@ class substacks(unittest.TestCase):
         
         """Substacks"""
 
-        print
-        print "Running substacks..."
+        print()
+        print("Running substacks...")
 
         set_lambda(1.1)
         set_N(50)
@@ -44,13 +44,13 @@ class substacks(unittest.TestCase):
 
         R_OK = 0.0362401973292
 
-        print R, "expected", R_OK
+        print(R, "expected", R_OK)
 
         R_pass = abs((R - R_OK) / R_OK) < eps.testing_eps
 
         free_tmps()
 
-        self.failUnless(R_pass)
+        self.assertTrue(R_pass)
 
 
 suite = unittest.makeSuite(substacks, 'test')        

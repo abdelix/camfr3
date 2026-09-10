@@ -9,7 +9,7 @@
 
 from camfr import *
 from numpy import *
-from Tkinter import *
+from tkinter import *
 
 # win bug?? of toch ergens code die ik mis
 import camfr_PIL
@@ -75,10 +75,10 @@ class StackPlot:
                                 # (used by restore)
     STACKSIZE       = 100       # The start size for the stack canvas.
                                 # (used by restore)
-    fieldRange      = [ FIELDSIZE, FIELDSIZE, 6, range(1), range(1)]
+    fieldRange      = [ FIELDSIZE, FIELDSIZE, 6, list(range(1)), list(range(1))]
                                 # Plotrange  x-axis, y-axis, pixel.
                                 # (of field)
-    stackRange      = [ STACKSIZE, STACKSIZE, 1, range(1), range(1)]
+    stackRange      = [ STACKSIZE, STACKSIZE, 1, list(range(1)), list(range(1))]
                                 # Plotrange  x-axis, y-axis, pixel.
                                 # (of refractiveindex)
 
@@ -892,7 +892,7 @@ class StackPlot:
    ###########################################################################
 
     def _save(self, saveas="CAMFRPICTURE"):
-        import tkFileDialog, tkMessageBox, os, gifmaker, Image, ImagePalette
+        import tkinter.filedialog, tkinter.messagebox, os, gifmaker, Image, ImagePalette
         
         index   = self.indexFlag.get()
 
@@ -918,7 +918,7 @@ class StackPlot:
             ttle = "save movie as jpg files"
                       
         #  Get file name.
-        name    = tkFileDialog.asksaveasfilename(
+        name    = tkinter.filedialog.asksaveasfilename(
                         filetypes   = ftypes ,
                         initialfile = ifile,
                         title       = ttle)
@@ -934,14 +934,14 @@ class StackPlot:
             else:
                     camfr_PIL._overlay_pictures(
                     self.pic_f, self.pic_n, 1).save(name)
-            print "file saved as ", name
+            print("file saved as ", name)
 
         elif (saveas=="CAMFRRAWDATA"):
             if not (ext in ['.xls','.XLS']):
                 ext = '.xls'
             name = root + ext
             self._saveMatrix( name, self.mat_f)
-            print "file saved as", name
+            print("file saved as", name)
 
 
         elif (saveas=="CAMFRGIFMOVIE"):
@@ -952,7 +952,7 @@ class StackPlot:
             # copy from playbutton 
             self._movieNewPlay()
     
-            movie2 = range(0,len(self.movie))
+            movie2 = list(range(0,len(self.movie)))
             for Nr in range(0,len(self.movie)):
                 if not index: movie2[Nr] = self.movie[Nr].convert("P")
                 else:
@@ -961,7 +961,7 @@ class StackPlot:
             fp = open(name,"wb")
             gifmaker.makedelta(fp, movie2)
             fp.close()
-            print "file saved as", name
+            print("file saved as", name)
 
         elif (saveas=="CAMFRFRAMESMOVIE"):
             if not(ext in camfr_PIL.formats):
@@ -977,10 +977,10 @@ class StackPlot:
                     camfr_PIL._overlay_pictures(
                     self.movie[Nr], self.pic_n, 1).save(nameNR)
 
-            print "file saved as %i "%len(self.movie),root,"_Nr",ext," frames"
+            print("file saved as %i "%len(self.movie),root,"_Nr",ext," frames")
 
         else:
-            tkMessageBox.showwarning(
+            tkinter.messagebox.showwarning(
                 title="fail",
                 message="no file/data is saved")
 
@@ -995,8 +995,8 @@ class StackPlot:
         File = open(name,"w")
         for row in matrix:
             for column in row:
-                print >> File, column, '\t',
-            print >> File, ''
+                print(column, '\t', end=' ', file=File)
+            print('', file=File)
         File.close()
 
    ###########################################################################
@@ -1006,8 +1006,8 @@ class StackPlot:
    ###########################################################################
 
     def _about(self):
-        import tkMessageBox
-        tkMessageBox.showinfo('About CAMFR stack plot... ', INFOCONTENT )
+        import tkinter.messagebox
+        tkinter.messagebox.showinfo('About CAMFR stack plot... ', INFOCONTENT )
 
    ###########################################################################
    #
@@ -1040,7 +1040,7 @@ class StackPlot:
         
 class colorFrame: 
     def __init__(self, stackPlotObject):
-        import tkColorChooser
+        import tkinter.colorchooser
 
         spo = stackPlotObject
         ct = Toplevel()
@@ -1048,7 +1048,7 @@ class colorFrame:
         
         def negcol():
             c = camfr_PIL.NEGCOLOR
-            n = tkColorChooser.askcolor(
+            n = tkinter.colorchooser.askcolor(
                 color="#%02x%02x%02x"%(c[0],c[1],c[2]))[0]
             if n:
                 camfr_PIL.NEGCOLOR = n
@@ -1057,7 +1057,7 @@ class colorFrame:
    
         def midcol():
             c = camfr_PIL.MIDCOLOR
-            n = tkColorChooser.askcolor(
+            n = tkinter.colorchooser.askcolor(
                 color="#%02x%02x%02x"%(c[0],c[1],c[2]))[0]
             if n:
                 camfr_PIL.MIDCOLOR = n
@@ -1066,7 +1066,7 @@ class colorFrame:
 
         def poscol():
             c = camfr_PIL.POSCOLOR
-            n = tkColorChooser.askcolor(
+            n = tkinter.colorchooser.askcolor(
                 color="#%02x%02x%02x"%(c[0],c[1],c[2]))[0]
             if n:
                 camfr_PIL.POSCOLOR = n
@@ -1291,12 +1291,12 @@ class configurationFrame:
    ###########################################################################
 
     def _validate(self, entry, endResult, nr, mi=1, ma=800):   
-        import tkMessageBox
+        import tkinter.messagebox
         # Controls if it is integer.
         try:
             result = int(entry.get())
         except ValueError:
-            tkMessageBox.showwarning(
+            tkinter.messagebox.showwarning(
                 "Illegal value",
                 "Not an integer." + "\nPlease try again",
                 #parent = ct
@@ -1305,7 +1305,7 @@ class configurationFrame:
 
         # Controls if it is too small.
         if self.spo.MINVALUE is not None and result < mi:
-            tkMessageBox.showwarning(
+            tkinter.messagebox.showwarning(
                 "Too small",
                 "The allowed minimum value is %s. "
                 "Please try again." % mi
@@ -1315,7 +1315,7 @@ class configurationFrame:
 
         # Controls if it is too big.
         if self.spo.MAXVALUE is not None and result > ma:
-            tkMessageBox.showwarning(
+            tkinter.messagebox.showwarning(
                 "Too large",
                 "The allowed maximum value is %s. "
                 "Please try again." % ma,

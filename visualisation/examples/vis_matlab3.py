@@ -46,4 +46,4 @@ figure
 pcolor(abs(R12*R12))
 """)
 
-raw_input("Press <enter> to continue")
+input("Press <enter> to continue")

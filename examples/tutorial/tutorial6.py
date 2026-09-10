@@ -40,8 +40,8 @@ outfile = file("tutorial6.out",'w')
 
 for x in arange(0.000, 2.250, 0.100):
     for z in arange(0.000, 0.500, 0.010):
-        print >> outfile, abs(stack.field(Coord(x,0,z)).E2()),
-    print >> outfile
+        print(abs(stack.field(Coord(x,0,z)).E2()), end=' ', file=outfile)
+    print(file=outfile)
 
 outfile.close()
 

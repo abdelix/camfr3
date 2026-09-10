@@ -188,3 +188,40 @@ if b"\t" in indent:
 tree, including `INDENT`/`DEDENT`, using the Python 2 tokenizer from `lib2to3` (run under Python
 3.12). There were 0 mismatches in 25 files, and no tracked `.py` file still has a tab in its
 indentation.
+
+### 7. Mechanical Python 2 → 3 syntax conversion
+
+Commit: `refactor: convert Python 2 syntax with 2to3`
+
+**Tool.** Python 3.14 no longer ships `lib2to3` (it was removed in 3.13), so I ran the copy in the
+locally installed Python 3.12:
+
+```bash
+git ls-files -z '*.py' | xargs -0 python3.12 -m lib2to3 -w -n -x import
+```
+
+**Why `-x import`.** The `import` fixer rewrites `import eps` into `from . import eps` whenever a
+module with that name sits next to the file. `testsuite/*.py` and the examples are run as plain
+scripts (`python camfr_test.py`), and in a script a relative import fails. Package-internal
+imports are handled by hand in entry 8.
+
+**Result.** 88 of 105 files changed (469 insertions, 470 deletions), and all 105 files compile with
+Python 3.14. I reviewed every non-`print` hunk. The conversions were:
+
+- `print` statements → `print()` calls (≈ 324), with trailing commas → `end=' '`.
+- `apply(f, args, kw)` → `f(*args, **kw)`; backticks → `repr()`; `d.has_key(k)` → `k in d`;
+  `raise E, msg` → `raise E(msg)`; `raw_input` → `input`.
+- `Tkinter`/`tkFileDialog`/`tkMessageBox`/`tkColorChooser` → `tkinter.*`.
+- Dict views and `range()` wrapped in `list()` where 2to3 could not prove an iterator is enough.
+  This is harmless, so I didn't hand-tune it.
+- `self.failUnless(...)` → `self.assertTrue(...)` (`fix_asserts`).
+- `from __future__ import division` removed from `camfr/__init__.py`; true division is the default in Python 3.
+
+**What 2to3 does not fix.** The following entries deal with each of these:
+
+- implicit relative imports inside the `camfr` package;
+- `list.sort(cmpfunc)` and `file()`;
+- Python 2 floor division of integers (`int / int`), which silently becomes true division;
+- modules that no longer exist (`Canvas`, `Image`, `MLab`, `Numeric`, `numpy.oldnumeric`);
+- `unittest.makeSuite`, removed in Python 3.13;
+- `distutils`, removed in Python 3.12.

@@ -15,8 +15,8 @@ class section2(unittest.TestCase):
 
         """Section 2"""
 
-        print
-        print "Running section 2..."
+        print()
+        print("Running section 2...")
         
         set_lambda(1.55)
         set_N(1)
@@ -44,7 +44,7 @@ class section2(unittest.TestCase):
 
         n_eff_0 = s.mode(0).n_eff()
         n_eff_0_OK = 2.41228943244-2.91399206483e-08j
-        print n_eff_0, "expected", n_eff_0_OK
+        print(n_eff_0, "expected", n_eff_0_OK)
         n_eff_0_pass = abs((n_eff_0 - n_eff_0_OK)/n_eff_0_OK) < eps.testing_eps
 
         free_tmps()
@@ -52,7 +52,7 @@ class section2(unittest.TestCase):
         set_left_wall (E_wall)
         set_right_wall(E_wall)
         
-        self.failUnless(n_eff_0_pass)
+        self.assertTrue(n_eff_0_pass)
 
 suite = unittest.makeSuite(section2, 'test')
 

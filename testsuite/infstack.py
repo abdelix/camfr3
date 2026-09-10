@@ -17,8 +17,8 @@ class infstack(unittest.TestCase):
         
         """Semi-infinite stack"""
 
-        print
-        print "Running semi-infinite stack..."
+        print()
+        print("Running semi-infinite stack...")
 
         set_N(40)
         set_polarisation(TE)
@@ -68,7 +68,7 @@ class infstack(unittest.TestCase):
         R = s.R12(0,0)
         R_OK = 0.222979277262-0.283388447399j
 
-        print R, "expected", R_OK
+        print(R, "expected", R_OK)
 
         R_pass = abs((R - R_OK) / R_OK) < eps.testing_eps
 
@@ -76,7 +76,7 @@ class infstack(unittest.TestCase):
 
         set_upper_PML(0)
        
-        self.failUnless(R_pass)
+        self.assertTrue(R_pass)
 
         free_tmps()
 

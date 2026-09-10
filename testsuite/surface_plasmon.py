@@ -16,8 +16,8 @@ class surface_plasmon(unittest.TestCase):
 
         """Surface plasmon"""
 
-        print
-        print "Running surface plasmon..."
+        print()
+        print("Running surface plasmon...")
 
         # Initialisation calculation parameters.
         
@@ -59,7 +59,7 @@ class surface_plasmon(unittest.TestCase):
         n_eff_OK   = 1.30342585412
         n_eff_test = sample.mode(1).n_eff().real
         
-        print n_eff_test , "expected", n_eff_OK
+        print(n_eff_test , "expected", n_eff_OK)
         n_eff_pass = abs((n_eff_test-n_eff_OK)/n_eff_OK) < eps.testing_eps
 
         free_tmps()
@@ -69,7 +69,7 @@ class surface_plasmon(unittest.TestCase):
         set_mode_surplus(1.5)
         set_low_index_core(False)
 
-        self.failUnless(n_eff_pass)
+        self.assertTrue(n_eff_pass)
 
 suite = unittest.makeSuite(surface_plasmon, 'test')
 

@@ -16,8 +16,8 @@ class blazed_grating(unittest.TestCase):
         
         """Blazed grating"""
 
-        print
-        print "Running blazed grating..."
+        print()
+        print("Running blazed grating...")
 
         set_lambda(1.55)
         set_N(30)
@@ -107,8 +107,8 @@ class blazed_grating(unittest.TestCase):
         R_OK = 0.400333359695
         T_OK = 0.204851452350
 
-        print R, "expected", R_OK
-        print T, "expected", T_OK
+        print(R, "expected", R_OK)
+        print(T, "expected", T_OK)
 
         R_pass = abs((R - R_OK) / R_OK) < eps.testing_eps
         T_pass = abs((T - T_OK) / T_OK) < eps.testing_eps
@@ -118,7 +118,7 @@ class blazed_grating(unittest.TestCase):
         set_lower_PML(0)
         set_upper_PML(0)
 
-        self.failUnless(R_pass and T_pass)
+        self.assertTrue(R_pass and T_pass)
 
 suite = unittest.makeSuite(blazed_grating, 'test')        
 

@@ -15,8 +15,8 @@ class grating2(unittest.TestCase):
 
         """Grating 2"""
 
-        print
-        print "Running grating 2..."
+        print()
+        print("Running grating 2...")
 
         set_polarisation(TE)
         set_lambda(.84)
@@ -64,12 +64,12 @@ class grating2(unittest.TestCase):
     
         R = stack.R12(0,0)
         R_OK = 0.415900175747+0.0326513148086j
-        print R, "expected", R_OK
+        print(R, "expected", R_OK)
         R_pass = abs((R - R_OK) / R_OK) < eps.testing_eps
 
         free_tmps()
            
-        self.failUnless(R_pass)
+        self.assertTrue(R_pass)
 
 suite = unittest.makeSuite(grating2, 'test')
 

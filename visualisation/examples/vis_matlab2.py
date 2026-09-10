@@ -42,5 +42,5 @@ for W in arange(.100,.200,.010):
 
     free_tmps()
 
-raw_input("Press <enter> to continue.")
+input("Press <enter> to continue.")
 

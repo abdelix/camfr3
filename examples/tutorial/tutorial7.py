@@ -49,6 +49,6 @@ outfile = file("tutorial7.out",'w')
 steps2 = 100
 for i in range(steps2):
     x = i * w / steps2
-    print >> outfile, x, index(x), slab.n(Coord(x, 0, 0)).real
+    print(x, index(x), slab.n(Coord(x, 0, 0)).real, file=outfile)
 
 outfile.close()

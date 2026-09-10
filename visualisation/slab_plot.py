@@ -9,7 +9,7 @@
 
 from camfr import *
 from numpy import *
-from Tkinter import *
+from tkinter import *
 from TkPlotCanvas import *
 
 
@@ -429,12 +429,11 @@ class PlotCanvasXY(PlotCanvas):
     
    def __init__(self, master, width, height, background='white', **attr):
 
-         if attr.has_key('giveXY'):
+         if 'giveXY' in attr:
             self.giveXY = attr['giveXY']
             del attr['giveXY']
 
-         apply(PlotCanvas.__init__,
-              (self, master, width, height, background), attr)
+         PlotCanvas.__init__(*(self, master, width, height, background), **attr)
          
          #enables mouse selecting
          self.canvas.bind('<ButtonRelease-1>', self._mouseRelease2)

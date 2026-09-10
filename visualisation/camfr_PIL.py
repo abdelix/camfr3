@@ -81,7 +81,7 @@ def _create_window_and_draw(drawobject):
     window.pack(fill=BOTH, expand=YES)
 
     def display(value):
-        print value
+        print(value)
 
     c = PlotCanvas( window, 500, 500, zoom=1, select=display,
                     relief=SUNKEN,border=2)
@@ -202,8 +202,8 @@ def _create_scaled_arrow_plot(px, pz, r_x=0, r_y=0,
     pz*=scale_x
     px*=scale_y
     
-    for x in np.array(range(width))[::ARROWSIZE]:
-        for y in np.array(range(height))[::ARROWSIZE]:
+    for x in np.array(list(range(width)))[::ARROWSIZE]:
+        for y in np.array(list(range(height)))[::ARROWSIZE]:
             X = scale_x*x
             Y = scale_y*y
             _create_arrow(draw,(X,Y), pz[y,x], px[y,x])
@@ -232,8 +232,8 @@ def _scale_function(z, r_x, r_y, min_area, scale):
     height = z.shape[0]
     width  = z.shape[1]
 
-    if type(r_x)!=np.ndarray or np.asarray(r_x).shape[0]==1: r_x = range(width)
-    if type(r_y)!=np.ndarray or np.asarray(r_y).shape[0]==1: r_y = range(height)
+    if type(r_x)!=np.ndarray or np.asarray(r_x).shape[0]==1: r_x = list(range(width))
+    if type(r_y)!=np.ndarray or np.asarray(r_y).shape[0]==1: r_y = list(range(height))
 
     if len(r_x)>1:  d_x = r_x[1] - r_x[0]
     else :          d_x = 1
@@ -371,7 +371,7 @@ def _create_arrow_plot(px, pz, r_x=0, r_y=0,
 
 def _output_pic(pic, filename=0):
 
-    import Tkinter, ImageTk, os, sys
+    import tkinter, ImageTk, os, sys
     
     if filename:
         if '.' in filename:
@@ -384,16 +384,16 @@ def _output_pic(pic, filename=0):
         script_path = os.path.abspath(script)
         pic_path    = os.path.dirname(script_path)+slash+filename
         if not suffix in formats:
-            print "File format not supported. Defaulting to jpg."
+            print("File format not supported. Defaulting to jpg.")
             pic_path += ".jpg"
 
         pic.save(pic_path)    
-        print "Created", pic_path
+        print("Created", pic_path)
     else:
-        root     = Tkinter.Tk()    
-        canvas   = Tkinter.Canvas(width=pic.size[0], height=pic.size[1])
+        root     = tkinter.Tk()    
+        canvas   = tkinter.Canvas(width=pic.size[0], height=pic.size[1])
         backdrop = ImageTk.PhotoImage(pic)
-        canvas.create_image(0, 0, image=backdrop, anchor=Tkinter.NW)
+        canvas.create_image(0, 0, image=backdrop, anchor=tkinter.NW)
         canvas.pack()
 
         root.mainloop()
@@ -529,7 +529,7 @@ def _create_phasor_movie(z_, r_x=0, r_y=0, min_area=100000, scale=1, ln=0):
 
 def _output_movie(movie, filename):
 
-    import Tkinter, ImageTk, gifmaker, os, sys
+    import tkinter, ImageTk, gifmaker, os, sys
 
     frames = len(movie)
 
@@ -544,7 +544,7 @@ def _output_movie(movie, filename):
         if '.' in filename:
             (name, suffix) = os.path.splitext(filename)
             if suffix != '.gif':
-                print "File format not supported. Defaulting to gif."
+                print("File format not supported. Defaulting to gif.")
                 filename = filename[:filename.index('.')] + ".gif"
         else:
             filename += ".gif"
@@ -557,10 +557,10 @@ def _output_movie(movie, filename):
         
         gifmaker.makedelta(fp, movie)
         fp.close()
-        print  "Created", userpath
+        print("Created", userpath)
 
     else:
-        root = Tkinter.Tk()
+        root = tkinter.Tk()
         
         # Close window procedure.
 
@@ -570,14 +570,14 @@ def _output_movie(movie, filename):
         
         # Animate picture.
         
-        canvas = Tkinter.Canvas(width=movie[0].size[0],
+        canvas = tkinter.Canvas(width=movie[0].size[0],
                                 height=movie[0].size[1])
 
         while not stop[0]:
             for x in range(frames):
                 if stop[0]: break
                 backdrop = ImageTk.PhotoImage(movie[x])
-                canvas.create_image(0, 0, image=backdrop, anchor=Tkinter.NW)
+                canvas.create_image(0, 0, image=backdrop, anchor=tkinter.NW)
                 canvas.pack()
                 root.update()
                 root.after(int(100))
@@ -748,7 +748,7 @@ def plot_n_stack(stack, r_x, r_z, r_y=0, filename=0, colormap=whiteblack):
     except TypeError:
       rzrange = True
     if rxrange and ryrange and rzrange:
-      print "Error: plot_n_stack can only make cross sections."
+      print("Error: plot_n_stack can only make cross sections.")
 
     n = np.zeros([len(ax1),len(ax2)],float)
     if rzrange:
@@ -786,7 +786,7 @@ def plot_arrow_stack(stack, r_x, r_z, r_y = 0, filename=0):
     except TypeError:
       rzrange = True
     if rxrange and ryrange and rzrange:
-      print "Error: plot_n_stack can only make cross sections"
+      print("Error: plot_n_stack can only make cross sections")
     px   = np.zeros([len(r_x),len(r_z)], float)
     py   = np.zeros([len(r_y),len(r_z)], float)
     pz   = np.zeros([len(r_x),len(r_z)], float)
@@ -836,7 +836,7 @@ def plot_n(o, r1, r2=0, r3=0, filename=0, colormap=whiteblack):
     elif type(o) == Section:
         plot_n_section(o, r1, r2, filename, colormap)
     else:
-        print "Unsupported argument for plot_n."
+        print("Unsupported argument for plot_n.")
 
 
 
@@ -894,7 +894,7 @@ def plot_field_stack(stack, component, r_x, r_z, r_y = 0, filename=0,
     except TypeError:
       rzrange = True
     if rxrange and ryrange and rzrange:
-      print "Error: plot_n_stack can only make cross sections"
+      print("Error: plot_n_stack can only make cross sections")
 
     f = np.zeros([len(ax1),len(ax2)], float)
     if rzrange:
@@ -1012,16 +1012,16 @@ def _calc_arrow_stack(px, pz, stack, r_x, r_z):
     
     global ARROWSIZE
     if get_polarisation() == TM:
-        for x in np.array(range(len(r_x)))[::ARROWSIZE]:
-            for z in np.array(range(len(r_z)))[::ARROWSIZE]:
+        for x in np.array(list(range(len(r_x))))[::ARROWSIZE]:
+            for z in np.array(list(range(len(r_z))))[::ARROWSIZE]:
                 f       = stack.field(Coord(r_x[x], 0, r_z[z]))
                 h2      = f.H2().conjugate()
                 px[x,z] = (-f.Ez() * h2).real
                 pz[x,z] = ( f.E1() * h2).real
 
     elif get_polarisation() == TE:
-        for x in np.array(range(len(r_x)))[::ARROWSIZE]:
-            for z in np.array(range(len(r_z)))[::ARROWSIZE]:
+        for x in np.array(list(range(len(r_x))))[::ARROWSIZE]:
+            for z in np.array(list(range(len(r_z))))[::ARROWSIZE]:
                 f       = stack.field(Coord(r_x[x], 0, r_z[z]))
                 e2      = f.E2()
                 px[x,z] = ( e2 * f.Hz().conjugate()).real
@@ -1029,24 +1029,24 @@ def _calc_arrow_stack(px, pz, stack, r_x, r_z):
 
     elif get_polarisation() == TE_TM: # 3D stack
         if len(r_x)==1:
-          for y in np.array(range(len(r_y)))[::ARROWSIZE]:
-             for z in np.array(range(len(r_z)))[::ARROWSIZE]:
+          for y in np.array(list(range(len(r_y))))[::ARROWSIZE]:
+             for z in np.array(list(range(len(r_z))))[::ARROWSIZE]:
                 f = stack.field(Coord(x,r_y[y], r_z[z]))
                 py[y,z] = (f.H1().conjugate()*f.Ez() \
                            -f.E1()*f.Hz().conjugate()).real
                 pz[y,z] = (f.E1()*f.H2().conjugate() \
                            -f.H1().conjugate()*f.E2()).real
         elif len(r_y)==1:
-          for x in np.array(range(len(r_x)))[::ARROWSIZE]:
-             for z in np.array(range(len(r_z)))[::ARROWSIZE]:
+          for x in np.array(list(range(len(r_x))))[::ARROWSIZE]:
+             for z in np.array(list(range(len(r_z))))[::ARROWSIZE]:
                 f = stack.field(Coord(r_x[x],y, r_z[z]))
                 px[x,z] = (f.E2()*f.Hz().conjugate() \
                            -f.H2().conjugate()*f.Ez()).real
                 pz[x,z] = (f.E1()*f.H2().conjugate() \
                            -f.H1().conjugate()*f.E2()).real
         else:
-          for x in np.array(range(len(r_x)))[::ARROWSIZE]:
-             for y in np.array(range(len(r_y)))[::ARROWSIZE]:
+          for x in np.array(list(range(len(r_x))))[::ARROWSIZE]:
+             for y in np.array(list(range(len(r_y))))[::ARROWSIZE]:
                 f = stack.field(Coord(r_x[x],r_y[y], z))
                 px[y,x] = (f.E2()*f.Hz().conjugate() \
                            -f.H2().conjugate()*f.Ez()).real
@@ -1054,7 +1054,7 @@ def _calc_arrow_stack(px, pz, stack, r_x, r_z):
                            -f.H1().conjugate()*f.E2()).real
 
     else:
-        print "Error: no polarisation defined."
+        print("Error: no polarisation defined.")
 
     
 
@@ -1115,7 +1115,7 @@ def plot_field(o, component, r1, r2=0, r3=0, filename=0,
         plot_field_section_mode(o,component,r1,r2,filename,colormap,overlay_n,
                                 contour)
     else:
-        print "Unsupported argument for plot_field."
+        print("Unsupported argument for plot_field.")
         
 
 
@@ -1156,7 +1156,7 @@ def animate_field_stack(stack, component, r_x, r_z, r_y = 0, filename=0,
     except TypeError:
       rzrange = True
     if rxrange and ryrange and rzrange:
-      print "Error: plot_n_stack can only make cross sections"
+      print("Error: plot_n_stack can only make cross sections")
 
     f = np.zeros([len(ax1),len(ax2)], complex)
     if rzrange:
@@ -1241,7 +1241,7 @@ def animate_field(o, component, r1, r2, r3=0, filename=0, overlay_n=1,
         animate_field_section_mode(o,component,r1,r2,filename,
                                    overlay_n,contour)
     else:
-        print "Unsupported argument for animate_field."
+        print("Unsupported argument for animate_field.")
 
 
 

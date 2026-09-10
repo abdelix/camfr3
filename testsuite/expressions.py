@@ -15,8 +15,8 @@ class expressions(unittest.TestCase):
         
         """Expressions"""
 
-        print
-        print "Running expressions..."
+        print()
+        print("Running expressions...")
 
         a = Material(1)
         
@@ -71,7 +71,7 @@ class expressions(unittest.TestCase):
 
         free_tmps()
 
-        self.failUnless(1)
+        self.assertTrue(1)
 
 suite = unittest.makeSuite(expressions, 'test')        
 

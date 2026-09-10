@@ -16,8 +16,8 @@ class plasmon_biosensor(unittest.TestCase):
 
         """Plasmon biosensor"""
 
-        print
-        print "Running plasmon biosensor..."
+        print()
+        print("Running plasmon biosensor...")
 
         # Initialisation calculation parameters.
         
@@ -61,7 +61,7 @@ class plasmon_biosensor(unittest.TestCase):
         
         T    = 10*log10(abs(stack.T12(0,0))**2)	
         T_OK = -25.5819930951
-        print T, "expected", T_OK
+        print(T, "expected", T_OK)
         T_pass = abs((T-T_OK)/T_OK) < eps.testing_eps
         
         set_polarisation(TE)
@@ -74,7 +74,7 @@ class plasmon_biosensor(unittest.TestCase):
         set_lower_PML(0)
         set_orthogonal(True)
 
-        self.failUnless(T_pass)
+        self.assertTrue(T_pass)
 
 suite = unittest.makeSuite(plasmon_biosensor, 'test')
 

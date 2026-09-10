@@ -15,8 +15,8 @@ class VCSEL(unittest.TestCase):
         
         """VCSEL"""
 
-        print
-        print "Running VCSEL..."
+        print()
+        print("Running VCSEL...")
 
         set_lambda(.980)
         set_N(100)
@@ -82,8 +82,8 @@ class VCSEL(unittest.TestCase):
         wavelength_OK = 0.980365834012
         gain_OK = 1182.17331249
 
-        print wavelength, "expected", wavelength_OK
-        print gain, "expected", gain_OK
+        print(wavelength, "expected", wavelength_OK)
+        print(gain, "expected", gain_OK)
 
         wavelength_pass \
           = abs((wavelength - wavelength_OK)/wavelength_OK) < eps.testing_eps
@@ -95,7 +95,7 @@ class VCSEL(unittest.TestCase):
 
         set_circ_PML(0)
 
-        self.failUnless(wavelength_pass and gain_pass)
+        self.assertTrue(wavelength_pass and gain_pass)
 
 suite = unittest.makeSuite(VCSEL, 'test')        
 

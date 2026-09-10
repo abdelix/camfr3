@@ -71,7 +71,7 @@ splitter = Stack(  5*(cen(2*r) + no_rods(a-2*r))                   \
 splitter.set_inc_field(wg.mode(guided).fw_field())
 splitter.calc()
 
-print "R", splitter.R12(0,0)
+print("R", splitter.R12(0,0))
 
 # Calculate field.
 
@@ -79,8 +79,8 @@ outfile = open("splitter.out", 'w')
 
 for x in arange(0.000, no_rods.width() - cl - a, a/20.):
     for z in arange(0.000, splitter.length(), a/20.):
-        print >> outfile, abs(splitter.field(Coord(x, 0, z)).E2()),
-    print >> outfile
+        print(abs(splitter.field(Coord(x, 0, z)).E2()), end=' ', file=outfile)
+    print(file=outfile)
 
 outfile.close()    
 

@@ -7,7 +7,7 @@
 # Last revision: 2002-5-14
 #
 
-from Tkinter import *
+from tkinter import *
 from Canvas import Line, CanvasText
 import string, numpy
 
@@ -26,7 +26,7 @@ class PolyPoints:
         self.points = numpy.array(points)
         self.scaled = self.points
         self.attributes = {}
-        for name, value in self._attributes.items():
+        for name, value in list(self._attributes.items()):
             try:
                 value = attr[name]
             except KeyError: pass
@@ -42,7 +42,7 @@ class PolyPoints:
     def writeToFile(self, file, separator):
         if self.points.any():
             for p in self.points:
-                file.write(`p[0]` + separator + `p[1]` + '\n')
+                file.write(repr(p[0]) + separator + repr(p[1]) + '\n')
             return 1
         else:
             return 0
@@ -86,7 +86,7 @@ class PolyLine(PolyPoints):
                 x1, y1 = self.scaled[i]
                 x2, y2 = self.scaled[i+1]
                 arguments = arguments + (x1, y1, x2, y2)
-            apply(Line, arguments, options)
+            Line(*arguments, **options)
 
 class VerticalLine(PolyLine):
 
@@ -108,7 +108,7 @@ class VerticalLine(PolyLine):
     """
 
     def __init__(self, xpos, **attr):
-        apply(PolyLine.__init__, (self, 2*[(xpos, 0.)]), attr)
+        PolyLine.__init__(*(self, 2*[(xpos, 0.)]), **attr)
 
     def draw(self, canvas, bbox):
         self.scaled[0, 1] = bbox[0][1]
@@ -138,8 +138,8 @@ class HorizontalLine(PolyLine):
     """
 
     def __init__(self, ypos, **attr):
-        print ypos
-        apply(PolyLine.__init__, (self, 2*[(0., ypos)]), attr)
+        print(ypos)
+        PolyLine.__init__(*(self, 2*[(0., ypos)]), **attr)
 
     def draw(self, canvas, bbox):
         self.scaled[0, 0] = bbox[0][0]
@@ -342,14 +342,14 @@ class PlotCanvas(Frame):
                  font="-*-helvetica-medium-r-normal--10-*-*-*-*-*-*-*",
                  **attr):
         self.zoom = 0
-        if attr.has_key('zoom'):
+        if 'zoom' in attr:
             self.zoom = attr['zoom']
             del attr['zoom']
         self.selectfn = None
-        if attr.has_key('select'):
+        if 'select' in attr:
             self.selectfn = attr['select']
             del attr['select']
-        apply(Frame.__init__, (self, master), attr)
+        Frame.__init__(*(self, master), **attr)
         self.canvas = Canvas(self, width=width, height=height,
                              background=background)
         self.canvas.pack(fill=BOTH, expand=YES)
@@ -393,7 +393,7 @@ class PlotCanvas(Frame):
         self.redraw()
 
     def bind(self, *args):
-        apply(self.canvas.bind, args)
+        self.canvas.bind(*args)
 
     def _testFont(self, font):
         if font is not None:
@@ -495,7 +495,7 @@ class PlotCanvas(Frame):
                 return lower, upper
             else:
                 return upper, lower
-        raise ValueError, str(spec) + ': illegal axis specification'
+        raise ValueError(str(spec) + ': illegal axis specification')
 
     def _drawAxes(self, canvas, xaxis, yaxis,
                   bb1, bb2, scale, shift, xticks, yticks):
@@ -516,7 +516,7 @@ class PlotCanvas(Frame):
                          fill = 'black', width = 1)
                     if text:
                         dict['text'] = label
-                        apply(CanvasText, (self.canvas, p[0], p[1]), dict)
+                        CanvasText(*(self.canvas, p[0], p[1]), **dict)
                 text = 0
 
         dict['anchor'] = E
@@ -534,7 +534,7 @@ class PlotCanvas(Frame):
                          fill = 'black', width = 1)
                     if text:
                         dict['text'] = label
-                        apply(CanvasText, (self.canvas, p[0], p[1]), dict)
+                        CanvasText(*(self.canvas, p[0], p[1]), **dict)
                 text = 0
 
     def _ticks(self, lower, upper):
@@ -556,10 +556,10 @@ class PlotCanvas(Frame):
             format = '%+7.0e'
         elif power >= 0:
             digits = max(1, int(power))
-            format = '%' + `digits`+'.0f'
+            format = '%' + repr(digits)+'.0f'
         else:
             digits = -int(power)
-            format = '%'+`digits+2`+'.'+`digits`+'f'
+            format = '%'+repr(digits+2)+'.'+repr(digits)+'f'
         ticks = []
         t = -grid*numpy.floor(-lower/grid)
         while t <= upper and len(ticks) < 200:
@@ -574,7 +574,7 @@ class PlotCanvas(Frame):
         dict = {'anchor': NW, 'text': text, 'fill': bg}
         if self.font is not None:
             dict['font'] = self.font
-        item = apply(CanvasText, (self.canvas, 0., 0.), dict)
+        item = CanvasText(*(self.canvas, 0., 0.), **dict)
         bb = self.canvas.bbox(item)
         self.canvas.delete(item)
         return bb
@@ -589,7 +589,7 @@ class PlotCanvas(Frame):
     def redraw(self):
         "Redraws the last canvas contents."
         if self.last_draw is not None:
-            apply(self.draw, self.last_draw)
+            self.draw(*self.last_draw)
 
     def _mousePressed(self, event):
         self.startx = self.canvas.canvasx(event.x)
@@ -748,7 +748,7 @@ if __name__ == '__main__':
 
     def display(value):
         select(value)
-        print value
+        print(value)
 
     c = PlotCanvas(window, "300", "200", relief=SUNKEN, border=2,
                    zoom = 1, select = display)

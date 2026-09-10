@@ -123,8 +123,8 @@ def __Section_plot(self, field="Ex", mode=0, dx=0.100, dy=0.100, annotations=Tru
     # create the complementary array of CAMFR fields
     try:
         cfield = [fieldopts[a] for a in    [b.lower() for b in field]  ]
-    except KeyError, k:
-        raise ValueError(  "Unrecognized value %s found for the `field` argument. " % k  + "The following options are valid: %s"  % fieldopts.keys()  )
+    except KeyError as k:
+        raise ValueError(  "Unrecognized value %s found for the `field` argument. " % k  + "The following options are valid: %s"  % list(fieldopts.keys())  )
     #end try(fieldopts)
     
         
@@ -162,7 +162,7 @@ def __Section_plot(self, field="Ex", mode=0, dx=0.100, dy=0.100, annotations=Tru
         m = m+1
         for camfrfield in cfield:
             f = f+1
-            print( "Calculating fields for Mode %i: %s" %( modeN,field[f].title() )  )
+            print(( "Calculating fields for Mode %i: %s" %( modeN,field[f].title() )  ))
             x = np.arange(0, obj.width(), dx)
             y = np.arange(0, obj.height(), dy)
             X,Y = np.meshgrid(x,y)

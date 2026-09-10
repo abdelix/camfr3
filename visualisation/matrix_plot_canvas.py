@@ -7,7 +7,7 @@
 #
 ##############################################################################
 
-from Tkinter import *
+from tkinter import *
 
 ##############################################################################
 #
@@ -25,16 +25,16 @@ class MatrixPlotCanvas(Frame):
     def __init__(self, master, width, height, **attr):
 
         self.zoom = 0
-        if attr.has_key('zoom'):
+        if 'zoom' in attr:
             self.zoom = attr['zoom']
             del attr['zoom']
             
         self.selectfn = None
-        if attr.has_key('select'):
+        if 'select' in attr:
             self.selectfn = attr['select']
             del attr['select']
             
-        apply(Frame.__init__, (self, master), attr)
+        Frame.__init__(*(self, master), **attr)
 
         self.canvas = Canvas(self, width=width, height=height)
         self.canvas.pack(fill=BOTH, expand=YES)
@@ -82,7 +82,7 @@ class MatrixPlotCanvas(Frame):
 
     def draw(self,pic):
 
-        import Tkinter, ImageTk
+        import tkinter, ImageTk
 
         # Old band has no connection with new draw.
         if self.rubberband:
@@ -99,7 +99,7 @@ class MatrixPlotCanvas(Frame):
         self.xborder = int(( ca_w - im_w )/ 2)
         
         self.canvas.create_image(self.xborder, self.yborder,
-                                 image=self.myImage, anchor=Tkinter.NW)
+                                 image=self.myImage, anchor=tkinter.NW)
         
         self.canvas.update()
 

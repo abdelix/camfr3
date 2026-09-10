@@ -15,8 +15,8 @@ class gaussian(unittest.TestCase):
 
         """Gaussian"""
 
-        print
-        print "Running Gaussian..."
+        print()
+        print("Running Gaussian...")
 
         set_N(40)
         set_lambda(1.55)
@@ -39,7 +39,7 @@ class gaussian(unittest.TestCase):
         T = abs(s.trans_field()[0])
         T_OK = 0.217622614347
 
-        print T, "expected", T_OK
+        print(T, "expected", T_OK)
         T_pass = abs((T - T_OK) / T_OK) < eps.testing_eps
 
         free_tmps()
@@ -47,7 +47,7 @@ class gaussian(unittest.TestCase):
         set_lower_PML(0)
         set_upper_PML(0)
            
-        self.failUnless(T_pass)
+        self.assertTrue(T_pass)
 
 suite = unittest.makeSuite(gaussian, 'test')
 

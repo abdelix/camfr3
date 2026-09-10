@@ -16,8 +16,8 @@ class taper(unittest.TestCase):
         
         """Taper"""
 
-        print
-        print "Running taper..."
+        print()
+        print("Running taper...")
         
         set_N(40)
 
@@ -86,7 +86,7 @@ class taper(unittest.TestCase):
         R = taper.R12(0,0)
         R_OK = 0.0273696979622+0.337022950103j
         
-        print R, "expected", R_OK
+        print(R, "expected", R_OK)
         R_pass = abs((R - R_OK) / R_OK) < eps.testing_eps
 
         free_tmps()
@@ -95,7 +95,7 @@ class taper(unittest.TestCase):
 
         set_upper_PML(0)
        
-        self.failUnless(R_pass)
+        self.assertTrue(R_pass)
 
 suite = unittest.makeSuite(taper, 'test')        
 

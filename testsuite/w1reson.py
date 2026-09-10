@@ -46,8 +46,8 @@ class w1reson(unittest.TestCase):
         
         """W1 resonator"""
 
-        print
-        print "Running W1 resonator..."
+        print()
+        print("Running W1 resonator...")
         
         set_lambda(1.526)
 
@@ -89,10 +89,10 @@ class w1reson(unittest.TestCase):
         ra_OK =  0.764317811335
         rp_OK =  0.291072912404
 
-        print ta, "expected", ta_OK
-        print tp, "expected", tp_OK
-        print ra, "expected", ra_OK
-        print rp, "expected", rp_OK
+        print(ta, "expected", ta_OK)
+        print(tp, "expected", tp_OK)
+        print(ra, "expected", ra_OK)
+        print(rp, "expected", rp_OK)
 
         ta_pass = abs((ta-ta_OK)/ta_OK) < eps.testing_eps
         tp_pass = abs((tp-tp_OK)/tp_OK) < eps.testing_eps
@@ -101,7 +101,7 @@ class w1reson(unittest.TestCase):
         
         free_tmps()
 
-        self.failUnless(ta_pass and tp_pass and ra_pass and rp_pass)
+        self.assertTrue(ta_pass and tp_pass and ra_pass and rp_pass)
 
         set_solver(track)
         set_orthogonal(1)

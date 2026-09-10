@@ -35,6 +35,6 @@ outfile = file("tutorial3.out",'w')
 for L in arange(0.000, 0.500, 0.010):    
     stack = Stack(normal(0) + thick(L) + normal(0))
     stack.calc()
-    print >> outfile, L, abs(stack.R12(0,0))
+    print(L, abs(stack.R12(0,0)), file=outfile)
 
 outfile.close()

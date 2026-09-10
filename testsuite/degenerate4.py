@@ -15,8 +15,8 @@ class degenerate4(unittest.TestCase):
 
         """Degenerate 4"""
 
-        print
-        print "Running degenerate 4..."
+        print()
+        print("Running degenerate 4...")
 
 
         set_lambda(1.5)
@@ -40,12 +40,12 @@ class degenerate4(unittest.TestCase):
         R = s.R12(0,0)
         R_OK = 0.0
 
-        print R, "expected", R_OK
+        print(R, "expected", R_OK)
         R_pass = abs(R - R_OK) < eps.testing_eps
 
         free_tmps()
         
-        self.failUnless(R_pass)
+        self.assertTrue(R_pass)
 
 suite = unittest.makeSuite(degenerate4, 'test')
 
