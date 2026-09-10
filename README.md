@@ -122,13 +122,18 @@ See the Examples directory for full examples, as some details are missing here.
 
 
 ## Installation
-CAMFR currently only supports Python 2.7.
+CAMFR runs on Python 3. It has been tested with Python 3.14 and NumPy 2.3 on Linux. The original code base supported Python 2.7 only; `PORTING_JOURNAL.md` documents every change made for the port.
 
-To use CAMFR, download one of the released versions (see the "releases" or "tags" section of this github repo), or the bleeding-edge code, and extract the archive into a directory.  Follow the instruction in the `INSTALL` text file for your system.  You will have to compile the CAMFR library, as it compiles C code to generate the Python library.  A number of dependencies are required, which you can hopefully install easily through your system's package manager, or download directly from the developer websites.
+You have to compile the CAMFR library. This requires a C++ and a Fortran compiler, SCons, Boost.Python built for your Python version, Blitz++, BLAS and LAPACK. On Linux:
 
-The preferred method to run your scripts is through a Python IDE like Spyder (a matlab-like IDE).  The simplest installation of Spyder (along with all required scientific python modules) can be accomplished via [Python(x,y)](https://code.google.com/p/pythonxy/) (Win) or [Anaconda](http://continuum.io/downloads) (Mac,Win,Linux), or from source, for example via MacPorts `port install py27-spyder` on Mac OS. 
+    cp machine_cfg.py.linux machine_cfg.py
+    python3 -m pip install .
 
-CAMFR scripts can also be run like any typical Python script on the command line via `python myScript.py` or `python -i myScript.py` to make it interactive afterwards.
+See the `INSTALL` file for the full list of dependencies and further options.
+
+CAMFR scripts can be run like any other Python script with `python3 myScript.py`, or with `python3 -i myScript.py` to stay in the interpreter afterwards.
+
+Modules shipped inside the package are imported through the package, e.g. `from camfr.RCLED import *`. The Python 2 installer also made them importable as top-level modules (`from RCLED import *`).
 
 
 
