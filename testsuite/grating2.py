@@ -45,10 +45,10 @@ class grating2(unittest.TestCase):
 
         if groove_depth < d_guide:
             etched = Slab(substrate(d_sub) + guiding(d_guide - groove_depth) \
-			  + air(groove_depth + d_air))
+                          + air(groove_depth + d_air))
         else:
             etched = Slab(substrate(d_sub - (groove_depth-d_guide)) \
-			  + air(groove_depth + d_air))
+                          + air(groove_depth + d_air))
 
         # Define 2D stack.
 

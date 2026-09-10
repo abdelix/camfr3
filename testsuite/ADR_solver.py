@@ -30,8 +30,8 @@ class ADR_solver(unittest.TestCase):
         InGaAsP_1_55 = Material(3.61)
 
         s_ADR = Slab(InP(1.5) + InGaAsP_1_25(0.1) + InGaAsP_1_55(.15)    \
-		     + InGaAsP_1_25(0.1)                                 \
-		     + InP(0.5) + InGaAs(0.05) + FeCo(0.05))
+                     + InGaAsP_1_25(0.1)                                 \
+                     + InP(0.5) + InGaAs(0.05) + FeCo(0.05))
 
         s_ADR.calc()
 

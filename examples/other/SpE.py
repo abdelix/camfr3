@@ -50,7 +50,7 @@ for d in arange(0.01, 3.0, 0.05):
     # Numerical formula as ratio of total emitted powers.
 
     numeric =   half.     field(Coord(0,0,0)).E1().real   \
-	      / half_open.field(Coord(0,0,0)).E1().real 
+              / half_open.field(Coord(0,0,0)).E1().real 
 
     print d, exact, numeric
 

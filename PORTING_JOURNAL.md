@@ -50,7 +50,7 @@ for d in *.deb; do dpkg -x "$d" ../boost-root; done
 ```
 
 On a machine where you have root, `sudo apt install libboost-python-dev` gives the same
-library in `/usr`. The build configuration (entry 3) accepts either location.
+library in `/usr`. The build configuration (entry 2) accepts either location.
 
 ### 2. Build configuration for SCons 4 and Python 3
 
@@ -162,3 +162,29 @@ from third-party code, and I left them alone:
 - `std::auto_ptr` deprecation inside Boost.Python 1.90's own headers.
 - K&R-style function definitions (`-Wold-style-definition`) in the vendored C file
   `math/bessel/slatec/machar.c`. I kept it untouched so the vendored SLATEC code stays pristine.
+
+### 6. Mixed tab/space indentation
+
+Commit: `style: expand tab indentation to spaces`
+
+**Issue.** 25 of the 105 Python files indent with a mix of tabs and spaces (e.g.
+`testsuite/slab.py`, lines 20 and 35). Python 2 advances a tab to the next multiple of 8
+columns. Python 3 rejects ambiguous mixes with `TabError`. The `py35_compat` branch fixed these
+files by hand, and its commit messages admit that loops and conditionals may have been "screwed up".
+
+**Resolution.** A small script expands tabs **only in the leading indentation**, using
+`str.expandtabs(8)`, which is exactly Python 2's rule. Tabs inside string literals and comments
+are left alone. I made this a separate, behaviour-neutral commit ahead of the syntax conversion,
+so it can be reviewed on its own:
+
+```python
+LEADING = re.compile(rb"^[ \t]*")
+indent = LEADING.match(line).group(0)
+if b"\t" in indent:
+    line = indent.expandtabs(8) + line[len(indent):]
+```
+
+**Verification.** For each changed file I compared the token streams of `HEAD` and the working
+tree, including `INDENT`/`DEDENT`, using the Python 2 tokenizer from `lib2to3` (run under Python
+3.12). There were 0 mismatches in 25 files, and no tracked `.py` file still has a tab in its
+indentation.

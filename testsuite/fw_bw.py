@@ -17,7 +17,7 @@ class fw_bw(unittest.TestCase):
 
         print
         print "Running fw_bw..."
-	
+        
         set_lambda(1)
         set_N(20)
         set_polarisation(TE)

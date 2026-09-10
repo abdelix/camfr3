@@ -60,7 +60,7 @@ class metal_splitter(unittest.TestCase):
  
         arm = Slab(  met(r) + air(a-2*r)                             \
            + sections*(met(2*r) + air(a-2*r))                        \
-	   + air(a)                                                  \
+           + air(a)                                                  \
            + periods*(met(2*r) + air(a-2*r))                         \
            + air(cl) )
 

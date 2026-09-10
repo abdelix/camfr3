@@ -48,9 +48,9 @@ class grating3(unittest.TestCase):
               + air(groove_depth + d))
 
         stack = Stack(waveguide(period_length)  \
-	    + 10 * (etched(  period_length*(1-filling_factor))
+            + 10 * (etched(  period_length*(1-filling_factor))
                            + waveguide(period_length*filling_factor)) \
-	    + waveguide(period_length))
+            + waveguide(period_length))
 
         # Calculate.
 

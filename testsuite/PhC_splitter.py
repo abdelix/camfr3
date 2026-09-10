@@ -59,7 +59,7 @@ class PhC_splitter(unittest.TestCase):
  
         arm = Slab(  GaAs(r) + air(a-2*r)                           \
            + sections*(GaAs(2*r) + air(a-2*r))                      \
-	   + air(a)                                                 \
+           + air(a)                                                 \
            + periods*(GaAs(2*r) + air(a-2*r))                       \
            + air(cl) )
 
