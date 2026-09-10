@@ -833,7 +833,7 @@ def calc(cav, sources=None, weights=None, steps=30, symmetric=False,
 
     # Collect results.
 
-    for i in range(len(fluxes)/5):
+    for i in range(len(fluxes)//5):
       gen, sub, out = fluxes[5*i]+fluxes[5*i+1],fluxes[5*i+3],fluxes[5*i+4]
 
       if sources[i] in list(results.keys()):

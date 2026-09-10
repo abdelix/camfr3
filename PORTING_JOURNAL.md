@@ -378,3 +378,27 @@ settings (PML, walls, N) unreset for the next test. So I ran each of the 47 modu
 In the full sequential run `rods` also failed: its first effective index came out as
 `0.121-8.85j` against an expected `0.5206-8.889j`. Run alone, `rods` passes. The failure was
 caused by the preceding `taper` error, which skipped taper's cleanup (`set_upper_PML(0)`, …).
+
+### 13. Python 2 integer division
+
+Commit: `fix: restore floor division where Python 2 divided integers`
+
+**Issue.** On Python 2, `/` between two integers floors, unless the module has
+`from __future__ import division`; only `camfr/__init__.py` did. Python 3 always returns a
+float, and 2to3 does not touch `/`. In the testsuite this showed up as `w1reson` failing with
+`TypeError: 'float' object cannot be interpreted as an integer` at `range(0, numodd, 1)`, where
+`numodd = periods/2`.
+
+**Audit.** An `ast` scan listed all 240 `/` operations whose operands are not obviously floating
+point, and I classified each one by hand. Almost all of them divide physical lengths, complex
+amplitudes or float variables, and those stay as they are. I restored floor division (`//`)
+wherever both operands are integers and the result is used as an integer:
+
+- `camfr/GARCLED.py`: `range(len(fluxes)/5)`;
+- `testsuite/w1reson.py`: `numodd = periods/2` and `numeven = (periods+1)/2` (each twice);
+- `visualisation/camfr_PIL.py`: `z_scale = (len(colormap)-1)/2` (a colormap index scale).
+
+Some plot-scaling expressions in `camfr_PIL`/`camfr_tk` stay as true division, e.g.
+`min_area/(height*width*d_x*d_y)`. There Python 2 floored only because the inputs happened to be
+integers, and the package's own `__init__.py` opting into true division shows what the authors
+intended.

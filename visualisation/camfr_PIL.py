@@ -500,7 +500,7 @@ def _create_phasor_movie(z_, r_x=0, r_y=0, min_area=100000, scale=1, ln=0):
         if (zmax == 0):
             # in this case, z=0, the middle of the color palet
             #(z+zmax)*z_scale) should be = len(colormap)/2
-            z_scale = (len(colormap)-1)/2
+            z_scale = (len(colormap)-1)//2
             zmax = 1 
         else:
             z_scale = (len(colormap)-1)/(2*zmax)
