@@ -1287,6 +1287,9 @@ int UniformBlochSection::order(Polarisation pol, int Mx, int My) const
     if ( (m->pol == pol) && (m->get_Mx() == Mx) && (m->get_My() == My) )
       return i;
   }
+
+  py_error("Error: no mode with the requested polarisation and orders.");
+  exit(-1);
 }
 
 

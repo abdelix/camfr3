@@ -130,3 +130,19 @@ was `c.Stack(wg(0) + c.Slab(air(4.22))(0))`. It creates a temporary `Slab` whose
 reference disappears while the `Term` keeps a raw C++ pointer to it. CAMFR has always required
 waveguide objects to stay alive while stacks use them, and the same script crashes on Python 2. The
 corrected script binds the slab to a variable.
+
+### 4. Undefined behaviour at the end of non-void functions
+
+Commit: `fix: return on every path of non-void functions`
+
+GCC 15 reported `-Wreturn-type` in two places:
+
+- `Contour::subcontour()` (`math/calculus/croot/contour.cpp`) falls off the end only for an
+  out-of-range enum value.
+- `UniformBlochSection::order()` (`primitives/blochsection/blochsection.cpp`) falls off the end
+  when no mode matches the requested polarisation and orders. Python can reach this path through
+  `BlochSection.order()`, and the garbage return value would be used as a mode index.
+
+Flowing off the end of a non-void function is undefined behaviour, and GCC at `-O3` is free to
+exploit it. **Resolution:** both functions now end with the error idiom used throughout CAMFR,
+`py_error(...); exit(-1);`.

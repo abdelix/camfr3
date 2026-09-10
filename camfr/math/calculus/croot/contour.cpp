@@ -200,6 +200,9 @@ const Contour Contour::subcontour(Subcontour s) const
     case bottom_right:
       return Contour(bc, cr, *f, M, eps, mu, max_k);
   }
+
+  py_error("Error: unknown subcontour.");
+  exit(-1);
 }
 
 
