@@ -530,7 +530,7 @@ with `MPLBACKEND=Agg` and no `DISPLAY`:
 **Verification.** Tutorials 3, 6 and 7 and `OLED.py` run to completion. For example, `OLED.py`
 reports emitted power 1.404 and extraction efficiencies of 0.380 to the substrate and 0.139 to the
 outside world. `OLED_grating*.py` now get past the import and fail later inside `GARCLED`
-(entry 19).
+(entry 21).
 
 Other example results, all expected in a headless run:
 
@@ -563,3 +563,55 @@ Commit: `fix(visualisation): pass int colours to Pillow and tolerate Agg`
 150×600 GIF. That exercises the Pillow imports (entry 10), the vendored gifmaker and the colormap
 code. `omniguide.py` now gets as far as opening its Tk movie window, which a headless run
 cannot do.
+
+### 19. Iterator invalidation in the slab overlap-matrix cache
+
+Commit: `fix(slab): do not advance an erased iterator in SlabMatrixCache`
+
+**Issue.** The contributed Silicon Section example
+(`examples/contrib/Example - Silicon-Waveguide ModeSim v2018-01.py`) computed all modes and
+fields and printed `done.`, then segfaulted while the interpreter was shutting down. An earlier
+run instead stopped at its 300 s timeout, probably from the same memory corruption. gdb:
+
+```
+#0 std::_Rb_tree_increment(std::_Rb_tree_node_base*)            libstdc++
+#1 SlabMatrixCache::deregister(SlabImpl*)
+#2 SlabImpl::~SlabImpl()
+#3 Slab_M::~Slab_M()
+#4 Slab::~Slab()
+#5 boost::python::objects::value_holder<Slab>::~value_holder()
+   ... _Py_Dealloc ... Py_RunMain
+```
+
+`deregister` erased the map element its loop iterator pointed to (`cache.erase(i->first)`) and
+then advanced that invalidated iterator (`++i`). That is undefined behaviour, which the old
+allocator happened to tolerate. The testsuite never hit it because the tests free their objects
+explicitly, whereas the example keeps its slabs alive until the interpreter tears the module down.
+
+**Resolution.** Collect the matching keys first and erase them afterwards, the same pattern
+`InterfaceCache` (`icache.cpp`) already uses. I checked every `erase()` call in the C++ sources
+and found no other loop that erases while iterating. One pre-existing behaviour is unchanged:
+`deregister` removes cache entries without deleting the cached `OverlapMatrices`, whereas
+`clear()` does delete them.
+
+**Verification.** The Silicon example now exits normally, in 13 s. A minimal script that fills the
+cache with several slab pairs and then deletes the slabs did *not* crash even before the fix,
+because this kind of undefined behaviour depends on the heap layout. So the evidence is the
+example plus the code analysis. The official testsuite still passes: 47 tests, OK.
+
+### 20. Documentation
+
+Commit: `docs: update README and INSTALL for Python 3`
+
+- `README.md`: the Installation section no longer says Python 2.7 only. It points to
+  `PORTING_JOURNAL.md`, gives the two-line Linux build, drops the Python(x,y) and MacPorts
+  `py27` advice, and notes that package modules are imported as `camfr.RCLED` etc. (entry 17).
+- `INSTALL`: rewritten for Python 3. It covers:
+  - the dependencies: a C++17 compiler, Boost.Python built for the running Python, NumPy,
+    Matplotlib and Pillow, plus optional SciPy;
+  - the Debian/Ubuntu package names;
+  - `pip install .` with `machine_cfg.py.linux`, and `BOOST_ROOT`;
+  - isolated builds versus `--no-build-isolation`, and PEP 668 virtual environments;
+  - running the testsuite headless.
+
+  It also warns that the macOS, MSVC and Gentoo templates have not been updated.

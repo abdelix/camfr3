@@ -168,10 +168,18 @@ SlabMatrixCache::~SlabMatrixCache()
 
 void SlabMatrixCache::deregister(SlabImpl* wg)
 {
+  // Collect the keys first: erasing an element invalidates the iterator
+  // pointing to it.
+
+  vector<pair<SlabImpl*, SlabImpl*> > to_wipe;
+
   for (Cache<pair<SlabImpl*, SlabImpl*>, OverlapMatrices*>::iter
          i=cache.begin(); i!=cache.end(); ++i)
     if ( (i->first.first == wg) || (i->first.second == wg) )
-      cache.erase(i->first);
+      to_wipe.push_back(i->first);
+
+  for (unsigned int i=0; i<to_wipe.size(); i++)
+    cache.erase(to_wipe[i]);
 }
 
 
