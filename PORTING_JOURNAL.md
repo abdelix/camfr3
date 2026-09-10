@@ -283,3 +283,20 @@ Commit: `fix(visualisation): replace Canvas, MLab and numpy.oldnumeric`
 `camfr_PIL.py`, but there are 3. The script stopped at that assertion, after the earlier
 replacements had already been written. I checked the partial result, corrected the count and
 applied the remaining two steps.
+
+### 10. Pillow instead of PIL
+
+Commit: `fix(visualisation): import PIL modules from the PIL namespace`
+
+**Issue.** The plotting code uses `import Image`, `import ImageTk`, …, which is the layout of the
+original PIL (last released in 2009). Its maintained fork, Pillow, only provides `PIL.Image` and
+so on. `gifmaker.py`, vendored from PIL 1.1, also calls `GifImagePlugin.getheader`. In current
+Pillow (checked on 12.1.1) that function returns a `(header chunks, used palette)` tuple instead
+of a list, so `getheader(im) + getdata(im)` raises `TypeError`. It also writes the GIF trailer as
+a `str`, which a binary file object rejects on Python 3.
+
+**Resolution.**
+
+- `from PIL import Image, ImageTk, …` at 8 import sites in 5 files.
+- In `gifmaker.makedelta`: `getheader(im)[0] + getdata(im)` and `fp.write(b";")`.
+- Dropped the unused `import string`.

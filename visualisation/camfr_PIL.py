@@ -147,7 +147,7 @@ def plot_vector(v):
 
 def _create_scaled_matrix_plot(colormap, z, r_x=0, r_y=0,
                                min_area = 100000, scale =1):
-    import Image
+    from PIL import Image
     
     def round(x):
         return int(math.floor(x+.5))
@@ -181,7 +181,7 @@ def _create_scaled_matrix_plot(colormap, z, r_x=0, r_y=0,
 
 def _create_scaled_arrow_plot(px, pz, r_x=0, r_y=0,
                               min_area = 100000, scale =1):
-    import Image, ImageDraw
+    from PIL import Image, ImageDraw
     global ARROWSIZE
     
     # Determine width and height of a vector.
@@ -370,7 +370,9 @@ def _create_arrow_plot(px, pz, r_x=0, r_y=0,
 
 def _output_pic(pic, filename=0):
 
-    import tkinter, ImageTk, os, sys
+    import tkinter, os, sys
+
+    from PIL import ImageTk
     
     if filename:
         if '.' in filename:
@@ -411,10 +413,10 @@ def _output_pic(pic, filename=0):
 def _overlay_pictures(pic1, pic2, contour):
 
     if (contour):
-        import ImageFilter, ImageChops
+        from PIL import ImageFilter, ImageChops
         return ImageChops.multiply(pic2.filter(ImageFilter.CONTOUR), pic1)
     else:
-        import Image
+        from PIL import Image
         return Image.blend(pic2, pic1, 0.5)
 
 
@@ -527,7 +529,9 @@ def _create_phasor_movie(z_, r_x=0, r_y=0, min_area=100000, scale=1, ln=0):
 
 def _output_movie(movie, filename):
 
-    import tkinter, ImageTk, os, sys
+    import tkinter, os, sys
+
+    from PIL import ImageTk
     from . import gifmaker
 
     frames = len(movie)

@@ -137,7 +137,9 @@ def plot_matrix(z, r_x=0, r_y=0, filename=0, colorcode=0):
     if filename:
         print("Saving to file not supported.")
 
-    import numpy as np, tkinter, ImageTk
+    import numpy as np, tkinter
+
+    from PIL import ImageTk
         
     # Scale z and find appropriate colormap.
     

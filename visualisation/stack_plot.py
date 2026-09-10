@@ -892,7 +892,8 @@ class StackPlot:
    ###########################################################################
 
     def _save(self, saveas="CAMFRPICTURE"):
-        import tkinter.filedialog, tkinter.messagebox, os, Image, ImagePalette
+        import tkinter.filedialog, tkinter.messagebox, os
+        from PIL import Image, ImagePalette
         from . import gifmaker
         
         index   = self.indexFlag.get()

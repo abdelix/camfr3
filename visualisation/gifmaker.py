@@ -39,10 +39,8 @@
 # write data directly to a socket.  Or something...
 #
 
-import Image, ImageChops
-import string
-
-from GifImagePlugin import getheader, getdata
+from PIL import Image, ImageChops
+from PIL.GifImagePlugin import getheader, getdata
 
 # --------------------------------------------------------------------
 # sequence iterator
@@ -76,7 +74,8 @@ def makedelta(fp, sequence):
         if not previous:
 
             # global header
-            for s in getheader(im) + getdata(im):
+            # Pillow's getheader() returns (header chunks, used palette).
+            for s in getheader(im)[0] + getdata(im):
                 fp.write(s)
 
         else:
@@ -100,7 +99,7 @@ def makedelta(fp, sequence):
 
         frames = frames + 1
 
-    fp.write(";")
+    fp.write(b";")
 
     return frames
 
