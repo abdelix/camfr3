@@ -437,3 +437,47 @@ Commit: `fix: replace cmp sorting, file() and removed SciPy/Pillow APIs`
   points x = 1, 2, 3.
 - `Dispersive_Material_Factory` on a two-point table (1000 nm: 1.45; 2000 nm: 1.44 − 0.001j) at
   λ = 1.5 µm returns `n = 1.445 − 0.0005j`, the linear interpolation.
+
+### 15. NumPy integers as C++ `int` arguments
+
+Commit: `fix(wrap): accept NumPy integers where C++ expects an int`
+
+**Issue.** `metal_coupler` failed with
+
+```
+Boost.Python.ArgumentError: Python argument types in
+    Waveguide.mode(Slab, numpy.int64)
+did not match C++ signature:
+    mode(Waveguide, int)
+```
+
+The index comes from `for k in arange(0, nom, 1)`. On Python 2 on 64-bit Linux, `numpy.int64`
+subclasses `int`, so Boost.Python accepted it. On Python 3, NumPy integers do not subclass `int`
+and only implement `__index__`, which Boost.Python's built-in integer converters never consult.
+
+A probe against the unfixed build showed:
+
+- `numpy.int64`, `int32` and `uint8` were rejected by `Slab.mode()` and `set_precision()`;
+- `numpy.float64` and `complex128` were accepted, because they still subclass `float`/`complex`;
+- `numpy.float32` was rejected, but it was not a `float` subclass on Python 2 either.
+
+Indexing modes with NumPy integers is a very common pattern in user scripts, so I fixed this in
+the wrapper instead of patching the test.
+
+**Resolution.** An extra rvalue converter, registered for `int` and `unsigned int`, handles any
+object that is not an `int`/`float` but implements `__index__`. It converts via `PyNumber_Index`,
+range-checks against `std::numeric_limits<T>` and raises `OverflowError` when the value doesn't
+fit. The built-in conversions are unchanged, because Boost.Python only consults the new converter
+after them.
+
+**Verification.**
+
+- `mode(np.int64(1))`, `mode(np.int32(1))` and `mode(np.uint8(1))` return the same mode as `mode(1)`.
+- `set_precision(np.int64(3))` is accepted.
+- `set_precision(np.int64(-1))` and `set_N(np.int64(2**40))` raise `OverflowError`.
+- `set_precision(2.0)` and `set_precision(np.float64(1.0))` are still rejected with `ArgumentError`, as before.
+- `metal_coupler` passes: `0.027369697961+0.337022950101j`, expected `0.0273696979622+0.337022950103j`.
+
+A side observation: `metal_coupler` needed 47 s in the 6-way parallel run and 2 s on its own.
+Each process was running multithreaded OpenBLAS on 8 cores, so the machine was heavily
+oversubscribed. Later parallel runs set `OPENBLAS_NUM_THREADS=1`.

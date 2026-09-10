@@ -10,6 +10,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
+#include <limits>
+
 #include <boost/python.hpp>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -465,6 +467,64 @@ struct cMatrix_to_python
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Integer arguments from objects implementing __index__.
+//
+// On Python 2, numpy.int64 was a subclass of int, so NumPy integers were
+// accepted wherever the C++ side expects an integer. On Python 3, NumPy
+// integers only implement __index__, which the built-in Boost.Python
+// converters ignore.
+//
+/////////////////////////////////////////////////////////////////////////////
+
+template<class T>
+struct register_integer_from_python_index
+{
+  register_integer_from_python_index()
+  {
+    boost::python::converter::registry::push_back
+      (&convertible, &construct, boost::python::type_id<T>());
+  }
+
+  static void* convertible(PyObject* o)
+  {
+    if (PyLong_Check(o) || PyFloat_Check(o) || !PyIndex_Check(o))
+      return NULL;
+
+    return o;
+  }
+
+  static void construct
+    (PyObject* o, boost::python::converter::rvalue_from_python_stage1_data*
+     data)
+  {
+    boost::python::handle<> index(PyNumber_Index(o));
+
+    long long v = PyLong_AsLongLong(index.get());
+
+    if ((v == -1) && PyErr_Occurred())
+      boost::python::throw_error_already_set();
+
+    if (   (v < static_cast<long long>(std::numeric_limits<T>::min()))
+        || (v > static_cast<long long>(std::numeric_limits<T>::max())) )
+    {
+      PyErr_SetString(PyExc_OverflowError, "integer argument out of range.");
+      boost::python::throw_error_already_set();
+    }
+
+    void* storage = ((
+      boost::python::converter::rvalue_from_python_storage<T>*)data)
+        ->storage.bytes;
+
+    new (storage) T(static_cast<T>(v));
+
+    data->convertible = storage;
+  }
+};
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // Wrapper functions warning about deprecated features.
 //
 /////////////////////////////////////////////////////////////////////////////
@@ -603,6 +663,9 @@ BOOST_PYTHON_MODULE(_camfr)
   to_python_converter<cVector, cVector_to_python>();
   to_python_converter<cMatrix, cMatrix_to_python>();
   register_cVector_from_python();
+
+  register_integer_from_python_index<int>();
+  register_integer_from_python_index<unsigned int>();
 
   // Wrap Limit enum.
 
