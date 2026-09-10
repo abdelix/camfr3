@@ -216,7 +216,10 @@ def __Section_plot(self, field="Ex", mode=0, dx=0.100, dy=0.100, annotations=Tru
             
             ## update the plots:
             if (m==0) and (f==0): 
-                fig.canvas.window().raise_()    # bring plot window to front (a hack - delete this if it causes trouble)
+                try:
+                    fig.canvas.window().raise_()    # bring plot window to front (a hack - delete this if it causes trouble)
+                except AttributeError:
+                    pass    # only some GUI backends provide canvas.window()
             fig.canvas.draw()   # update the figure
             plt.pause(0.05)     # allow GUI to update (may pop a warning)
             

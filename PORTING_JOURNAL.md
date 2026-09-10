@@ -530,9 +530,36 @@ with `MPLBACKEND=Agg` and no `DISPLAY`:
 **Verification.** Tutorials 3, 6 and 7 and `OLED.py` run to completion. For example, `OLED.py`
 reports emitted power 1.404 and extraction efficiencies of 0.380 to the substrate and 0.139 to the
 outside world. `OLED_grating*.py` now get past the import and fail later inside `GARCLED`
-(entry 18).
+(entry 19).
 
 Other example results, all expected in a headless run:
 
 - `tutorial2`, `tutorial4`, `other/{excitations,geometry,infstack,PhC_splitter,planar,SpE,VCSEL}`: run to completion.
 - `tutorial1`, `tutorial5`, `other/fieldplot`: open Tk windows, so they fail with `TclError: no display name`.
+
+### 18. NumPy integers as Pillow colours; backend-specific matplotlib call
+
+Commit: `fix(visualisation): pass int colours to Pillow and tolerate Agg`
+
+**Issues.**
+
+- Every PIL-based plot (`plot_field`, `plot_n`, `animate_field`, …) failed with `TypeError: color
+  must be int or tuple`, in `examples/contrib/omniguide.py` and in my own headless check.
+  `_create_color_range` builds each colour as `sum(numpy_array * [1, 0x100, 0x10000])`, which is a
+  `numpy.int64`. Pillow's `Image.paste()` accepts only Python `int`s or tuples. This worked on
+  Python 2 because `numpy.int64` subclassed `int` there, the same root cause as entry 15.
+- The same function called a bare `array()`, which only exists through the `from pylab import *`
+  in `camfr/__init__.py`, so it would fail with `NO_CAMFR_GRAPHICS` set.
+- `Section.plot()` (`section_matplotlib.py`) calls `fig.canvas.window().raise_()` to bring the
+  window to the front. Only some GUI backends have `canvas.window()`, so with Agg, or any backend
+  lacking it, the plot aborted with `AttributeError`.
+
+**Resolution.** Wrap each colour in `int(...)`, use `np.array`, and wrap the window-raising call
+(already marked "a hack" in the source) in `try/except AttributeError`.
+
+**Verification** (headless, `MPLBACKEND=Agg`): for a Stack of two slab waveguides separated by a
+1 µm gap, `plot_field(..., filename="field.png")`, `plot_n(..., filename="index.png")` and
+`animate_field(..., filename="movie.gif")` write a 150×600 PNG, a 150×600 PNG and a 16-frame
+150×600 GIF. That exercises the Pillow imports (entry 10), the vendored gifmaker and the colormap
+code. `omniguide.py` now gets as far as opening its Tk movie window, which a headless run
+cannot do.

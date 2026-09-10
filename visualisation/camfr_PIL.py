@@ -638,7 +638,7 @@ def create_black_white_colormap():
 def _create_color_range(c1=(0,0,0), c2=(255,255,255), ad_last = 0 ):
 
     # Calc max range.
-    diff    = np.array(c2)-array(c1)  
+    diff    = np.array(c2)-np.array(c1)
     colors  = float(np.max(np.abs(diff)))
 
     # Dred,dgreen,dblue.
@@ -647,7 +647,8 @@ def _create_color_range(c1=(0,0,0), c2=(255,255,255), ad_last = 0 ):
     # Start_to_end + dc.
     if ad_last: colors +=1
 
-    return [sum( (c1 + (x*dc).astype(int))*[1, 0x100, 0x10000] )
+    # Pillow only accepts Python ints (not numpy.int64) as colours.
+    return [int(sum( (c1 + (x*dc).astype(int))*[1, 0x100, 0x10000] ))
             for x in range(int(colors))]
 
 
