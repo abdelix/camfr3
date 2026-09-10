@@ -649,3 +649,28 @@ and gives physically sensible values.
 NumPy prints `ComplexWarning: Casting complex values to real discards the imaginary part` at
 `GARCLED.py:451-460`, where complex expressions are assigned into real arrays. NumPy has always
 discarded the imaginary part in this assignment, so I left the behaviour unchanged.
+
+### 22. Numeric in the visualisation examples
+
+Commit: `fix(examples): replace Numeric in the Tk visualisation examples`
+
+**Issue.** `visualisation/examples/vis_tk2.py` and `vis_tk3.py` do `from Numeric import *` and
+fail with `ModuleNotFoundError: No module named 'Numeric'`. Numeric is NumPy's predecessor and
+has been unmaintained since 2006.
+
+**Resolution.** Import only the names the scripts use: `from numpy import arange` and
+`from numpy import arange, zeros`. A `from numpy import *` placed after `from camfr import *`
+would shadow CAMFR names, e.g. NumPy's `full()` over CAMFR's `Mode_correction.full`. Also,
+`zeros(N())` now creates a float array rather than Numeric's integer array. It still converts
+through the NumPy 2 `cVector` converter (entry 3), which casts to complex.
+
+**Verification** (headless). `vis_tk2` runs its full width sweep (20 Stack calculations), and
+`vis_tk3` builds its stack and sets up the incident field. Both then stop when creating the Tk
+window (`TclError: no display name`), which is as far as a run without a display can go.
+
+The same headless run showed these results for the other visualisation examples:
+
+- `plot_blochstack`, `plot_slab`, `plot_stack` and `vis_tk1` also get as far as opening their
+  Tk windows.
+- `vis_matlab1`, `vis_matlab2` and `vis_matlab3` need `camfr_matlab` (MATLAB through `pymat`),
+  which is not ported (entry 9), so I left them unchanged.

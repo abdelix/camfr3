@@ -7,7 +7,7 @@
 ####################################################################
 
 from camfr import *
-from Numeric import *
+from numpy import arange, zeros
 
 set_N(40)
 set_lambda(1.55)
