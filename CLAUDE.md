@@ -5,7 +5,7 @@ expansion (EME): C++ and Fortran compiled into a Boost.Python extension (`camfr/
 wrapped by a thin Python package.
 
 Upstream (`master`) is Python 2.7 only. The `python3-port` branch ports it to Python 3.
-**`PORTING_JOURNAL.md` documents every change, issue and resolution in 23 numbered entries —
+**`PORTING_JOURNAL.md` documents every change, issue and resolution in numbered entries —
 read it before touching the port, and add an entry for each new change.**
 
 `MODERNISATION.md` is the checklist of planned build and packaging improvements
@@ -30,12 +30,24 @@ BOOST_ROOT=$(realpath ../demultiplexers/deps/boost-root/usr) ../demultiplexers/d
 ## Test
 
 ```bash
-cd testsuite && MPLBACKEND=Agg python3 camfr_test.py      # 47 tests, expected: OK
+cd testsuite && MPLBACKEND=Agg ../../demultiplexers/deps/venv314/bin/python camfr_test.py   # 47 tests, expected: OK
 ```
 
+Use the venv interpreter: `camfr` is installed there, not in the system Python. The testsuite
+imports the *installed* package, so reinstall after changing sources.
 Per-module runs are useful when a test crashes (one segfault aborts the whole suite).
 `ADR_solver`, `stack2` and `metal_splitter` fail; upstream excludes all three from
 `camfr_test.py`, and it is unverified whether they ever passed on Python 2.
+
+## Repository state
+
+- Git remote `origin` is the **upstream** repo (demisjohn/CAMFR). The `python3-port` branch has
+  **never been pushed**. Do not push to `origin`. The user's own fork is `abdelix/CAMFR`. Ask
+  where to publish before adding a remote or pushing.
+- The upstream `py35_compat` branch is an earlier, abandoned attempt. It was not merged, and
+  this port was done independently.
+- `TODO` is Peter Bienstman's original feature wishlist. Leave it alone and track new work in
+  `MODERNISATION.md`.
 
 ## Layout
 
@@ -64,11 +76,29 @@ Per-module runs are useful when a test crashes (one segfault aborts the whole su
   segfaults (not yet investigated). Scripts take solver settings as CLI arguments instead.
 - **Headless runs:** `NO_CAMFR_GRAPHICS=1` skips the pylab import; `MPLBACKEND=Agg` avoids Tk. Do not set `NO_CAMFR_GRAPHICS` for the testsuite: the tests use `zeros`/`arange` that only arrive through the `pylab` star-import (15 tests fail without it).
   Tk GUI plotting is unverified — there was no display server available.
+- **Machine:** 4 physical cores / 8 threads. When running several CAMFR processes in parallel,
+  set `OPENBLAS_NUM_THREADS=1` or they oversubscribe the CPU.
+- **Killing processes:** use exact PIDs, not `pkill -f <pattern>`. The pattern can match the
+  invoking shell and kill it (journal entry 23).
 - **Imports:** modules inside the package are imported through it (`from camfr.RCLED import *`).
   The Python 2 installer's `camfr.pth` used to make them top-level.
 - **`visualisation/camfr_matlab.py` is not ported** (needs `pymat`, Python 2 only).
 - **Performance:** the `Section` solver spends ~90% of its time in the plane-wave estimation
   stage. Passing `Section.set_estimate(n_eff)` skips it and is ~40× faster for the same result.
+
+## Open items
+
+- **Rename for publication (decision pending).** Candidate names free on PyPI are `camfr3`
+  (recommended, and the checkout directory already uses it), `camfr-ng`, `pycamfr` and
+  `camfr-next`. Keep `import camfr` as the module name. Once a name is chosen, update the
+  `setup.py`/`pyproject.toml` metadata and the README header, and add `NOTICE` and
+  `CITATION.cff` crediting the original authors.
+- **`setup.py` licence field** says `GPL-2.0-or-later`. `LICENSE` is GPL v2, and no "or later"
+  grant has been verified in the sources. Use `GPL-2.0` unless one is found.
+- **Second-`Section` segfault** (see Gotchas): not yet investigated. An ASan/UBSan build is the
+  suggested first step (`MODERNISATION.md`).
+- **`examples/other/OLED_grating_avg.py`** was stopped before it finished (it is very long-running).
+  It is not verified.
 
 ## Licensing
 
@@ -85,3 +115,20 @@ evaluates mode solvers for an AWG/demultiplexer modelling tool. The build depend
 (Boost, the Python 3.14 venv) stay in `../demultiplexers/deps/`, shared with that project.
 Benchmarks and comparison scripts are in `../demultiplexers/scripts/`;
 CAMFR is one of five solvers compared there (femwell, Tidy3D, MPB, Palace).
+
+Reference result, useful as a regression check: a 500 × 220 nm Si wire in SiO2 at 1550 nm
+(n = 3.476 / 1.444). CAMFR gives neff TE0 2.4451, TM0 1.7702 and TE1 1.4925. Palace and
+femwell agree to within 3e-4 (TE0 2.4454). The command is
+(about 1 s):
+
+```bash
+NO_CAMFR_GRAPHICS=1 ../demultiplexers/deps/venv314/bin/python ../demultiplexers/scripts/si_wire_neff_camfr.py \
+    --plane-waves 32 --slab-modes 70 --modes 3 --estimate 2.445 --estimate 1.770 --estimate 1.4925
+```
+
+Give exactly as many `--estimate`s as `--modes`. Surplus modes come back with zero field, and the
+script crashes with `ZeroDivisionError`. Without estimates the same run takes about 200 s, and the
+script's default 24/50 setting is coarser (TE0 2.4464).
+
+The user's end goal is their own AWG/demux modelling tool, which needs PML, bent-waveguide modes
+and nonuniform meshing. CAMFR is being kept alive as one candidate engine.

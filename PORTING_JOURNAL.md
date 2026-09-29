@@ -781,3 +781,21 @@ passes (47 tests, OK). Two documentation problems surfaced:
   (`NameError: name 'zeros' is not defined`). The tests rely on NumPy names that only arrive
   through the `pylab` star-import that this variable disables. `CLAUDE.md` now warns about it;
   the proper fix is the lazy-pylab item in `MODERNISATION.md`.
+
+### 25. CLAUDE.md completed for standalone sessions
+
+**Change.** Filled the gaps in `CLAUDE.md` so a session started in this directory has the full
+context without the `demultiplexers` project. The additions:
+
+- the test command with the venv interpreter;
+- repository state: `origin` is upstream and the branch is unpushed;
+- machine and process-handling notes;
+- open items: rename, licence field, second-`Section` segfault, `OLED_grating_avg`;
+- the Si-wire regression check (re-run from the new location, it reproduces TE0 2.4451,
+  TM0 1.7702 and TE1 1.4925 in about 1 s);
+- the project goal.
+
+**Issue.** The first attempt at the regression command passed 3 estimates with the default 4
+modes. The surplus mode came back with zero field, and the script failed with
+`ZeroDivisionError` when it computed the TE fraction. **Resolution:** pass `--modes 3`; the
+requirement is documented in `CLAUDE.md`.
