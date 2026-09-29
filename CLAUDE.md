@@ -8,6 +8,10 @@ Upstream (`master`) is Python 2.7 only. The `python3-port` branch ports it to Py
 **`PORTING_JOURNAL.md` documents every change, issue and resolution in 23 numbered entries —
 read it before touching the port, and add an entry for each new change.**
 
+`MODERNISATION.md` is the checklist of planned build and packaging improvements
+(CMake/scikit-build-core, pybind11, CI, wheels) and their suggested order. Check it before
+changing the build, and tick items off as they land.
+
 ## Build and install
 
 ```bash
