@@ -121,11 +121,9 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 
 ## Open items
 
-- **Rename for publication (decision pending).** Candidate names free on PyPI are `camfr3`
-  (recommended, and the checkout directory already uses it), `camfr-ng`, `pycamfr` and
-  `camfr-next`. Keep `import camfr` as the module name. Once a name is chosen, update the
-  `setup.py`/`pyproject.toml` metadata and the README header, and add `NOTICE` and
-  `CITATION.cff` crediting the original authors.
+- **Published name is `camfr3`** (free on PyPI as of 2026-09-30; the module is still
+  `import camfr`). `setup.py`, the README header, `NOTICE` and `CITATION.cff` are updated.
+  Not yet uploaded — see the Distribution section of `MODERNISATION.md`.
 - **`setup.py` licence field** says `GPL-2.0-or-later`. `LICENSE` is GPL v2, and no "or later"
   grant has been verified in the sources. Use `GPL-2.0` unless one is found.
 - **Second-`Section` segfault** (see Gotchas): not yet investigated. An ASan/UBSan build is the

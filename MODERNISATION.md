@@ -61,7 +61,8 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 
 ## 6. Distribution
 
-- [ ] Publish under the new name (the PyPI name `camfr` belongs to the original author).
+- [ ] Publish under the new name `camfr3` (the PyPI name `camfr` belongs to the original author).
+      Metadata, `NOTICE` and `CITATION.cff` are done (journal entry 27); the upload is not.
 - [ ] conda-forge feedstock (Boost, Blitz++ and OpenBLAS are already on conda-forge).
 
 ## 7. Related correctness work (not build issues)

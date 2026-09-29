@@ -77,12 +77,17 @@ class camfr_distribution(Distribution):
 
 # Set up the module.
 
-setup(name             = "camfr",
+# Published as 'camfr3' because the PyPI name 'camfr' belongs to the original
+# author. The import name is still 'camfr'.
+
+setup(name             = "camfr3",
       version          = camfr_version,
-      description      = "CAvity Modelling FRamework",
+      description      = "CAvity Modelling FRamework, ported to Python 3",
       author           = "Peter Bienstman",
       author_email     = "Peter.Bienstman@UGent.be",
-      url              = "https://github.com/demisjohn/CAMFR",
+      maintainer       = "Abdelfettah Hadij-ElHouati",
+      url              = "https://github.com/abdelix/CAMFR",
+      project_urls     = {"Upstream": "https://github.com/demisjohn/CAMFR"},
       license          = "GPL-2.0-or-later",
       packages         = ["camfr"],
       package_data     = {"camfr": ["_camfr.so"]},

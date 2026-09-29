@@ -1,4 +1,6 @@
-# CAMFR
+# camfr3 — CAMFR for Python 3
+
+`camfr3` is a Python 3 port of CAMFR. It is distributed as `camfr3` because the PyPI name `camfr` belongs to the original author; the module is still imported as `import camfr`. See `NOTICE` for attribution and `CITATION.cff` for how to cite.
 
 Forked from [Sourceforge project](http://camfr.sourceforge.net/) for maintenance.
 

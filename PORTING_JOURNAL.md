@@ -813,3 +813,22 @@ its build products.
 R/T. In `stack.cpp` only `S_scheme` computes R/T; `T_scheme_fields` is used for fields. The
 text was corrected before committing.
 
+### 27. Package renamed to camfr3 for publication
+
+**Change.** The distribution name is now `camfr3`; the module is still imported as `camfr`, so
+scripts are unaffected. A query to PyPI on 2026-09-30 found `camfr3` free (404 on both the JSON
+API and the simple index), while `camfr` belongs to the original author.
+
+- `setup.py`: `name="camfr3"`, a description that mentions Python 3, a maintainer entry, the
+  project URL pointing at the `abdelix/CAMFR` fork and the upstream `demisjohn/CAMFR` in
+  `project_urls`. Peter Bienstman stays the author. `pyproject.toml` holds no project metadata
+  and is unchanged.
+- `README.md`: new header explaining the name and the unchanged import.
+- `NOTICE`: attribution to the original authors, the preferred citation, and the licensing
+  notes (GPL v2, `COPYRIGHT`, ACM Algorithm 419 terms).
+- `CITATION.cff`: the software authors from `AUTHORS` plus the maintainer, with Bienstman &
+  Baets, *Opt. Quantum Electron.* **33**, 327–341 (2001) as the preferred citation. The DOI
+  (10.1023/A:1010882531238) was checked against Crossref.
+
+**Issue.** The licence field is still `GPL-2.0-or-later` (open item in `CLAUDE.md`), so
+`CITATION.cff` carries no `license` key yet. The version is still the fixed `20090406`.

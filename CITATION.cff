@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite the article below describing CAMFR.
+title: "camfr3: CAMFR (CAvity Modelling FRamework) for Python 3"
+type: software
+authors:
+  - family-names: Bienstman
+    given-names: Peter
+    affiliation: Ghent University
+  - family-names: Vanholme
+    given-names: Lieven
+    affiliation: Ghent University
+  - family-names: Ibanescu
+    given-names: Mihai
+    affiliation: MIT
+  - family-names: Hadij-ElHouati
+    given-names: Abdelfettah
+repository-code: "https://github.com/abdelix/CAMFR"
+url: "http://camfr.sourceforge.net/"
+keywords:
+  - eigenmode expansion
+  - Maxwell solver
+  - photonics
+  - perfectly matched layers
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Bienstman
+      given-names: Peter
+    - family-names: Baets
+      given-names: Roel
+  title: >-
+    Optical modelling of photonic crystals and VCSELs using eigenmode
+    expansion and perfectly matched layers
+  journal: Optical and Quantum Electronics
+  volume: 33
+  issue: "4-5"
+  start: 327
+  end: 341
+  year: 2001
+  doi: 10.1023/A:1010882531238

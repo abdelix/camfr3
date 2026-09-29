@@ -1,0 +1,37 @@
+camfr3
+======
+
+camfr3 is a Python 3 port of CAMFR (CAvity Modelling FRamework). It is
+distributed under the name "camfr3" because the PyPI name "camfr" belongs to
+the original author. The Python module is still imported as "camfr".
+
+CAMFR was written by Peter Bienstman at the Photonics Research Group,
+Department of Information Technology (INTEC), Ghent University, Belgium,
+with contributions from the people listed in AUTHORS.
+
+    Copyright (C) 1998-2007 Peter Bienstman - Ghent University
+
+Original project:  http://camfr.sourceforge.net/
+Upstream fork:     https://github.com/demisjohn/CAMFR
+
+The Python 3 port (branch python3-port) is maintained by
+Abdelfettah Hadij-ElHouati. Every change made for the port is documented in
+PORTING_JOURNAL.md.
+
+If you use this software in published work, please cite:
+
+    P. Bienstman and R. Baets, "Optical modelling of photonic crystals and
+    VCSELs using eigenmode expansion and perfectly matched layers",
+    Optical and Quantum Electronics 33, 327-341 (2001).
+    doi:10.1023/A:1010882531238
+
+Licensing
+---------
+
+CAMFR is released under the GNU General Public License, version 2 (LICENSE).
+The older permissive notice in COPYRIGHT is kept as distributed.
+
+camfr/math/ contains third-party numerical code (SLATEC Bessel routines,
+Jenkins-Traub ACM Algorithm 419, Brent root and minimum finders). ACM
+Algorithm 419 is subject to ACM's own software licence terms, which permit
+free non-commercial use; check them before any commercial distribution.
