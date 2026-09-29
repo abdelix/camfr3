@@ -770,3 +770,14 @@ now points at `../demultiplexers/deps/`.
 **Issue.** None. The venv holds a regular (non-editable) install of `camfr`, so the benchmark
 scripts keep working; rebuild with the command in `CLAUDE.md` to pick up changes from the new
 location.
+
+**Verification after the move.** Rebuilt and reinstalled from `~/Projects/camfr3`; the testsuite
+passes (47 tests, OK). Two documentation problems surfaced:
+
+- The build command in `CLAUDE.md` used a relative `BOOST_ROOT`, which fails with
+  `boost/python.hpp: No such file or directory`: SCons resolves relative include paths from the
+  `camfr/` subdirectory. The command now uses `$(realpath ...)`.
+- Running the testsuite with `NO_CAMFR_GRAPHICS=1` gives 8 failures and 7 errors
+  (`NameError: name 'zeros' is not defined`). The tests rely on NumPy names that only arrive
+  through the `pylab` star-import that this variable disables. `CLAUDE.md` now warns about it;
+  the proper fix is the lazy-pylab item in `MODERNISATION.md`.

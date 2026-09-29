@@ -16,12 +16,12 @@ changing the build, and tick items off as they land.
 
 ```bash
 cp machine_cfg.py.linux machine_cfg.py          # machine_cfg.py itself is gitignored
-BOOST_ROOT=../demultiplexers/deps/boost-root/usr ../demultiplexers/deps/venv314/bin/pip install --no-build-isolation .
+BOOST_ROOT=$(realpath ../demultiplexers/deps/boost-root/usr) ../demultiplexers/deps/venv314/bin/pip install --no-build-isolation .
 ```
 
 - `machine_cfg.py.linux` detects Python, NumPy and the versioned Boost.Python library
   (e.g. `libboost_python314`) from the interpreter running the build. `BOOST_ROOT` defaults
-  to `/usr`; on this machine Boost was unpacked into `../demultiplexers/deps/boost-root/usr` (no root).
+  to `/usr`; on this machine Boost was unpacked into `../demultiplexers/deps/boost-root/usr` (no root). It must be an absolute path: SCons resolves relative include paths from `camfr/`.
 - To build in place without installing: `python3 -m SCons` (SCons drives the C++/Fortran build;
   `setup.py` calls it from `build_py`).
 - Full build ≈ 70 s on 8 threads. Only `machine_cfg.py.linux` is maintained; the MacOSX/MSVC/
@@ -62,7 +62,7 @@ Per-module runs are useful when a test crashes (one segfault aborts the whole su
   variables. This is upstream behaviour, not a porting bug.
 - **One `Section` solve per process.** Solving a second `Section` in the same interpreter
   segfaults (not yet investigated). Scripts take solver settings as CLI arguments instead.
-- **Headless runs:** `NO_CAMFR_GRAPHICS=1` skips the pylab import; `MPLBACKEND=Agg` avoids Tk.
+- **Headless runs:** `NO_CAMFR_GRAPHICS=1` skips the pylab import; `MPLBACKEND=Agg` avoids Tk. Do not set `NO_CAMFR_GRAPHICS` for the testsuite: the tests use `zeros`/`arange` that only arrive through the `pylab` star-import (15 tests fail without it).
   Tk GUI plotting is unverified — there was no display server available.
 - **Imports:** modules inside the package are imported through it (`from camfr.RCLED import *`).
   The Python 2 installer's `camfr.pth` used to make them top-level.
