@@ -12,7 +12,7 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 - [ ] Stop importing everything from `pylab` in `camfr/__init__.py`. It slows `import camfr`,
       floods the namespace with Matplotlib names, and is why `NO_CAMFR_GRAPHICS` exists.
       Import plotting lazily; make Matplotlib and Pillow optional extras (`[plot]`).
-- [ ] Move the `visualisation/` modules into the package (`camfr/visualisation/` or `camfr/`),
+- [x] Move the `visualisation/` modules into the package (`camfr/visualisation/` or `camfr/`),
       so the `find_package_modules` override in `setup.py` can go and the source tree matches
       the installed layout.
 - [x] Replace the fixed version `20090406` in `camfrversion.py` with real versioning
@@ -33,6 +33,9 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
     instead of manual paths and guessing the `boost_python314` library name;
   - working editable installs (`pip install -e .`), correct wheel tags, first-class Fortran;
   - incremental builds, ccache, Ninja.
+
+- [x] Project metadata in `pyproject.toml` `[project]` (setup.py keeps only the SCons hook), and
+      a uv-managed dev environment (`uv sync`, `uv.lock`). Journal entry 32.
 
 ## 3. Replace Boost.Python with pybind11 or nanobind (1–2 weeks)
 

@@ -131,6 +131,8 @@ You have to compile the CAMFR library. This requires a C++ and a Fortran compile
     cp machine_cfg.py.linux machine_cfg.py
     python3 -m pip install .
 
+For development, [uv](https://docs.astral.sh/uv/) sets up an environment with an editable install: `uv sync`, then `uv run python myScript.py`.
+
 See the `INSTALL` file for the full list of dependencies and further options.
 
 CAMFR scripts can be run like any other Python script with `python3 myScript.py`, or with `python3 -i myScript.py` to stay in the interpreter afterwards.

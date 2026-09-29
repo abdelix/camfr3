@@ -886,3 +886,64 @@ updated to match.
 **Issue.** Pushing from the Claude Code session failed: HTTPS needs a credential prompt it
 cannot answer, and the local SSH key is not accepted by GitHub. **Resolution:** the user pushed
 from their own terminal; `CLAUDE.md` records that pushes are done by the user.
+
+### 31. Python 3.14 venv moved into the project
+
+**Change.** The venv moved from `~/Projects/demultiplexers/deps/venv314` to
+`~/Projects/camfr3/.venv`, and the old path is now a symlink to the new one. The benchmark
+scripts in `demultiplexers` (`compare_mode_solvers.py`, `si_wire_neff_camfr.py`) keep using
+`deps/venv314` unchanged. `CLAUDE.md` commands now use `.venv/bin/...`. Boost stays in
+`demultiplexers/deps/`.
+
+**Issue.** A venv is not relocatable: 9 files embedded the old absolute path (`pyvenv.cfg`,
+the `activate*` scripts and the shebangs of `pip`, `pip3`, `pip3.14`, `setuptools-scm`,
+`vcs-versioning`). **Resolution:** rewrote them with `sed` to the new path. `.venv` is kept
+out of git by the `*` in its own `.gitignore`.
+
+**Verification.** `pip` runs from the new location; `sys.prefix` is `.venv` through the new path
+and `deps/venv314` through the symlink. Testsuite through `.venv`: 47 tests, OK. Si-wire
+check through `deps/venv314`: TE0 2.4451, TM0 1.7702, TE1 1.4925. The `RuntimeWarning:
+Unexpected value in sys.prefix` seen with `../`-relative interpreter paths predates the move and
+is harmless.
+
+### 32. Development environment managed with uv; plotting modules moved into the package
+
+**Change.** `.venv` is now created and kept in sync by uv (0.11) instead of by hand:
+
+- `pyproject.toml` gained a `[project]` table with all metadata that was in `setup.py` (name,
+  dynamic version, description, readme, `license = "GPL-2.0-only"` with `license-files`,
+  authors, maintainers, dependencies, the `scipy` extra, URLs). `setup.py` keeps only the SCons
+  `build_py` hook and the platform-wheel `Distribution`. Build requirement raised to
+  `setuptools>=77` (PEP 639 licence fields).
+- `requires-python` raised from `>=3.8` to `>=3.10`: uv resolves for the whole range, and no
+  setuptools>=77 supports 3.8. 3.8 and 3.9 are end-of-life; only 3.14 is tested.
+- `[dependency-groups] dev` (installed by default): SCons, setuptools, setuptools-scm, SciPy.
+- `[tool.uv] cache-keys` list the C++/Fortran/Python sources, SCons files, `machine_cfg.py` and
+  the git commit/tags, so `uv sync` rebuilds after C++ edits (uv's default keys cover only
+  `pyproject.toml`/`setup.py`). Checked by touching `camfr/defs.cpp`.
+- `.python-version` (3.14) and `uv.lock` are committed.
+- The nine modules in `visualisation/` moved into `camfr/` (`git mv`, no code changes: they
+  already used package-relative imports). `setup.py` no longer injects them through a
+  `find_package_modules` override. `visualisation/` keeps the examples.
+
+**Issues.**
+
+1. uv installs the project editable, and the editable install lacked the `visualisation/`
+   modules (`ModuleNotFoundError: camfr.camfr_PIL`). A `no-editable = true` setting in
+   `[tool.uv]` is silently ignored. **Resolution:** moved the modules into the package (a planned
+   `MODERNISATION.md` item), so editable and wheel installs have the same layout.
+2. With the metadata in `[project]`, setuptools switched `include_package_data` on and the wheel
+   shipped every git-tracked file in `camfr/` (all `.cpp`/`.h`/`.f`). **Resolution:**
+   `[tool.setuptools] include-package-data = false`; the wheel again holds only the Python
+   modules, `_camfr.so` and `_version.py`, plus LICENSE/COPYRIGHT/AUTHORS/NOTICE in the metadata.
+3. `BOOST_ROOT` was first passed through a gitignored `uv.toml` (`extra-build-variables`). uv
+   then ignores `[tool.uv]` in `pyproject.toml`, which dropped the cache keys (it warns once).
+   **Resolution:** removed `uv.toml`; the local, gitignored `machine_cfg.py` now defaults
+   `BOOST_ROOT` to `../demultiplexers/deps/boost-root/usr` (the env var still overrides).
+
+The new `.venv` has no system site-packages; NumPy 2.5.3, Matplotlib 3.11.2 and SciPy 1.18.1
+come from PyPI. The `../demultiplexers/deps/venv314` symlink (entry 31) still points at it.
+
+**Verification.** Scratch environments first (editable and `--no-editable`), then the real
+`.venv`: testsuite 47 tests, OK, in each. Si-wire check through `deps/venv314`: TE0 2.4451,
+TM0 1.7702, TE1 1.4925. `import scipy, camfr.GARCLED` works.

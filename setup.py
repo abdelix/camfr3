@@ -4,12 +4,11 @@
 #
 # The compiled extension _camfr.so is built with SCons, using the settings in
 # machine_cfg.py (copy one of the machine_cfg.py.* templates first). The
-# installed 'camfr' package is assembled from camfr/ and the visualisation
-# modules. The version comes from the git tags (setuptools-scm, configured in
-# pyproject.toml).
+# package metadata and the version (setuptools-scm, from git tags) are in
+# pyproject.toml.
 #
 #     cp machine_cfg.py.linux machine_cfg.py
-#     python3 -m pip install .
+#     uv sync                  # or: python3 -m pip install .
 
 import os
 import subprocess
@@ -17,21 +16,6 @@ import sys
 
 from setuptools import Distribution, setup
 from setuptools.command.build_py import build_py
-
-# Modules that live outside camfr/ in the source tree but are installed
-# inside the camfr package.
-
-extra_modules = ["visualisation/camfr_PIL.py",
-                 "visualisation/camfr_matlab.py",
-                 "visualisation/camfr_tk.py",
-                 "visualisation/section_matplotlib.py",
-                 "visualisation/slab_plot.py",
-                 "visualisation/stack_plot.py",
-                 "visualisation/TkPlotCanvas.py",
-                 "visualisation/matrix_plot_canvas.py",
-                 "visualisation/gifmaker.py"]
-
-
 
 # Build the extension with SCons before collecting the package files.
 
@@ -48,17 +32,6 @@ class camfr_build_py(build_py):
 
     return build_py.run(self)
 
-  def find_package_modules(self, package, package_dir):
-
-    modules = build_py.find_package_modules(self, package, package_dir)
-
-    if package == "camfr":
-      for path in extra_modules:
-        name = os.path.splitext(os.path.basename(path))[0]
-        modules.append((package, name, path))
-
-    return modules
-
 
 
 # The package contains a compiled library, so wheels must be platform
@@ -71,26 +44,11 @@ class camfr_distribution(Distribution):
 
 
 
-# Set up the module.
+# Set up the module. The project metadata (name, version, dependencies) is
+# in pyproject.toml; only the build customisation stays here.
 
-# Published as 'camfr3' because the PyPI name 'camfr' belongs to the original
-# author. The import name is still 'camfr'.
-
-setup(name             = "camfr3",
-      use_scm_version  = True,
-      description      = "CAvity Modelling FRamework, ported to Python 3",
-      author           = "Peter Bienstman",
-      author_email     = "Peter.Bienstman@UGent.be",
-      maintainer       = "Abdelfettah Hadij-ElHouati",
-      maintainer_email = "abdel.14@gmail.com",
-      url              = "https://github.com/abdelix/CAMFR",
-      project_urls     = {"Upstream": "https://github.com/demisjohn/CAMFR"},
-      license          = "GPL-2.0-only",
-      packages         = ["camfr"],
+setup(packages         = ["camfr"],
       package_data     = {"camfr": ["_camfr.so"]},
-      python_requires  = ">=3.8",
-      install_requires = ["numpy", "matplotlib", "pillow"],
-      extras_require   = {"scipy": ["scipy"]},
       distclass        = camfr_distribution,
       cmdclass         = {"build_py": camfr_build_py},
       zip_safe         = False,

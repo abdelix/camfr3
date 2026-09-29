@@ -16,35 +16,46 @@ changing the build, and tick items off as they land.
 
 ## Build and install
 
+The environment is managed with uv (`pyproject.toml`, `uv.lock`, `.python-version`):
+
 ```bash
-cp machine_cfg.py.linux machine_cfg.py          # machine_cfg.py itself is gitignored
-BOOST_ROOT=$(realpath ../demultiplexers/deps/boost-root/usr) ../demultiplexers/deps/venv314/bin/pip install --no-build-isolation .
+cp machine_cfg.py.linux machine_cfg.py   # gitignored; on this machine it already exists
+uv sync                                  # creates .venv, builds and installs camfr3 (editable)
 ```
 
+- `uv sync` installs the project **editable**: Python edits in `camfr/` take effect at once;
+  C++/Fortran edits need another `uv sync`, which rebuilds because the sources are listed in
+  `[tool.uv] cache-keys`. `uv sync --reinstall-package camfr3` forces a rebuild.
+- `.venv` is self-contained (NumPy, Matplotlib, SciPy from PyPI; no system site-packages) and
+  runs on the system Python 3.14. The `dev` group (installed by default) adds SCons,
+  setuptools, setuptools-scm and SciPy.
 - `machine_cfg.py.linux` detects Python, NumPy and the versioned Boost.Python library
-  (e.g. `libboost_python314`) from the interpreter running the build. `BOOST_ROOT` defaults
-  to `/usr`; on this machine Boost was unpacked into `../demultiplexers/deps/boost-root/usr` (no root). It must be an absolute path: SCons resolves relative include paths from `camfr/`.
-- To build in place without installing: `python3 -m SCons` (SCons drives the C++/Fortran build;
-  `setup.py` calls it from `build_py`).
+  (e.g. `libboost_python314`) from the interpreter running the build. `BOOST_ROOT` (env var)
+  defaults to `/usr`; the local `machine_cfg.py` defaults it to
+  `../demultiplexers/deps/boost-root/usr` (unpacked without root). It must be an absolute
+  path: SCons resolves relative include paths from `camfr/`. Do not add a `uv.toml`: uv then
+  ignores `[tool.uv]` in `pyproject.toml`, including the cache keys.
+- Without uv: `python3 -m pip install .` also works (build isolation fetches the build deps).
+- To build in place without installing: `uv run python -m SCons` (SCons drives the C++/Fortran
+  build; `setup.py` calls it from `build_py`).
 - The version comes from git tags via setuptools-scm (`v3.0.0a1` → `3.0.0a1`; untagged commits
-  get `.devN+g<hash>`). With `--no-build-isolation` it must be installed in the venv (it is).
-  The generated `camfr/_version.py` is gitignored; an in-place SCons build reports `0+unknown`.
-- The venv once held both the old `camfr` and the new `camfr3` distribution, which own the same
-  `camfr/` directory. Uninstall both before reinstalling if that happens again.
-- Full build ≈ 70 s on 8 threads. Only `machine_cfg.py.linux` is maintained; the MacOSX/MSVC/
-  gentoo templates are Python 2 era.
+  get `.devN+g<hash>`). The generated `camfr/_version.py` is gitignored.
+- All package metadata is in `pyproject.toml`; `setup.py` only keeps the SCons hook and
+  the platform-wheel flag. `include-package-data = false` keeps the C++ sources out of wheels.
+- Full build ≈ 70 s on 8 threads (SCons reuses the in-tree `*.os`, so rebuilds are faster).
+  Only `machine_cfg.py.linux` is maintained; the MacOSX/MSVC/gentoo templates are Python 2 era.
 
 ## Test
 
 ```bash
-cd testsuite && MPLBACKEND=Agg ../../demultiplexers/deps/venv314/bin/python camfr_test.py   # 47 tests, expected: OK
+cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 47 tests, expected: OK
 ```
 
-Use the venv interpreter: `camfr` is installed there, not in the system Python. The testsuite
-imports the *installed* package, so reinstall after changing sources.
+Use the venv interpreter (or `uv run`): `camfr` is installed there, not in the system Python.
+The install is editable, so rebuild with `uv sync` only after C++/Fortran changes.
 Per-module runs are useful when a test crashes (one segfault aborts the whole suite). Each
 test module defines a `suite` and runs standalone:
-`cd testsuite && MPLBACKEND=Agg ../../demultiplexers/deps/venv314/bin/python wg.py`.
+`cd testsuite && MPLBACKEND=Agg ../.venv/bin/python wg.py`.
 A new test must be added to both the import list and `alltests` in `camfr_test.py`.
 Tests compare against hard-coded reference values with tolerance `eps.testing_eps`.
 `ADR_solver`, `stack2` and `metal_splitter` fail; upstream excludes all three from
@@ -69,7 +80,7 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   `material.py`, `RCLED.py`, `GARCLED.py`). `camfr_wrap*.cpp` are the Boost.Python bindings.
 - `camfr/math/` — vendored numerics: SLATEC Bessel routines, Jenkins–Traub (ACM Algorithm 419),
   Brent root/minimum finders. **Do not reformat or "modernise" vendored files.**
-- `visualisation/` — plotting modules; installed *into* the `camfr` package by `setup.py`.
+- `visualisation/` — only plotting examples now; the plotting modules live in `camfr/`.
 - `testsuite/`, `examples/` — run from the source tree, not installed.
 
 ## Architecture
@@ -123,7 +134,7 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   invoking shell and kill it (journal entry 23).
 - **Imports:** modules inside the package are imported through it (`from camfr.RCLED import *`).
   The Python 2 installer's `camfr.pth` used to make them top-level.
-- **`visualisation/camfr_matlab.py` is not ported** (needs `pymat`, Python 2 only).
+- **`camfr/camfr_matlab.py` is not ported** (needs `pymat`, Python 2 only).
 - **Performance:** the `Section` solver spends ~90% of its time in the plane-wave estimation
   stage. Passing `Section.set_estimate(n_eff)` skips it and is ~40× faster for the same result.
 
@@ -149,7 +160,11 @@ the original author, so a rename is planned for publication; credit Bienstman & 
 
 This checkout was split out of the `demultiplexers` project (`../demultiplexers`), which
 evaluates mode solvers for an AWG/demultiplexer modelling tool. The build dependencies
-(Boost, the Python 3.14 venv) stay in `../demultiplexers/deps/`, shared with that project.
+(Boost and the other solvers' venvs) stay in `../demultiplexers/deps/`. The Python 3.14 venv
+lives in this repo as `.venv/` (managed by uv, ignored by its own `.gitignore`);
+`../demultiplexers/deps/venv314` is a symlink to it, so the benchmark scripts there keep working
+and use the editable camfr from this checkout. `uv sync` recreates `.venv` at the same path, so
+the link stays valid.
 Benchmarks and comparison scripts are in `../demultiplexers/scripts/`;
 CAMFR is one of five solvers compared there (femwell, Tidy3D, MPB, Palace).
 
@@ -159,7 +174,7 @@ femwell agree to within 3e-4 (TE0 2.4454). The command is
 (about 1 s):
 
 ```bash
-NO_CAMFR_GRAPHICS=1 ../demultiplexers/deps/venv314/bin/python ../demultiplexers/scripts/si_wire_neff_camfr.py \
+NO_CAMFR_GRAPHICS=1 .venv/bin/python ../demultiplexers/scripts/si_wire_neff_camfr.py \
     --plane-waves 32 --slab-modes 70 --modes 3 --estimate 2.445 --estimate 1.770 --estimate 1.4925
 ```
 

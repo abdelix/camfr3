@@ -1,11 +1,61 @@
 [build-system]
 # The extension is compiled by SCons (driven from setup.py) against the NumPy
 # headers of the build environment.
-requires = ["setuptools>=64", "setuptools-scm>=8", "numpy", "scons"]
+requires = ["setuptools>=77", "setuptools-scm>=8", "numpy", "scons"]
 build-backend = "setuptools.build_meta"
+
+# Published as 'camfr3' because the PyPI name 'camfr' belongs to the original
+# author. The import name is still 'camfr'.
+
+[project]
+name = "camfr3"
+dynamic = ["version"]
+description = "CAvity Modelling FRamework, ported to Python 3"
+readme = "README.md"
+license = "GPL-2.0-only"
+license-files = ["LICENSE", "COPYRIGHT", "AUTHORS", "NOTICE"]
+authors = [{ name = "Peter Bienstman", email = "Peter.Bienstman@UGent.be" }]
+maintainers = [{ name = "Abdelfettah Hadij-ElHouati", email = "abdel.14@gmail.com" }]
+requires-python = ">=3.10"
+dependencies = ["numpy", "matplotlib", "pillow"]
+
+[project.optional-dependencies]
+scipy = ["scipy"]
+
+[project.urls]
+Homepage = "https://github.com/abdelix/CAMFR"
+Upstream = "https://github.com/demisjohn/CAMFR"
+
+[dependency-groups]
+# Installed by default with `uv sync`: tools for an in-place build
+# (python -m SCons) and SciPy, which GARCLED needs.
+dev = ["scons", "setuptools>=77", "setuptools-scm>=8", "scipy"]
 
 [tool.setuptools_scm]
 # Version from the latest git tag (vX.Y.Z); untagged commits get a .devN suffix.
 version_file = "camfr/_version.py"
 # Used when no git metadata is available (e.g. a plain source archive).
 fallback_version = "0+unknown"
+
+[tool.setuptools]
+# Ship only the Python modules and _camfr.so (package_data in setup.py), not
+# the C++/Fortran sources that sit in the same directory.
+include-package-data = false
+
+[tool.uv]
+# uv only rebuilds the project when a cache key changes; the defaults cover
+# pyproject.toml and setup.py only, so list the C++/Fortran sources and the
+# build configuration too.
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "setup.py" },
+  { file = "SConstruct" },
+  { file = "machine_cfg.py" },
+  { file = "camfr/**/*.cpp" },
+  { file = "camfr/**/*.h" },
+  { file = "camfr/**/*.c" },
+  { file = "camfr/**/*.f" },
+  { file = "camfr/**/*.py" },
+  { file = "camfr/**/SConscript*" },
+  { git = { commit = true, tags = true } },
+]
