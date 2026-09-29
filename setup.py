@@ -4,8 +4,9 @@
 #
 # The compiled extension _camfr.so is built with SCons, using the settings in
 # machine_cfg.py (copy one of the machine_cfg.py.* templates first). The
-# installed 'camfr' package is assembled from camfr/, the visualisation
-# modules and camfrversion.py.
+# installed 'camfr' package is assembled from camfr/ and the visualisation
+# modules. The version comes from the git tags (setuptools-scm, configured in
+# pyproject.toml).
 #
 #     cp machine_cfg.py.linux machine_cfg.py
 #     python3 -m pip install .
@@ -17,15 +18,10 @@ import sys
 from setuptools import Distribution, setup
 from setuptools.command.build_py import build_py
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from camfrversion import camfr_version
-
 # Modules that live outside camfr/ in the source tree but are installed
 # inside the camfr package.
 
-extra_modules = ["camfrversion.py",
-                 "visualisation/camfr_PIL.py",
+extra_modules = ["visualisation/camfr_PIL.py",
                  "visualisation/camfr_matlab.py",
                  "visualisation/camfr_tk.py",
                  "visualisation/section_matplotlib.py",
@@ -81,7 +77,7 @@ class camfr_distribution(Distribution):
 # author. The import name is still 'camfr'.
 
 setup(name             = "camfr3",
-      version          = camfr_version,
+      use_scm_version  = True,
       description      = "CAvity Modelling FRamework, ported to Python 3",
       author           = "Peter Bienstman",
       author_email     = "Peter.Bienstman@UGent.be",

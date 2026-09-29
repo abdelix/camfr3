@@ -1,5 +1,11 @@
 [build-system]
 # The extension is compiled by SCons (driven from setup.py) against the NumPy
 # headers of the build environment.
-requires = ["setuptools>=64", "numpy", "scons"]
+requires = ["setuptools>=64", "setuptools-scm>=8", "numpy", "scons"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+# Version from the latest git tag (vX.Y.Z); untagged commits get a .devN suffix.
+version_file = "camfr/_version.py"
+# Used when no git metadata is available (e.g. a plain source archive).
+fallback_version = "0+unknown"

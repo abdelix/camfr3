@@ -14,7 +14,16 @@ from .geometry import *      # converted numpy* to np.*
 from .geometry3d import *    # converted numpy* to np.*
 from .material import *
 from .section_matplotlib import *    # matplotlib functions for Section objects
-from .camfrversion import *
+
+# The version is written to _version.py by setuptools-scm at build time. It is
+# missing in an in-place SCons build, which has no packaging step.
+
+try:
+    from ._version import __version__
+except ImportError:
+    __version__ = "0+unknown"
+
+camfr_version = __version__  # name used before setuptools-scm
 
 # Splash screen.
 

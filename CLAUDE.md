@@ -26,6 +26,11 @@ BOOST_ROOT=$(realpath ../demultiplexers/deps/boost-root/usr) ../demultiplexers/d
   to `/usr`; on this machine Boost was unpacked into `../demultiplexers/deps/boost-root/usr` (no root). It must be an absolute path: SCons resolves relative include paths from `camfr/`.
 - To build in place without installing: `python3 -m SCons` (SCons drives the C++/Fortran build;
   `setup.py` calls it from `build_py`).
+- The version comes from git tags via setuptools-scm (`v3.0.0a1` → `3.0.0a1`; untagged commits
+  get `.devN+g<hash>`). With `--no-build-isolation` it must be installed in the venv (it is).
+  The generated `camfr/_version.py` is gitignored; an in-place SCons build reports `0+unknown`.
+- The venv once held both the old `camfr` and the new `camfr3` distribution, which own the same
+  `camfr/` directory. Uninstall both before reinstalling if that happens again.
 - Full build ≈ 70 s on 8 threads. Only `machine_cfg.py.linux` is maintained; the MacOSX/MSVC/
   gentoo templates are Python 2 era.
 

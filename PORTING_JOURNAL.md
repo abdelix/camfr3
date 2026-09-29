@@ -846,3 +846,31 @@ identifier is now `GPL-2.0-only`, the current SPDX form of the deprecated `GPL-2
 specify one. Whether shipping `LICENSE` alone counts as specifying v2 is arguable, so
 `GPL-2.0-only` is the conservative reading. It can be relaxed only if the original authors
 confirm an "or later" intent.
+
+### 29. Version from git tags with setuptools-scm
+
+**Change.** The fixed `camfr_version = "20090406"` in `camfrversion.py` is replaced by
+setuptools-scm, so the version comes from the latest `vX.Y.Z` git tag. The new line starts at
+`3.0.0` (first tag `v3.0.0a1`): major version 3 marks the Python 3 break and matches the
+`camfr3` name, and the new PyPI project has no older releases to order against.
+
+- `pyproject.toml`: `setuptools-scm>=8` added to the build requirements; a
+  `[tool.setuptools_scm]` section writes `camfr/_version.py` and falls back to `0+unknown`
+  without git metadata.
+- `setup.py`: `use_scm_version=True`; `camfrversion.py` is no longer injected into the package.
+- `camfr/__init__.py`: imports `__version__` from `_version` (or `0+unknown` in an in-place
+  SCons build) and keeps `camfr_version` as an alias for old scripts and the splash screen.
+- `camfrversion.py` deleted. Its last user, the `distrib` target in `makefile`, was dead Python
+  2-era packaging (already listed for removal in `MODERNISATION.md`); `python -m build --sdist`
+  replaces it, so the target was removed rather than ported.
+- `setuptools-scm` 10.3.4 installed into the build venv (needed with `--no-build-isolation`).
+
+**Issue.** After the rename in entry 27 the venv held two distributions, `camfr 20090406` and
+`camfr3`, both owning `site-packages/camfr/`, and the stale `camfrversion.py` stayed behind.
+Uninstalling only `camfr` would have deleted files `camfr3` had installed. **Resolution:**
+uninstalled both and reinstalled `camfr3`. The stale in-tree `build/` directory (which also
+held `camfrversion.py`) was deleted before building.
+
+**Verification.** Untagged build reported `1.dev965+unknown.gc3bef1856.d20260929` as
+`camfr.__version__`, `camfr.camfr_version` and the `camfr3` distribution metadata. Testsuite:
+47 tests, OK. Si-wire check: TE0 2.4451, TM0 1.7702, TE1 1.4925.
