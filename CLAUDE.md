@@ -1,4 +1,6 @@
-# CLAUDE.md — working notes for CAMFR
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 CAMFR (CAvity Modelling FRamework) is a full-vectorial Maxwell solver built on eigenmode
 expansion (EME): C++ and Fortran compiled into a Boost.Python extension (`camfr/_camfr.so`),
@@ -35,7 +37,11 @@ cd testsuite && MPLBACKEND=Agg ../../demultiplexers/deps/venv314/bin/python camf
 
 Use the venv interpreter: `camfr` is installed there, not in the system Python. The testsuite
 imports the *installed* package, so reinstall after changing sources.
-Per-module runs are useful when a test crashes (one segfault aborts the whole suite).
+Per-module runs are useful when a test crashes (one segfault aborts the whole suite). Each
+test module defines a `suite` and runs standalone:
+`cd testsuite && MPLBACKEND=Agg ../../demultiplexers/deps/venv314/bin/python wg.py`.
+A new test must be added to both the import list and `alltests` in `camfr_test.py`.
+Tests compare against hard-coded reference values with tolerance `eps.testing_eps`.
 `ADR_solver`, `stack2` and `metal_splitter` fail; upstream excludes all three from
 `camfr_test.py`, and it is unverified whether they ever passed on Python 2.
 
@@ -57,6 +63,33 @@ Per-module runs are useful when a test crashes (one segfault aborts the whole su
   Brent root/minimum finders. **Do not reformat or "modernise" vendored files.**
 - `visualisation/` — plotting modules; installed *into* the `camfr` package by `setup.py`.
 - `testsuite/`, `examples/` — run from the source tree, not installed.
+
+## Architecture
+
+- **Two abstract hierarchies** carry the whole solver. `Waveguide` (`waveguide.h`) is a
+  cross-section that finds its own eigenmodes (`find_modes`, `get_mode`). The concrete
+  types are in `camfr/primitives/`: `planar` (1D, uniform), `slab` (2D, stratified),
+  `circ` (cylindrical), `section` (3D rectangular, built from slabs) and `blochsection`.
+  `Scatterer` (`scatterer.h`) maps modes of an incidence waveguide to modes of an exit
+  waveguide via R/T matrices. `Interface`, `Stack`, `InfStack` and `BlochStack` are all
+  scatterers.
+- **Stacks are chains of `Chunk`s** (waveguide + length). The full structure's R/T come from
+  the S-matrix cascade (`S_scheme.cpp`). Field calculation reuses those results through
+  `S_scheme_fields`/`T_scheme_fields`.
+  Interface overlap matrices are memoised in the global `interface_cache` (`icache.*`), and
+  waveguides deregister from it in their destructor.
+- **Global solver state.** Wavelength, number of modes `N`, polarisation, solver choice, PML
+  and precision settings live in a single `Global global` struct (`defs.h`). Python sets them
+  through free functions (`set_lambda`, `set_N`, `set_polarisation`, …). A change to them
+  affects every object in the process. Call `free_tmps()` between independent calculations.
+- **Python surface.** `camfr_wrap.cpp` (`BOOST_PYTHON_MODULE(_camfr)`) plus
+  `camfr_wrap_2.cpp` (Cavity, Planar, Slab, Section, BlochSection) expose the C++ classes.
+  `camfr/__init__.py` star-imports `_camfr`, the pure-Python geometry and material helpers
+  and (unless `NO_CAMFR_GRAPHICS` is set) `pylab`. Expressions such as `Slab(air(2) + Si(0.5))`
+  are built by `expression.*` from `Material(length)` terms.
+- **Build.** `SConstruct` reads `machine_cfg.py` and delegates to `camfr/SConscript`. Object
+  files (`*.os`) and `_camfr.so` land *in the source tree* (gitignored). The docs are
+  Texinfo (`docs/camfr.texi`).
 
 ## Conventions
 

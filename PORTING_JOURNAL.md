@@ -799,3 +799,17 @@ context without the `demultiplexers` project. The additions:
 modes. The surplus mode came back with zero field, and the script failed with
 `ZeroDivisionError` when it computed the TE fraction. **Resolution:** pass `--modes 3`; the
 requirement is documented in `CLAUDE.md`.
+
+### 26. Architecture notes and single-test command in CLAUDE.md
+
+**Change.** `CLAUDE.md` gained the standard Claude Code header, the command for running one
+test module on its own (each module defines `suite` and runs under `unittest.main()`), and an
+Architecture section: the `Waveguide`/`Scatterer` hierarchies, stacks as chains of `Chunk`s
+cascaded with the S-matrix scheme, the `interface_cache`, the process-wide `Global global`
+settings, the split of the bindings over two `camfr_wrap*.cpp` files, and where SCons puts
+its build products.
+
+**Issue.** A first draft described the T-matrix scheme as an alternative way of computing
+R/T. In `stack.cpp` only `S_scheme` computes R/T; `T_scheme_fields` is used for fields. The
+text was corrected before committing.
+
