@@ -52,9 +52,12 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 
 ## Repository state
 
-- Git remote `origin` is the **upstream** repo (demisjohn/CAMFR). The `python3-port` branch has
-  **never been pushed**. Do not push to `origin`. The user's own fork is `abdelix/CAMFR`. Ask
-  where to publish before adding a remote or pushing.
+- Remotes: `origin` is the user's fork `abdelix/CAMFR`; `upstream` is `demisjohn/CAMFR`.
+  `python3-port` tracks `origin/python3-port`. Never push to `upstream`.
+- Tags `vX.Y.Z` set the package version (setuptools-scm); `v3.0.0a1` is pushed. Push new tags
+  explicitly (`git push origin <tag>`).
+- Pushing needs the user's credentials (HTTPS prompt), which this environment cannot supply:
+  commit locally and ask the user to push from their own terminal.
 - The upstream `py35_compat` branch is an earlier, abandoned attempt. It was not merged, and
   this port was done independently.
 - `TODO` is Peter Bienstman's original feature wishlist. Leave it alone and track new work in

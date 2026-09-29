@@ -874,3 +874,15 @@ held `camfrversion.py`) was deleted before building.
 **Verification.** Untagged build reported `1.dev965+unknown.gc3bef1856.d20260929` as
 `camfr.__version__`, `camfr.camfr_version` and the `camfr3` distribution metadata. Testsuite:
 47 tests, OK. Si-wire check: TE0 2.4451, TM0 1.7702, TE1 1.4925.
+
+### 30. Branch published to the user's fork
+
+**Change.** The remotes were reorganised: upstream `demisjohn/CAMFR` is now `upstream`, and
+`origin` is the user's fork `abdelix/CAMFR`, whose `master` was identical to upstream's
+(`f00a092`). `python3-port` (up to `3ae9590`) and the tag `v3.0.0a1` are pushed there, and the
+local branch tracks `origin/python3-port`. The "Repository state" section of `CLAUDE.md` is
+updated to match.
+
+**Issue.** Pushing from the Claude Code session failed: HTTPS needs a credential prompt it
+cannot answer, and the local SSH key is not accepted by GitHub. **Resolution:** the user pushed
+from their own terminal; `CLAUDE.md` records that pushes are done by the user.
