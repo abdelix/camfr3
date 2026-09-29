@@ -755,3 +755,18 @@ could **not** confirm whether these three passed on Python 2.
 `pkill -f` with a pattern that also matched the command line of the shell script running it.
 The script killed itself (exit status 144) before writing anything. No repository state changed;
 the entry was then written without pattern-based process matching.
+
+### 24. Checkout moved to its own workspace
+
+**Change.** The checkout moved from `~/Projects/demultiplexers/CAMFR` to `~/Projects/camfr3`, so
+development can continue as a standalone project. The directory name anticipates the planned
+package rename; the Python module is still `camfr`. (`~/Projects/CAMFR` was already taken by an
+older clone of the `abdelix/CAMFR` fork, which was left untouched.)
+
+The build dependencies were not moved: Boost and the Python 3.14 venv stay in
+`~/Projects/demultiplexers/deps/`, where the solver benchmark scripts also use them. `CLAUDE.md`
+now points at `../demultiplexers/deps/`.
+
+**Issue.** None. The venv holds a regular (non-editable) install of `camfr`, so the benchmark
+scripts keep working; rebuild with the command in `CLAUDE.md` to pick up changes from the new
+location.

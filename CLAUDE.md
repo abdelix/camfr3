@@ -16,12 +16,12 @@ changing the build, and tick items off as they land.
 
 ```bash
 cp machine_cfg.py.linux machine_cfg.py          # machine_cfg.py itself is gitignored
-BOOST_ROOT=../deps/boost-root/usr ../deps/venv314/bin/pip install --no-build-isolation .
+BOOST_ROOT=../demultiplexers/deps/boost-root/usr ../demultiplexers/deps/venv314/bin/pip install --no-build-isolation .
 ```
 
 - `machine_cfg.py.linux` detects Python, NumPy and the versioned Boost.Python library
   (e.g. `libboost_python314`) from the interpreter running the build. `BOOST_ROOT` defaults
-  to `/usr`; on this machine Boost was unpacked into `../deps/boost-root/usr` (no root).
+  to `/usr`; on this machine Boost was unpacked into `../demultiplexers/deps/boost-root/usr` (no root).
 - To build in place without installing: `python3 -m SCons` (SCons drives the C++/Fortran build;
   `setup.py` calls it from `build_py`).
 - Full build ≈ 70 s on 8 threads. Only `machine_cfg.py.linux` is maintained; the MacOSX/MSVC/
@@ -80,6 +80,8 @@ the original author, so a rename is planned for publication; credit Bienstman & 
 
 ## Context
 
-This checkout lives inside the `demultiplexers` project, which evaluates mode solvers for an
-AWG/demultiplexer modelling tool. Benchmarks and comparison scripts are in `../scripts/`;
+This checkout was split out of the `demultiplexers` project (`../demultiplexers`), which
+evaluates mode solvers for an AWG/demultiplexer modelling tool. The build dependencies
+(Boost, the Python 3.14 venv) stay in `../demultiplexers/deps/`, shared with that project.
+Benchmarks and comparison scripts are in `../demultiplexers/scripts/`;
 CAMFR is one of five solvers compared there (femwell, Tidy3D, MPB, Palace).
