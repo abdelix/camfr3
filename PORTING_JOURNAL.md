@@ -832,3 +832,17 @@ API and the simple index), while `camfr` belongs to the original author.
 
 **Issue.** The licence field is still `GPL-2.0-or-later` (open item in `CLAUDE.md`), so
 `CITATION.cff` carries no `license` key yet. The version is still the fixed `20090406`.
+
+### 28. Licence identifier set to GPL-2.0-only; maintainer email added
+
+**Change.** `setup.py` declared `GPL-2.0-or-later`. A search of the sources found no "or later"
+grant: the source headers carry no GPL notice, the README says only "released under the GPL",
+and the only "any later version" wording in `LICENSE` is the appendix template ("How to Apply
+These Terms to Your New Programs"), not a grant. The shipped `LICENSE` is GPL v2, so the
+identifier is now `GPL-2.0-only`, the current SPDX form of the deprecated `GPL-2.0`.
+`CITATION.cff` gained the same `license` key. `setup.py` also gained `maintainer_email`.
+
+**Issue.** GPL v2 section 9 lets a recipient choose any GPL version when a program does not
+specify one. Whether shipping `LICENSE` alone counts as specifying v2 is arguable, so
+`GPL-2.0-only` is the conservative reading. It can be relaxed only if the original authors
+confirm an "or later" intent.

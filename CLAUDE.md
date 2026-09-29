@@ -124,8 +124,6 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 - **Published name is `camfr3`** (free on PyPI as of 2026-09-30; the module is still
   `import camfr`). `setup.py`, the README header, `NOTICE` and `CITATION.cff` are updated.
   Not yet uploaded — see the Distribution section of `MODERNISATION.md`.
-- **`setup.py` licence field** says `GPL-2.0-or-later`. `LICENSE` is GPL v2, and no "or later"
-  grant has been verified in the sources. Use `GPL-2.0` unless one is found.
 - **Second-`Section` segfault** (see Gotchas): not yet investigated. An ASan/UBSan build is the
   suggested first step (`MODERNISATION.md`).
 - **`examples/other/OLED_grating_avg.py`** was stopped before it finished (it is very long-running).

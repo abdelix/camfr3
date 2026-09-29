@@ -3,6 +3,7 @@ message: >-
   If you use this software, please cite the article below describing CAMFR.
 title: "camfr3: CAMFR (CAvity Modelling FRamework) for Python 3"
 type: software
+license: GPL-2.0-only
 authors:
   - family-names: Bienstman
     given-names: Peter
