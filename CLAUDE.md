@@ -69,6 +69,12 @@ fails the run): both are deterministic and clean under ASan, but ill-conditioned
 45–46). A new test module just needs a `unittest.TestCase`; for the old runner also add it to
 the import list and `alltests` in `camfr_test.py`.
 
+**CI** (`.github/workflows/ci.yml`, GitHub Actions, Ubuntu 24.04): `uv sync --locked` + `pytest`
+for Python 3.10, 3.12 and 3.14 (`UV_PYTHON` per job), and a job that runs the suite on the
+`make asan` build with UBSan `halt_on_error=1`. `uv.lock` resolves per Python version (e.g.
+NumPy 2.2.6 on 3.10), so `--locked` works across the matrix. Lint with
+`uvx --from actionlint-py actionlint .github/workflows/ci.yml`.
+
 The old runner still works and runs everything in one process, so tests must restore any
 global setting they change (or later tests fail only there):
 

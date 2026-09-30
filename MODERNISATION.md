@@ -70,7 +70,10 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
       silently leaving them out of `camfr_test.py`. `ADR_solver` passes since entry 41;
       `stack2` and `metal_splitter` are strict `xfail` (entry 49); `PhC_splitter`, also
       commented out upstream, passes and is back.
-- [ ] GitHub Actions on Linux and macOS: build, test, sanitizer job.
+- [x] GitHub Actions on Linux: build, test, sanitizer job (`.github/workflows/ci.yml`,
+      entry 50; Python 3.10/3.12/3.14 + an ASan/UBSan job).
+- [ ] GitHub Actions on macOS (Homebrew gcc for gfortran, Blitz++, Accelerate or OpenBLAS).
+      Not added yet: it could not be tried locally.
 - [ ] `cibuildwheel` to publish binary wheels (manylinux + OpenBLAS), so users never compile.
 
 ## 6. Distribution

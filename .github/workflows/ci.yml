@@ -1,0 +1,74 @@
+# Build CAMFR and run the testsuite, plus an AddressSanitizer/UBSan run.
+# The commands mirror the local workflow in CLAUDE.md (uv sync, pytest,
+# make asan).
+
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12", "3.14"]
+    env:
+      UV_PYTHON: ${{ matrix.python }}   # overrides .python-version for every uv call
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # setuptools-scm needs the tags for the version
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gfortran libblitz0-dev libblas-dev liblapack-dev
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Build and install
+        run: uv sync --locked
+
+      - name: Test
+        run: uv run --no-sync pytest
+
+  sanitizers:
+    name: ASan + UBSan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gfortran libblitz0-dev libblas-dev liblapack-dev
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Build with sanitizers
+        run: |
+          uv sync --locked
+          make asan
+
+      # The extension is loaded into an uninstrumented Python, so the ASan
+      # runtime is preloaded. Leak checking is off (Python itself "leaks" at
+      # exit); UBSan findings abort, so any report fails the job.
+      - name: Test under ASan + UBSan
+        run: |
+          export LD_PRELOAD=$(gcc -print-file-name=libasan.so)
+          export ASAN_OPTIONS=detect_leaks=0
+          export UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1:suppressions=$PWD/ubsan.supp
+          .venv/bin/python -m pytest

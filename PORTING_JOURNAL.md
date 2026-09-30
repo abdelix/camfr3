@@ -1400,3 +1400,28 @@ of `camfr/`, `testsuite/` and `examples/` with `-W error::SyntaxWarning` found n
 **Verification.** `uv run pytest`: **51 passed, 2 xfailed**, no warnings, ~12 s (8 threads).
 A probe test that raises SIGSEGV is reported as one failure (`CRASHED with signal 11`) while
 the other tests still run.
+
+### 50. GitHub Actions CI
+
+**Change.** `.github/workflows/ci.yml` (on push, pull request and manual dispatch):
+
+- **test**: Ubuntu 24.04, Python 3.10, 3.12 and 3.14 (`UV_PYTHON` per job overrides
+  `.python-version`); apt `gfortran libblitz0-dev libblas-dev liblapack-dev`;
+  `actions/checkout` with `fetch-depth: 0` (setuptools-scm needs the tags);
+  `astral-sh/setup-uv` with its cache; `uv sync --locked`; `uv run --no-sync pytest`.
+- **sanitizers**: `uv sync --locked`, `make asan`, then pytest with the ASan runtime
+  preloaded, `detect_leaks=0` and UBSan `halt_on_error=1` (any finding fails the job).
+- The strict `xfail` markers now use `raises=AssertionError`, so only the known wrong result
+  is expected; another error in `stack2`/`metal_splitter` would fail the run.
+
+macOS is not included: it could not be tried here (`MODERNISATION.md` keeps it open).
+
+**Issue.** `uv run --no-sync` in a Python 3.10 environment warned that it does not satisfy
+`.python-version` (3.14). **Resolution:** `UV_PYTHON` at job level instead of `--python` on
+`uv sync`.
+
+**Verification.** GitHub is not reachable from here, so each job's commands were run in a fresh
+clone of the branch (tags included, empty `.venv`): Python 3.10 (NumPy 2.2.6, SciPy 1.15.3) and
+3.12: 51 passed, 2 xfailed each; sanitizer job (3.14): build ≈ 5 min, 51 passed, 2 xfailed in
+72 s. `actionlint` reports no problems. The workflow itself runs for the first time when the
+branch is pushed.

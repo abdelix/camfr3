@@ -18,7 +18,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 collect_ignore = ["camfr_test.py", "eps.py", "__init__.py"]
 
 # Known failures (PORTING_JOURNAL.md entries 45-46). strict: an unexpected pass
-# fails the run, so the marker is removed when a test starts to pass.
+# fails the run, so the marker is removed when a test starts to pass. Only the
+# known wrong result (AssertionError) is expected; any other error still fails.
 
 XFAIL = {
     "stack2": "ill-conditioned: R12 does not converge with N (journal entry 45)",
@@ -30,4 +31,5 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         module = os.path.splitext(os.path.basename(str(item.fspath)))[0]
         if module in XFAIL:
-            item.add_marker(pytest.mark.xfail(reason=XFAIL[module], strict=True))
+            item.add_marker(pytest.mark.xfail(reason=XFAIL[module], strict=True,
+                                              raises=AssertionError))
