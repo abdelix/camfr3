@@ -35,6 +35,8 @@ from functools import cmp_to_key
 ############################################################################
 
 class Point:
+    """A 2D point. In a Geometry, x is the propagation direction (z of the
+    Stack) and y the transverse one."""
 
     def __init__(self, x, y):
         self.x = x
@@ -100,6 +102,7 @@ class Line:
 ############################################################################
 
 class Circle:
+    """A disc of Material mat, centre Point c, radius r, for a Geometry."""
 
     def __init__(self, c, r, mat):
         self.c    = c
@@ -131,6 +134,8 @@ class Circle:
 ############################################################################
 
 class Rectangle:
+    """A rectangle of Material mat between opposite corners p1 and p2 (Points),
+    for a Geometry."""
 
     def __init__(self, p1, p2, mat):
         p = [p1, p2]
@@ -173,6 +178,7 @@ class Rectangle:
 ############################################################################
 
 class Square:
+    """A square of Material mat, centre Point c, side a, for a Geometry."""
 
     def __init__(self, c, a, mat):
         self.c = c
@@ -207,6 +213,8 @@ class Square:
 ############################################################################
               
 class Triangle:
+    """A triangle of Material mat with vertices p1, p2, p3 (Points), for a
+    Geometry."""
 
     def __init__(self, p1, p2, p3, mat):
         self.p = [p1, p2, p3]
@@ -356,6 +364,13 @@ def average_slabs(slabs, i0, i1):
 ############################################################################
 
 class Picture(object):
+    """A bitmap image (png, jpg, ...) as a structure, for a Geometry.
+
+    The image is converted to grey scale; white maps to index n_min, black to
+    n_max, and grey levels are interpolated linearly (or taken from the list
+    ``materials``). A Picture is not combined with other shapes: only the last
+    Picture added to a Geometry is used.
+    """
 
     def __init__(self, name, n_min=0, n_max=2.5, materials=[]):
         self.imageName    = name
@@ -649,6 +664,12 @@ def makeRefractiveIndexList(camfr_mat, colors):
 slab_cache = []
 
 class Geometry:
+    """A 2D structure built from shapes, discretised into a Stack expression.
+
+    ``g = Geometry(background)``, then ``g += Rectangle(...)`` etc.; shapes
+    added later take precedence where they overlap. ``g.to_expression(...)``
+    gives the Expression for a Stack.
+    """
 
     def __init__(self, background_mat = Material(1.0)):
         self.background_mat = background_mat
@@ -664,6 +685,17 @@ class Geometry:
 
     def to_expression(self, x0, x1, dx=0, y0=0, y1=0, dy=0, add_flipped=0,
                       calc_average=0, verbose=False, rescaling='ANTIALIAS'):
+        """Discretise the geometry into an Expression of Slabs.
+
+        x0..x1 is the range along the propagation direction, cut into slices
+        dx long; y0..y1 the transverse range. Neighbouring slices are merged
+        when their material boundaries differ by less than dy, so slowly
+        varying regions get fewer, thicker slices. add_flipped appends the
+        mirrored expression; calc_average also returns the average eps and
+        1/eps. For a Picture, x0, x1 convert pixels to lengths and dx sets
+        the resolution (0: one slice per pixel column); rescaling is
+        'NEAREST', 'ANTIALIAS' or 'INV_AVERAGE'.
+        """
 
         # Test whether geometry contains a picture.
         

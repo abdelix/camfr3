@@ -44,6 +44,7 @@ def zintersection_compare(xyobjs1,xyobjs2):
 ############################################################################
 
 class Point3D:
+    """A 3D point: x, y transverse, z the propagation direction."""
 
     def __init__(self, x, y,z):
         self.x = x
@@ -88,6 +89,8 @@ def sort_point3d(p1, p2):
 ############################################################################
 
 class Cylinder:
+    """A cylinder of Material mat along y: centre Point3D c, radius r (in the
+    x-z plane), height h, for a Geometry3D."""
 
     def __init__(self, c, r, h, mat):
         self.c   = c
@@ -119,6 +122,8 @@ class Cylinder:
 ############################################################################
 
 class Box:
+    """A box of Material mat between opposite corners p1 and p2 (Point3Ds),
+    for a Geometry3D."""
 
     def __init__(self, p1, p2, mat):
         p = [p1, p2]
@@ -185,6 +190,11 @@ def get_cached_section(xy):
   return 0
       
 class Geometry3D:
+    """A 3D structure built from shapes, discretised into Sections.
+
+    As Geometry, one dimension up: ``to_expression`` slices along z and
+    builds a Section (with M1, M2 as in Section) for each distinct slice.
+    """
 
     def __init__(self, background_mat,M1,M2):
         self.background_mat = background_mat
@@ -200,6 +210,8 @@ class Geometry3D:
         return self
    
     def to_expression(self, x0, x1, dx, y0, y1, dy, z0, z1, dz, add_flipped=0):
+        """Discretise into an Expression of Sections along z (steps dz); x and
+        y as in Geometry.to_expression."""
 
         if (x0 > x1) or (y0 > y1) or (z0 > z1):
             print("Error: Invalid boundaries for to_expression.")

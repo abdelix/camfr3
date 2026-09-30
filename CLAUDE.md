@@ -57,7 +57,7 @@ make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
 ## Test
 
 ```bash
-uv run pytest                   # 51 passed, 2 xfailed; each test in its own process (--forked)
+uv run pytest                   # 61 passed, 2 xfailed; each test in its own process (--forked)
 uv run pytest testsuite/wg.py   # one module
 ```
 
@@ -67,7 +67,8 @@ test only, and CAMFR's global settings (PML, walls, solver switches) cannot leak
 `stack2` and `metal_splitter` are strict `xfail` (listed in `conftest.py`; an unexpected pass
 fails the run): both are deterministic and clean under ASan, but ill-conditioned (entries
 45–46). A new test module just needs a `unittest.TestCase`; for the old runner also add it to
-the import list and `alltests` in `camfr_test.py`.
+the import list and `alltests` in `camfr_test.py`. New bindings need a docstring and `py::arg` names
+(`testsuite/docstrings.py` fails otherwise; journal entry 61).
 
 **Wheels** (`[tool.cibuildwheel]` in `pyproject.toml`, `tools/ci/install_wheel_deps.sh`): Linux
 x86_64 manylinux_2_28 wheels for CPython 3.10–3.14, built in CI (`wheels` job, one per version)
@@ -87,7 +88,7 @@ The old runner still works and runs everything in one process, so tests must res
 global setting they change (or later tests fail only there):
 
 ```bash
-cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 51 tests, expected: OK
+cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 61 tests, expected: OK
 ```
 
 Use the venv interpreter (or `uv run`): `camfr` is installed there, not in the system Python.

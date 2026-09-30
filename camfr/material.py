@@ -15,6 +15,9 @@ from camfr import *
 ##############################################################################
 
 class Dispersive_Material_Factory:
+  """Materials from a tabulated index. The file has lines of wavelength (nm),
+  n and k; calling the factory returns a Material at the current wavelength
+  (needs SciPy)."""
 
   def __init__(self, filename):
 
@@ -47,6 +50,8 @@ class Dispersive_Material_Factory:
 #############################################################################
 
 class ZnS_Factory:
+  """ZnS with the dispersion formula of DeVore, JOSA 41, 416 (1951); calling
+  it returns a Material at the current wavelength."""
 
   def __call__(self):
 

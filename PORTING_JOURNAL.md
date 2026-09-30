@@ -1639,3 +1639,32 @@ name there, so `cavity.plot()` raised `NameError`. It now uses `_stack_plot`, li
 
 **Verification.** Found while adding docstrings (entry 61). `Cavity.plot is Stack.plot` now; the
 Tk window itself remains unverified (no display).
+
+### 61. Docstrings and argument names in the bindings (issue #14)
+
+**Change.** Every public function, class, method and enum value of `camfr._camfr` has a
+docstring and named arguments (`py::arg`), so `help()`, editor completion and keyword calls work
+(`set_N(N=7)`, `Material(n=1.5)`, `Coord(c1=…, c2=…, z=…)`). The texts come from the reference
+chapter of `docs/camfr.texi`, checked against the C++ sources: defaults are those of the
+`global*` initialisers (`defs.cpp`, `generalslab.cpp`, `section.cpp`, `circ.cpp`), and the
+settings the manual never documented (`set_NOV`, `A_switch`…) are described from their use in
+`section.cpp`. Docstrings use the Google style, for Sphinx napoleon (issue #15); pybind11
+prepends the signature. The Python-side public API got docstrings too: the plotting functions
+attached to the classes (`camfr_PIL.py`), the geometry shapes and `to_expression`
+(`geometry.py`, `geometry3d.py`) and the material factories.
+
+- `set_fourier_orders` was two overloads (a C++ default argument pybind11 cannot see); it is one
+  function with `My=0` now.
+- The manual's `Material(n, mur)` is wrong: the second argument is `etar`, with
+  eps_r = n·etar and mu_r = n/etar (`material.h`). The docstring says so.
+- `Stack(expression, n)` repeats the expression n times (`no_of_periods`); the argument is
+  named `periods`. `R12_power`/`T12_power` work only for `BlochSection` stacks.
+
+**Test.** `testsuite/docstrings.py` fails for any public name of the extension (69 functions,
+~230 methods) without a docstring beyond the signature, and checks keyword arguments. It avoids
+`from camfr import *`, which shadows `any` with NumPy's (always truthy on a generator: the first
+version passed for that reason). In the old single-process runner, other tests leave module
+attributes such as `_gain_material`, so only public names and functions are checked.
+
+**Verification.** `uv run pytest`: 61 passed, 2 xfailed; old runner: 61 tests, OK. The test
+found the undocumented plotting methods, and with them the `Cavity.plot` bug (entry 60).
