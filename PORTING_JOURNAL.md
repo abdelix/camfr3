@@ -1447,3 +1447,16 @@ Local equivalents (fresh clone, 4 cores / 8 threads, entry 50): build 73 s (3.10
 deprecated Node.js 20. Now `actions/checkout@v7` and `astral-sh/setup-uv@v10.2.0` (both
 `node24`; setup-uv no longer publishes a floating major tag, hence the exact version). The
 inputs used (`fetch-depth`, `enable-cache`) exist in both.
+
+### 52. Fork renamed to abdelix/camfr3; pushing through gh
+
+**Change.** The fork was renamed from `abdelix/CAMFR` to `abdelix/camfr3` (the remote `origin`
+already points there). `pyproject.toml` (`Homepage`), `CITATION.cff` (`repository-code`) and
+`CLAUDE.md` now use the new name. `CLAUDE.md` also records how to push from this environment:
+`gh` supplies the credentials as a one-off credential helper, since plain `git push` asks for
+another account's HTTPS password.
+
+**Issue.** The first push this way was rejected: the change to `.github/workflows/ci.yml`
+(entry 51) needs the token's `workflow` scope, and the `gh` token had only `gist`, `read:org`,
+`repo`. **Resolution:** the scope is added with `gh auth refresh -h github.com -s workflow`,
+which needs an interactive login by the user.

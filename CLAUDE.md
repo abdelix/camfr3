@@ -88,7 +88,7 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 
 ## Repository state
 
-- Remotes: `origin` is the user's fork `abdelix/CAMFR`; `upstream` is `demisjohn/CAMFR`.
+- Remotes: `origin` is the user's fork `abdelix/camfr3` (renamed from `abdelix/CAMFR`); `upstream` is `demisjohn/CAMFR`.
   Never push to `upstream`.
 - **Branches.** `python3-port` is the Python 3 port (SCons, Boost.Python), ending at `89b6c2f`.
   `modernisation` branches off it and holds the `MODERNISATION.md` work and what came out of
@@ -97,8 +97,11 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   goes on `modernisation`; this `CLAUDE.md` describes that branch.
 - Tags `vX.Y.Z` set the package version (setuptools-scm); `v3.0.0a1` is pushed. Push new tags
   explicitly (`git push origin <tag>`).
-- Pushing needs the user's credentials (HTTPS prompt), which this environment cannot supply:
-  commit locally and ask the user to push from their own terminal.
+- Pushing: `gh` is authenticated as `abdelix`; plain `git push` over HTTPS prompts for another
+  account's password and fails here. Push with gh as credential helper:
+  `git -c credential.helper= -c 'credential.https://github.com.helper=!gh auth git-credential'
+  -c credential.https://github.com.username=abdelix push`. Changing `.github/workflows/` needs
+  the token's `workflow` scope (`gh auth refresh -h github.com -s workflow`, interactive).
 - The upstream `py35_compat` branch is an earlier, abandoned attempt. It was not merged, and
   this port was done independently.
 - `TODO` is Peter Bienstman's original feature wishlist. Leave it alone and track new work in

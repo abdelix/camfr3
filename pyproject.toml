@@ -31,7 +31,7 @@ dependencies = ["numpy", "matplotlib", "pillow"]
 scipy = ["scipy"]
 
 [project.urls]
-Homepage = "https://github.com/abdelix/CAMFR"
+Homepage = "https://github.com/abdelix/camfr3"
 Upstream = "https://github.com/demisjohn/CAMFR"
 
 [dependency-groups]

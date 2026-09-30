@@ -16,7 +16,7 @@ authors:
     affiliation: MIT
   - family-names: Hadij-ElHouati
     given-names: Abdelfettah
-repository-code: "https://github.com/abdelix/CAMFR"
+repository-code: "https://github.com/abdelix/camfr3"
 url: "http://camfr.sourceforge.net/"
 keywords:
   - eigenmode expansion
