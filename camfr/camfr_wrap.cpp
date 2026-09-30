@@ -10,12 +10,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#include <limits>
-
-#include <boost/python.hpp>
-
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/operators.h>
 
 #include "camfr_wrap.h"
 
@@ -47,7 +43,7 @@
 /////////////////////////////////////////////////////////////////////////////
 //
 // Python wrappers for the CAMFR classes.
-// The wrappers are created with the Boost library.
+// The wrappers are created with pybind11 (Boost.Python until 2026).
 //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -330,24 +326,24 @@ inline Real stack_ext_S_flux(Stack& s, Real c1_start, Real c1_stop, Real eps)
   {return dynamic_cast<MultiWaveguide*>(s.get_ext())
      ->S_flux(s.ext_field_expansion(),c1_start,c1_stop,eps);}
 
-inline boost::python::object stack_fw_bw(Stack& s, Real z)
+inline py::tuple stack_fw_bw(Stack& s, Real z)
 {
   cVector fw(global.N,fortranArray);
   cVector bw(global.N,fortranArray);
 
   s.fw_bw_field(Coord(0,0,z), &fw, &bw);
 
-  return boost::python::make_tuple(fw, bw);
+  return py::make_tuple(fw, bw);
 }
 
-inline boost::python::object stack_fw_bw_2(Stack& s, Real z, Limit l)
+inline py::tuple stack_fw_bw_2(Stack& s, Real z, Limit l)
 {
   cVector fw(global.N,fortranArray);
   cVector bw(global.N,fortranArray);
 
   s.fw_bw_field(Coord(0,0,z,Plus,Plus,l), &fw, &bw);
 
-  return boost::python::make_tuple(fw, bw);
+  return py::make_tuple(fw, bw);
 }
 
 inline Real stack_length(Stack& s) 
@@ -357,169 +353,6 @@ inline Real stack_width(Stack& s)
 
 inline void free_tmp_interfaces(Waveguide& w)
   {interface_cache.deregister(&w);}
-
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Functions converting C++ objects to and from Python objects.
-//
-/////////////////////////////////////////////////////////////////////////////
-
-struct cVector_to_python
-{
-  static PyObject* convert(const cVector& c)
-  {
-    npy_intp dim[1]; dim[0] = c.rows();
-
-    PyArrayObject* result
-      = (PyArrayObject*) PyArray_SimpleNew(1, dim, NPY_CDOUBLE);
-
-    if (!result)
-      boost::python::throw_error_already_set();
-
-    char*     data    = (char*) PyArray_DATA(result);
-    npy_intp* strides = PyArray_STRIDES(result);
-
-    for (int i=0; i<c.rows(); i++)
-        *(Complex*)(data + i*strides[0]) = c(i+1);
-
-    return PyArray_Return(result);
-  }
-};
-
-struct register_cVector_from_python
-{
-
-  register_cVector_from_python()
-  {
-    boost::python::converter::registry::push_back
-      (&convertible, &construct, boost::python::type_id<cVector>());
-  }
-
-  static void* convertible(PyObject* o)
-  { 
-    if (!PyArray_Check(o))
-      return NULL;
-
-    if (    ( PyArray_NDIM((PyArrayObject*)(o)) != 1)
-         || ( PyArray_DIM((PyArrayObject*)(o), 0) != npy_intp(global.N)) )
-      return NULL;
-
-    return o;
-  }
-    
-    
-  static void construct
-    (PyObject* o, boost::python::converter::rvalue_from_python_stage1_data* 
-     data)
-  {
-    void* storage = ((
-      boost::python::converter::rvalue_from_python_storage<cVector>*)data)
-        ->storage.bytes;
-
-    PyArrayObject* a = (PyArrayObject *)
-      PyArray_FROMANY(o, NPY_CDOUBLE, 1, 1, NPY_ARRAY_IN_ARRAY);
-
-    if (!a)
-      boost::python::throw_error_already_set();
-
-    new (storage) cVector(global.N, fortranArray);
-
-    char*     adata    = (char*) PyArray_DATA(a);
-    npy_intp* astrides = PyArray_STRIDES(a);
-
-    for (int i=0; i<global.N; i++)
-      (*(cVector*)(storage))(i+1) = *(Complex*)(adata + i*astrides[0]);
-    
-    Py_DECREF(a);
-
-    data->convertible = storage;
-  }
-
-};
-
-struct cMatrix_to_python
-{
-  static PyObject* convert(const cMatrix& c)
-  {
-    npy_intp dim[2]; dim[0] = c.rows(); dim[1] = c.columns();
-
-    PyArrayObject* result
-      = (PyArrayObject*) PyArray_SimpleNew(2, dim, NPY_CDOUBLE);
-
-    if (!result)
-      boost::python::throw_error_already_set();
-
-    char*     data    = (char*) PyArray_DATA(result);
-    npy_intp* strides = PyArray_STRIDES(result);
-
-    for (int i=0; i<c.rows(); i++)
-      for (int j=0; j<c.columns(); j++)
-        *(Complex*)(data + i*strides[0] + j*strides[1])
-          = c(i+1,j+1);
-
-    return PyArray_Return(result);
-  }
-};
-
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Integer arguments from objects implementing __index__.
-//
-// On Python 2, numpy.int64 was a subclass of int, so NumPy integers were
-// accepted wherever the C++ side expects an integer. On Python 3, NumPy
-// integers only implement __index__, which the built-in Boost.Python
-// converters ignore.
-//
-/////////////////////////////////////////////////////////////////////////////
-
-template<class T>
-struct register_integer_from_python_index
-{
-  register_integer_from_python_index()
-  {
-    boost::python::converter::registry::push_back
-      (&convertible, &construct, boost::python::type_id<T>());
-  }
-
-  static void* convertible(PyObject* o)
-  {
-    if (PyLong_Check(o) || PyFloat_Check(o) || !PyIndex_Check(o))
-      return NULL;
-
-    return o;
-  }
-
-  static void construct
-    (PyObject* o, boost::python::converter::rvalue_from_python_stage1_data*
-     data)
-  {
-    boost::python::handle<> index(PyNumber_Index(o));
-
-    long long v = PyLong_AsLongLong(index.get());
-
-    if ((v == -1) && PyErr_Occurred())
-      boost::python::throw_error_already_set();
-
-    if (   (v < static_cast<long long>(std::numeric_limits<T>::min()))
-        || (v > static_cast<long long>(std::numeric_limits<T>::max())) )
-    {
-      PyErr_SetString(PyExc_OverflowError, "integer argument out of range.");
-      boost::python::throw_error_already_set();
-    }
-
-    void* storage = ((
-      boost::python::converter::rvalue_from_python_storage<T>*)data)
-        ->storage.bytes;
-
-    new (storage) T(static_cast<T>(v));
-
-    data->convertible = storage;
-  }
-};
 
 
 
@@ -560,7 +393,7 @@ Term waveguide_to_term(Waveguide& w, const Complex& d)
 //
 /////////////////////////////////////////////////////////////////////////////
 
-inline void stack_set_inc_field_function(Stack& s, PyObject* o, Real eps)
+inline void stack_set_inc_field_function(Stack& s, py::object o, Real eps)
 {
   Slab* slab = dynamic_cast<Slab*>(s.get_inc());
   
@@ -641,103 +474,92 @@ Complex basematerial_mur(Material& m, int i)
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Enums.
+//
+//   The values are also exported at module level (e.g. camfr.TE). As with
+//   Boost.Python, str() gives the bare name ('TE').
+//
+/////////////////////////////////////////////////////////////////////////////
+
+template <class E>
+void name_as_str(py::enum_<E>& e)
+  {e.def("__str__", [](py::handle h) {return py::str(h.attr("name"));});}
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // The CAMFR module itself
 //
 /////////////////////////////////////////////////////////////////////////////
 
-void camfr_wrap_2();
+void camfr_wrap_2(py::module_& m);
 
-BOOST_PYTHON_MODULE(_camfr)
+PYBIND11_MODULE(_camfr, m)
 {
-  using namespace boost::python;
-
-  implicitly_convertible<Scatterer,Term>();
-  implicitly_convertible<Stack,Term>();
-
-  // import_array() contains a 'return NULL' on Python 3, which does not
-  // compile inside the void module init body generated by Boost.Python.
-
-  if (_import_array() < 0)
-    throw_error_already_set();
-
-  to_python_converter<cVector, cVector_to_python>();
-  to_python_converter<cMatrix, cMatrix_to_python>();
-  register_cVector_from_python();
-
-  register_integer_from_python_index<int>();
-  register_integer_from_python_index<unsigned int>();
-
   // Wrap Limit enum.
 
-  enum_<Limit>("Limit")
+  py::enum_<Limit> limit(m, "Limit", py::arithmetic());
+  limit
     .value("Plus", Plus)
     .value("Min",  Min)
-    ;
-
-  scope().attr("Plus") = Plus;
-  scope().attr("Min")  = Min;
+    .export_values();
+  name_as_str(limit);
 
   // Wrap Solver enum.
 
-  enum_<Solver>("Solver")
+  py::enum_<Solver> solver(m, "Solver", py::arithmetic());
+  solver
     .value("ADR",           ADR)
     .value("track",         track)
-    .value("series",        series)    
+    .value("series",        series)
     .value("ASR",           ASR)
     .value("stretched_ASR", stretched_ASR)
-    ;
-
-  scope().attr("ADR")           = ADR;
-  scope().attr("track")         = track;
-  scope().attr("series")        = series;
-  scope().attr("ASR")           = ASR;
-  scope().attr("stretched_ASR") = stretched_ASR;
+    .export_values();
+  name_as_str(solver);
 
   // Wrap Stability enum.
 
-  enum_<Stability>("Stability")
+  py::enum_<Stability> stability(m, "Stability", py::arithmetic());
+  stability
     .value("normal", normal)
     .value("extra",  extra)
     .value("SVD",    SVD)
-    ;
-
-  scope().attr("normal") = normal;
-  scope().attr("extra")  = extra;
-  scope().attr("SVD")    = SVD;
+    .export_values();
+  name_as_str(stability);
 
   // Wrap Field_calc_heuristic enum.
 
-  enum_<Field_calc_heuristic>("Field_calc_heuristic")
+  py::enum_<Field_calc_heuristic> heuristic
+    (m, "Field_calc_heuristic", py::arithmetic());
+  heuristic
     .value("identical", identical)
     .value("symmetric", symmetric)
-    ;
-
-  scope().attr("identical") = identical;
-  scope().attr("symmetric") = symmetric;
+    .export_values();
+  name_as_str(heuristic);
 
   // Wrap Bloch_calc enum.
 
-  enum_<Bloch_calc>("Bloch_calc")
+  py::enum_<Bloch_calc> bloch_calc(m, "Bloch_calc", py::arithmetic());
+  bloch_calc
     .value("GEV", GEV)
     .value("T",   T)
-    ;
-
-  scope().attr("GEV") = GEV;
-  scope().attr("T")   = T;
+    .export_values();
+  name_as_str(bloch_calc);
 
   // Wrap Eigen_calc enum.
 
-  enum_<Eigen_calc>("Eigen_calc")
+  py::enum_<Eigen_calc> eigen_calc(m, "Eigen_calc", py::arithmetic());
+  eigen_calc
     .value("lapack",  lapack)
     .value("arnoldi", arnoldi)
-    ;
-
-  scope().attr("lapack")  = lapack;
-  scope().attr("arnoldi") = arnoldi;
+    .export_values();
+  name_as_str(eigen_calc);
 
   // Wrap Polarisation enum.
 
-  enum_<Polarisation>("Polarisation")
+  py::enum_<Polarisation> polarisation(m, "Polarisation", py::arithmetic());
+  polarisation
     .value("unknown", unknown)
     .value("TEM",     TEM)
     .value("TE",      TE)
@@ -745,162 +567,151 @@ BOOST_PYTHON_MODULE(_camfr)
     .value("HE",      HE)
     .value("EH",      EH)
     .value("TE_TM",   TE_TM)
-    ;
-
-  scope().attr("unknown") = unknown;
-  scope().attr("TEM")     = TEM;
-  scope().attr("TE")      = TE;
-  scope().attr("TM")      = TM;
-  scope().attr("HE")      = HE;
-  scope().attr("EH")      = EH;
-  scope().attr("TE_TM")   = TE_TM;
+    .export_values();
+  name_as_str(polarisation);
 
   // Wrap Fieldtype enum.
 
-  enum_<Fieldtype>("Fieldtype")
+  py::enum_<Fieldtype> fieldtype(m, "Fieldtype", py::arithmetic());
+  fieldtype
     .value("cos_type", cos_type)
     .value("sin_type", sin_type)
-    ;
+    .export_values();
+  name_as_str(fieldtype);
 
-  scope().attr("cos_type") = cos_type;
-  scope().attr("sin_type") = sin_type; 
+  // Wrap Section_wall_type enum.
 
- // Wrap Section_wall_type enum.
-
-  enum_<Section_wall_type>("Section_wall_type")
+  py::enum_<Section_wall_type> wall_type
+    (m, "Section_wall_type", py::arithmetic());
+  wall_type
     .value("E_wall",  E_wall)
-    .value("H_wall",  H_wall)    
+    .value("H_wall",  H_wall)
     .value("no_wall", no_wall)
-    ;
-
-  scope().attr("E_wall")  = E_wall;
-  scope().attr("H_wall")  = H_wall;  
-  scope().attr("no_wall") = no_wall;
+    .export_values();
+  name_as_str(wall_type);
 
   // Wrap Sort_type.
 
-  enum_<Sort_type>("Sort_type")
+  py::enum_<Sort_type> sort_type(m, "Sort_type", py::arithmetic());
+  sort_type
     .value("highest_index", highest_index)
     .value("lowest_loss",   lowest_loss)
-    ;
-  
-  scope().attr("highest_index") = highest_index;
-  scope().attr("lowest_loss")   = lowest_loss;
+    .export_values();
+  name_as_str(sort_type);
 
   // Wrap Section_solver enum.
 
-  enum_<Section_solver>("Section_solver")
-    .value("OS",                OS)
-    .value("NT",                NT)
-    .value("L",                 L)
-    .value("L_anis",            L_anis)
-    .value("ASR_2D",            ASR_2D)
-    .value("ASR_2D_stretched",	ASR_2D_stretched)
-    ;
-
-  scope().attr("OS")                = OS;
-  scope().attr("NT")                = NT; 
-  scope().attr("L")                 = L;  
-  scope().attr("L_anis")            = L_anis; 
-  scope().attr("ASR_2D")            = ASR_2D;
-  scope().attr("ASR_2D_stretched")  = ASR_2D_stretched;
+  py::enum_<Section_solver> section_solver
+    (m, "Section_solver", py::arithmetic());
+  section_solver
+    .value("OS",               OS)
+    .value("NT",               NT)
+    .value("L",                L)
+    .value("L_anis",           L_anis)
+    .value("ASR_2D",           ASR_2D)
+    .value("ASR_2D_stretched", ASR_2D_stretched)
+    .export_values();
+  name_as_str(section_solver);
 
   // Wrap Mode_correction enum.
 
-  enum_<Mode_correction>("Mode_correction")
+  py::enum_<Mode_correction> mode_correction
+    (m, "Mode_correction", py::arithmetic());
+  mode_correction
     .value("none",        none)
     .value("snap",        snap)
     .value("guided_only", guided_only)
     .value("full",        full)
-    ;
-
-  scope().attr("none")        = none;
-  scope().attr("snap")        = snap;
-  scope().attr("guided_only") = guided_only;
-  scope().attr("full")        = full;
+    .export_values();
+  name_as_str(mode_correction);
 
   // Wrap getters and setters for global parameters.
 
-  def("set_lambda",                 set_lambda);
-  def("get_lambda",                 get_lambda);
-  def("set_N",                      set_N);
-  def("N",                          get_N);
-  def("set_polarisation",           set_polarisation);  
-  def("get_polarisation",           get_polarisation);
-  def("set_gain_material",          set_gain_material);
-  def("set_solver",                 set_solver);
-  def("set_stability",              set_stability);
-  def("set_precision",              set_precision);
-  def("set_precision_enhancement",  set_precision_enhancement);
-  def("set_dx_enhanced",            set_dx_enhanced);
-  def("set_precision_rad",          set_precision_rad);
-  def("set_C_upperright",           set_C_upperright);
-  def("set_sweep_from_previous",    set_sweep_from_previous);
-  def("set_sweep_steps",            set_sweep_steps);
-  def("set_eps_trace_coarse",       set_eps_trace_coarse);
-  def("set_chunk_tracing",          set_chunk_tracing);
-  def("set_unstable_exp_threshold", set_unstable_exp_threshold);
-  def("set_field_calc_heuristic",   set_field_calc_heuristic);
-  def("set_bloch_calc",             set_bloch_calc);
-  def("set_eigen_calc",             set_eigen_calc);
-  def("set_orthogonal",             set_orthogonal);
-  def("set_degenerate",             set_degenerate);
-  def("set_circ_order",             set_circ_order);
-  def("set_circ_field_type",        set_circ_fieldtype);
-  def("set_left_wall",              set_left_wall);
-  def("set_right_wall",             set_right_wall);
-  def("set_upper_wall",             set_upper_wall);
-  def("set_lower_wall",             set_lower_wall);
-  def("set_left_PML",               set_left_PML);
-  def("set_right_PML",              set_right_PML);
-  def("set_upper_PML",              set_upper_PML);
-  def("set_lower_PML",              set_lower_PML);
-  def("set_circ_PML",               set_circ_PML);  
-  def("set_eta_ASR",                set_eta_ASR);
-  def("set_section_reduction",      set_section_reduction);
-  def("set_n_eff_max",              set_n_eff_max);
-  def("set_NOV",                    set_NOV);
-  def("set_estimate_cutoff",        set_estimate_cutoff);
-  def("set_estimate_cutoff_section",set_estimate_cutoff_section);
-  def("set_low_index_core",         set_low_index_core);
-  def("set_beta",                   set_beta);
-  def("set_section_solver",         set_section_solver);    
-  def("set_section_eta_ASR",        set_section_eta_ASR);
-  def("A_switch",                   A_switch);
-  def("B_switch",                   B_switch);
-  def("C_switch",                   C_switch);
-  def("D_switch",                   D_switch);
-  def("print_estimates",            print_estimates);
-  def("set_u_step",                 set_u_step);
-  def("set_v_step",                 set_v_step);
-  def("set_percentage_stretched",   set_percentage_stretched);
-  def("set_extended_output",        set_extended_output);
-  def("set_keep_all_estimates",     set_keep_all_estimates);  
-  def("set_mode_correction",        set_mode_correction);
-  def("set_mode_surplus",           set_mode_surplus);
-  def("set_backward_modes",         set_backward_modes);
-  def("set_keep_all_1D_estimates",  set_keep_all_1D_estimates);
-  def("set_fourier_orders",         set_fourier_orders);   
-  def("get_fourier_orders_x",       get_fourier_orders_x);
-  def("get_fourier_orders_y",       get_fourier_orders_y);
-  def("set_davy",                   set_davy);  
-  def("set_always_recalculate",     set_always_recalculate);  
-  def("set_calc_field_profiles",    set_calc_field_profiles);
-  def("set_always_dense",           set_always_dense);  
-  def("set_mueller_precision",      set_mueller_precision);
-  def("free_tmps",                  free_tmps);
-  def("free_tmp_interfaces",        free_tmp_interfaces);
+  m.def("set_lambda",                 set_lambda);
+  m.def("get_lambda",                 get_lambda);
+  m.def("set_N",                      set_N);
+  m.def("N",                          get_N);
+  m.def("set_polarisation",           set_polarisation);
+  m.def("get_polarisation",           get_polarisation);
+  m.def("set_gain_material",          set_gain_material);
+  m.def("set_solver",                 set_solver);
+  m.def("set_stability",              set_stability);
+  m.def("set_precision",              set_precision);
+  m.def("set_precision_enhancement",  set_precision_enhancement);
+  m.def("set_dx_enhanced",            set_dx_enhanced);
+  m.def("set_precision_rad",          set_precision_rad);
+  m.def("set_C_upperright",           set_C_upperright);
+  m.def("set_sweep_from_previous",    set_sweep_from_previous);
+  m.def("set_sweep_steps",            set_sweep_steps);
+  m.def("set_eps_trace_coarse",       set_eps_trace_coarse);
+  m.def("set_chunk_tracing",          set_chunk_tracing);
+  m.def("set_unstable_exp_threshold", set_unstable_exp_threshold);
+  m.def("set_field_calc_heuristic",   set_field_calc_heuristic);
+  m.def("set_bloch_calc",             set_bloch_calc);
+  m.def("set_eigen_calc",             set_eigen_calc);
+  m.def("set_orthogonal",             set_orthogonal);
+  m.def("set_degenerate",             set_degenerate);
+  m.def("set_circ_order",             set_circ_order);
+  m.def("set_circ_field_type",        set_circ_fieldtype);
+  m.def("set_left_wall",              set_left_wall);
+  m.def("set_right_wall",             set_right_wall);
+  m.def("set_upper_wall",             set_upper_wall);
+  m.def("set_lower_wall",             set_lower_wall);
+  m.def("set_left_PML",               set_left_PML);
+  m.def("set_right_PML",              set_right_PML);
+  m.def("set_upper_PML",              set_upper_PML);
+  m.def("set_lower_PML",              set_lower_PML);
+  m.def("set_circ_PML",               set_circ_PML);
+  m.def("set_eta_ASR",                set_eta_ASR);
+  m.def("set_section_reduction",      set_section_reduction);
+  m.def("set_n_eff_max",              set_n_eff_max);
+  m.def("set_NOV",                    set_NOV);
+  m.def("set_estimate_cutoff",        set_estimate_cutoff);
+  m.def("set_estimate_cutoff_section",set_estimate_cutoff_section);
+  m.def("set_low_index_core",         set_low_index_core);
+  m.def("set_beta",                   set_beta);
+  m.def("set_section_solver",         set_section_solver);
+  m.def("set_section_eta_ASR",        set_section_eta_ASR);
+  m.def("A_switch",                   A_switch);
+  m.def("B_switch",                   B_switch);
+  m.def("C_switch",                   C_switch);
+  m.def("D_switch",                   D_switch);
+  m.def("print_estimates",            print_estimates);
+  m.def("set_u_step",                 set_u_step);
+  m.def("set_v_step",                 set_v_step);
+  m.def("set_percentage_stretched",   set_percentage_stretched);
+  m.def("set_extended_output",        set_extended_output);
+  m.def("set_keep_all_estimates",     set_keep_all_estimates);
+  m.def("set_mode_correction",        set_mode_correction);
+  m.def("set_mode_surplus",           set_mode_surplus);
+  m.def("set_backward_modes",         set_backward_modes);
+  m.def("set_keep_all_1D_estimates",  set_keep_all_1D_estimates);
+  m.def("set_fourier_orders",         set_fourier_orders);
+  m.def("set_fourier_orders",         [](int Mx) {set_fourier_orders(Mx);});
+  m.def("get_fourier_orders_x",       get_fourier_orders_x);
+  m.def("get_fourier_orders_y",       get_fourier_orders_y);
+  m.def("set_davy",                   set_davy);
+  m.def("set_always_recalculate",     set_always_recalculate);
+  m.def("set_calc_field_profiles",    set_calc_field_profiles);
+  m.def("set_always_dense",           set_always_dense);
+  m.def("set_mueller_precision",      set_mueller_precision);
+  m.def("free_tmps",                  free_tmps);
+  m.def("free_tmp_interfaces",        free_tmp_interfaces);
 
   // Wrap Coord.
 
-  class_<Coord>("Coord", init<const Real&, const Real&, const Real&,
-         optional<Limit, Limit, Limit> >())
+  py::class_<Coord>(m, "Coord")
+    .def(py::init<const Real&, const Real&, const Real&>())
+    .def(py::init<const Real&, const Real&, const Real&, Limit>())
+    .def(py::init<const Real&, const Real&, const Real&, Limit, Limit>())
+    .def(py::init<const Real&, const Real&, const Real&,
+                  Limit, Limit, Limit>())
     .def("__repr__", &Coord::repr)
     ;
 
   // Wrap Field.
 
-  class_<Field>("Field", no_init)
+  py::class_<Field>(m, "Field")
     .def("E1",       field_E1)
     .def("E2",       field_E2)
     .def("Ez",       field_Ez)
@@ -918,19 +729,20 @@ BOOST_PYTHON_MODULE(_camfr)
 
   // Wrap FieldExpansion.
 
-  class_<FieldExpansion>("FieldExpansion", no_init)
+  py::class_<FieldExpansion>(m, "FieldExpansion")
     .def("field",    &FieldExpansion::field)
     .def("__repr__", &FieldExpansion::repr)
     ;
 
   // Wrap BaseMaterial.
 
-  class_<BaseMaterial, boost::noncopyable>("BaseMaterial", no_init);
+  py::class_<BaseMaterial>(m, "BaseMaterial");
 
   // Wrap Material.
-  class_<Material, bases<BaseMaterial> >
-    ("Material", init<const Complex& >())
-    .def(init<const Complex&, const Complex& >())
+
+  py::class_<Material, BaseMaterial>(m, "Material")
+    .def(py::init<const Complex&>())
+    .def(py::init<const Complex&, const Complex&>())
     .def("__call__",     material_to_term)
     .def("epsr",         material_epsr)
     .def("mur",          material_mur)
@@ -939,8 +751,8 @@ BOOST_PYTHON_MODULE(_camfr)
     .def("n",            &Material::n)
     .def("etar",         &Material::etar)
     .def("eta",          &Material::eta)
-    .def("set_epsr_mur", &Material::set_epsr_mur)    
-    .def("set_epsr",     &Material::set_epsr)    
+    .def("set_epsr_mur", &Material::set_epsr_mur)
+    .def("set_epsr",     &Material::set_epsr)
     .def("set_mur",      &Material::set_mur)
     .def("set_n",        &Material::set_n)
     .def("set_etar",     &Material::set_etar)
@@ -950,9 +762,9 @@ BOOST_PYTHON_MODULE(_camfr)
 
   // Wrap BiaxialMaterial.
 
-  class_<BiaxialMaterial, bases<BaseMaterial> >
-    ("BiaxialMaterial",init<const Complex&,const Complex&,const Complex&,
-                            const Complex&,const Complex&,const Complex& >())
+  py::class_<BiaxialMaterial, BaseMaterial>(m, "BiaxialMaterial")
+    .def(py::init<const Complex&, const Complex&, const Complex&,
+                  const Complex&, const Complex&, const Complex&>())
     .def("__call__", material_to_term)
     .def("epsr",     basematerial_epsr)
     .def("mur",      basematerial_mur)
@@ -961,11 +773,11 @@ BOOST_PYTHON_MODULE(_camfr)
 
   // Wrap Material_length.
 
-  class_<Material_length>("Material_length", no_init);
+  py::class_<Material_length>(m, "Material_length");
 
   // Wrap Mode.
 
-  class_<Mode>("Mode", no_init)
+  py::class_<Mode>(m, "Mode")
     .def("field",    &Mode::field)
     .def("n_eff",    &Mode::n_eff)
     .def("kz",       &Mode::get_kz)
@@ -975,9 +787,9 @@ BOOST_PYTHON_MODULE(_camfr)
 
   // Wrap Waveguide.
 
-  class_<Waveguide, boost::noncopyable>("Waveguide", no_init)
+  py::class_<Waveguide>(m, "Waveguide")
     .def("core",     &Waveguide::get_core,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("epsr",     &Waveguide::epsr_at)
     .def("mur",      &Waveguide::mur_at)
     .def("eps",      &Waveguide::eps_at)
@@ -986,11 +798,11 @@ BOOST_PYTHON_MODULE(_camfr)
     .def("etar",     &Waveguide::etar_at)
     .def("N",        &Waveguide::N)
     .def("mode",     waveguide_get_mode,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("fw_mode",  waveguide_get_fw_mode,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("bw_mode",  waveguide_get_bw_mode,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("calc",     &Waveguide::find_modes)
     .def("__repr__", &Waveguide::repr)
     .def("__call__", waveguide_to_term)
@@ -998,118 +810,120 @@ BOOST_PYTHON_MODULE(_camfr)
 
   // Wrap Waveguide_length.
 
-  class_<Waveguide_length>("Waveguide_length", no_init);
+  py::class_<Waveguide_length>(m, "Waveguide_length");
 
   // Wrap MultiWaveguide.
 
-  class_<MultiWaveguide, bases<Waveguide>, boost::noncopyable>
-    ("MultiWaveguide", no_init)
+  py::class_<MultiWaveguide, Waveguide>(m, "MultiWaveguide")
     .def("field_from_source", &MultiWaveguide::field_from_source)
     ;
 
   // Wrap MonoWaveguide.
 
-  class_<MonoWaveguide, bases<Waveguide>, boost::noncopyable>
-    ("MonoWaveguide", no_init);
+  py::class_<MonoWaveguide, Waveguide>(m, "MonoWaveguide");
 
   // Wrap Scatterer.
 
-  class_<Scatterer, boost::noncopyable>("Scatterer", no_init)
+  py::class_<Scatterer>(m, "Scatterer")
     .def("calc", &Scatterer::calcRT)
     .def("free", &Scatterer::freeRT)
     .def("inc",  &Scatterer::get_inc,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("ext",  &Scatterer::get_ext,
-         return_value_policy<reference_existing_object>())
-    .def(self + Expression())
-    .def(self + Term())
+         py::return_value_policy::reference)
+    .def(py::self + Expression())
+    .def(py::self + Term())
     ;
 
   // Wrap MultiScatterer.
 
-  class_<MultiScatterer, bases<Scatterer>, boost::noncopyable>
-    ("MultiScatterer", no_init);
+  py::class_<MultiScatterer, Scatterer>(m, "MultiScatterer");
 
   // Wrap DenseScatterer.
 
-  class_<DenseScatterer, bases<MultiScatterer>, boost::noncopyable>
-    ("DenseScatterer", no_init);
+  py::class_<DenseScatterer, MultiScatterer>(m, "DenseScatterer");
 
   // Wrap DiagScatterer.
 
-  class_<DiagScatterer, bases<MultiScatterer>, boost::noncopyable>
-    ("DiagScatterer", no_init);
+  py::class_<DiagScatterer, MultiScatterer>(m, "DiagScatterer");
 
   // Wrap MonoScatterer.
 
-  class_<MonoScatterer, bases<Scatterer>, boost::noncopyable>
-    ("MonoScatterer", no_init);
+  py::class_<MonoScatterer, Scatterer>(m, "MonoScatterer");
 
   // Wrap SquashedScatterer.
 
-  class_<SquashedScatterer, bases<DenseScatterer> >
-    ("SquashedScatterer", init<DenseScatterer&>());
+  py::class_<SquashedScatterer, DenseScatterer>(m, "SquashedScatterer")
+    .def(py::init<DenseScatterer&>());
 
   // Wrap FlippedScatterer.
 
-  class_<FlippedScatterer, bases<MultiScatterer> >
-    ("FlippedScatterer", init<MultiScatterer&>());
+  py::class_<FlippedScatterer, MultiScatterer>(m, "FlippedScatterer")
+    .def(py::init<MultiScatterer&>());
 
   // Wrap E_Wall.
 
-  class_<E_Wall, bases<DiagScatterer> >("E_Wall", init<Waveguide&>());
+  py::class_<E_Wall, DiagScatterer>(m, "E_Wall")
+    .def(py::init<Waveguide&>());
 
   // Wrap H_Wall.
 
-  class_<H_Wall, bases<DiagScatterer> >("H_Wall", init<Waveguide&>());
+  py::class_<H_Wall, DiagScatterer>(m, "H_Wall")
+    .def(py::init<Waveguide&>());
 
   // Wrap Expression.
 
-  class_<Expression>("Expression")
-    .def(init<const Term&>())
-    .def(init<const Expression&>())
+  py::class_<Expression>(m, "Expression")
+    .def(py::init<>())
+    .def(py::init<const Term&>())
+    .def(py::init<const Expression&>())
     .def("flatten",  &Expression::flatten)
-    .def("inc",  &Expression::get_inc,
-         return_value_policy<reference_existing_object>())
-    .def("ext",  &Expression::get_ext,
-         return_value_policy<reference_existing_object>())
+    .def("inc",      &Expression::get_inc,
+         py::return_value_policy::reference)
+    .def("ext",      &Expression::get_ext,
+         py::return_value_policy::reference)
     .def("__repr__", &Expression::repr)
     .def("add",      &Expression::operator+=)
-    .def(self += self)
-    .def(self + self)
-    .def(self + Term())
-    .def(self * int())
-    .def(int() * self)
+    .def("__iadd__", [](py::object self, const Expression& e)
+         {self.cast<Expression&>() += e; return self;})
+    .def(py::self + py::self)
+    .def(py::self + Term())
+    .def(py::self * int())
+    .def(int() * py::self)
     ;
 
   // Wrap Term.
 
-  class_<Term>("Term", init<Scatterer&>())
-    .def(init<Stack&>())
-    .def(init<const Expression&>())
-    .def("inc",  &Term::get_inc,
-         return_value_policy<reference_existing_object>())
-    .def("ext",  &Term::get_ext,
-         return_value_policy<reference_existing_object>())
+  py::class_<Term>(m, "Term")
+    .def(py::init<Scatterer&>())
+    .def(py::init<Stack&>())
+    .def(py::init<const Expression&>())
+    .def("inc",      &Term::get_inc,
+         py::return_value_policy::reference)
+    .def("ext",      &Term::get_ext,
+         py::return_value_policy::reference)
     .def("__repr__", &Term::repr)
-    .def(self + self)
-    .def(self + Expression())
-    .def(self * int())
-    .def(int() * self)
+    .def(py::self + py::self)
+    .def(py::self + Expression())
+    .def(py::self * int())
+    .def(int() * py::self)
     ;
 
   // Wrap Stack.
 
-  class_<Stack>("Stack", init<const Expression&, optional<int> >())
-    .def(init<const Term&, optional<int> >())
+  py::class_<Stack>(m, "Stack")
+    .def(py::init<const Expression&>())
+    .def(py::init<const Expression&, int>())
+    .def(py::init<const Term&>())
+    .def(py::init([](const Term& t, int n) {return new Stack(Expression(t), n);}))
     .def("calc",                     &Stack::calcRT)
     .def("free",                     &Stack::freeRT)
     .def("inc",                      &Stack::get_inc,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("ext",                      &Stack::get_ext,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("scatterer",                &Stack::as_multi,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("length",                   stack_length)
     .def("width",                    stack_width)
     .def("set_inc_field",            stack_set_inc_field)
@@ -1137,15 +951,19 @@ BOOST_PYTHON_MODULE(_camfr)
     .def("R12",                      stack_R12)
     .def("R21",                      stack_R21)
     .def("T12",                      stack_T12)
-    .def("T21",                      stack_T21)    
-    .def("R12_power",                &Stack::get_R12_power)    
+    .def("T21",                      stack_T21)
+    .def("R12_power",                &Stack::get_R12_power)
     .def("T12_power",                &Stack::get_T12_power)
-    .def(self + Expression())
-    .def(self + Term())
+    .def(py::self + Expression())
+    .def(py::self + Term())
     ;
+
+  // Scatterers and stacks are accepted wherever a Term is expected.
+
+  py::implicitly_convertible<Scatterer, Term>();
+  py::implicitly_convertible<Stack,     Term>();
 
   // The rest of the wrappers.
 
-  camfr_wrap_2();
+  camfr_wrap_2(m);
 }
-

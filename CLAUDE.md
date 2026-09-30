@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 CAMFR (CAvity Modelling FRamework) is a full-vectorial Maxwell solver built on eigenmode
-expansion (EME): C++ and Fortran compiled into a Boost.Python extension (`camfr/_camfr.so`),
+expansion (EME): C++ and Fortran compiled into a pybind11 extension (`camfr/_camfr.so`),
 wrapped by a thin Python package.
 
 Upstream (`master`) is Python 2.7 only. The `python3-port` branch ports it to Python 3.
@@ -31,10 +31,9 @@ make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
   accept that install and do not rebuild. The first `make dev` after a `uv sync` is full.
 - **Editable install:** Python edits in `camfr/` take effect at once; the extension
   (`_camfr.cpython-314-….so`) and `_version.py` are installed in site-packages.
-- **Boost.Python** is found as header + `libboost_python<XY>` directly (not via Boost's CMake
-  config, which is broken for partial installs). This machine's Boost is unpacked in
-  `../demultiplexers/deps/boost-root/usr`; the gitignored `local.cmake` sets `Boost_ROOT` to it
-  (template: `local.cmake.example`). `BOOST_ROOT`/`Boost_ROOT` in the environment also work.
+- **Bindings** use pybind11 (header-only, from PyPI; Boost.Python until journal entry 38).
+  System libraries needed: Blitz++, BLAS/LAPACK, gfortran. An optional gitignored `local.cmake`
+  (template `local.cmake.example`) holds machine-specific CMake settings; none are needed here.
   Do not add a `uv.toml`: uv then ignores `[tool.uv]` in `pyproject.toml`.
 - `cmake` and `ninja` are also installed as uv tools in `~/.local/bin`; scikit-build-core uses
   them instead of downloading them for each isolated build.
@@ -47,7 +46,7 @@ make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
   `.devN+g<hash>`), written to `camfr/_version.py` by scikit-build-core's `generate`.
 - Without uv: `python3 -m pip install .` works (build deps, CMake and Ninja come from PyPI).
 - **Warnings:** C/C++ compile with `-Wall -Wextra -Wno-unused-parameter` (option
-  `CAMFR_WARNINGS`); Boost and Blitz++ headers are `SYSTEM`. ~318 unique warnings remain, mostly
+  `CAMFR_WARNINGS`); Blitz++ headers are `SYSTEM`. ~318 unique warnings remain, mostly
   `sign-compare`/`reorder`; the ones that matter are listed in journal entry 37.
 - **Sanitizers:** `make asan` installs an ASan+UBSan build (`CAMFR_SANITIZE`, RelWithDebInfo,
   `build/asan`) into `.venv` in place of the normal one; `make dev` switches back. Run with
@@ -87,7 +86,7 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 ## Layout
 
 - `camfr/` — C++/Fortran sources plus the Python package (`__init__.py`, `geometry*.py`,
-  `material.py`, `RCLED.py`, `GARCLED.py`). `camfr_wrap*.cpp` are the Boost.Python bindings.
+  `material.py`, `RCLED.py`, `GARCLED.py`). `camfr_wrap*.cpp` are the pybind11 bindings.
 - `camfr/math/` — vendored numerics: SLATEC Bessel routines, Jenkins–Traub (ACM Algorithm 419),
   Brent root/minimum finders. **Do not reformat or "modernise" vendored files.**
 - `visualisation/` — only plotting examples now; the plotting modules live in `camfr/`.
@@ -111,8 +110,12 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   and precision settings live in a single `Global global` struct (`defs.h`). Python sets them
   through free functions (`set_lambda`, `set_N`, `set_polarisation`, …). A change to them
   affects every object in the process. Call `free_tmps()` between independent calculations.
-- **Python surface.** `camfr_wrap.cpp` (`BOOST_PYTHON_MODULE(_camfr)`) plus
-  `camfr_wrap_2.cpp` (Cavity, Planar, Slab, Section, BlochSection) expose the C++ classes.
+- **Python surface.** `camfr_wrap.cpp` (`PYBIND11_MODULE(_camfr, m)`) plus
+  `camfr_wrap_2.cpp` (Cavity, Planar, Slab, Section, BlochSection) expose the C++ classes;
+  `camfr_wrap.h` holds the `cVector`/`cMatrix` ↔ NumPy type casters (copies; a `cVector`
+  argument must be a 1D array of length `N()`). Pointer-returning methods use
+  `return_value_policy::reference`. Optional constructor arguments are explicit overloads,
+  because some C++ defaults (e.g. `Section`'s `M1`, `M2`) depend on `global` at call time.
   `camfr/__init__.py` star-imports the NumPy namespace (what `pylab` used to provide, minus
   Matplotlib), `_camfr` and the pure-Python helpers. Matplotlib, Pillow and tkinter are imported
   only when something is plotted (they are still required dependencies). Expressions such as `Slab(air(2) + Si(0.5))`
@@ -180,7 +183,8 @@ the original author, so a rename is planned for publication; credit Bienstman & 
 
 This checkout was split out of the `demultiplexers` project (`../demultiplexers`), which
 evaluates mode solvers for an AWG/demultiplexer modelling tool. The build dependencies
-(Boost and the other solvers' venvs) stay in `../demultiplexers/deps/`. The Python 3.14 venv
+(the other solvers' venvs; also the Boost that camfr used before pybind11) stay in
+`../demultiplexers/deps/`. The Python 3.14 venv
 lives in this repo as `.venv/` (managed by uv, ignored by its own `.gitignore`);
 `../demultiplexers/deps/venv314` is a symlink to it, so the benchmark scripts there keep working
 and use the editable camfr from this checkout. `uv sync` recreates `.venv` at the same path, so

@@ -1,10 +1,10 @@
 COMPILING AND INSTALLING
 
-CAMFR is a C++/Fortran library with a Python 3 interface built on
-Boost.Python.
+CAMFR is a C++/Fortran library with a Python 3 interface built with
+pybind11.
 
 It has been tested on Ubuntu 26.04 with Python 3.14, NumPy 2.5, GCC and
-gfortran 15, Boost 1.90, Blitz++ 1.0.2, reference BLAS/LAPACK 3.12 and
+gfortran 15, Blitz++ 1.0.2, reference BLAS/LAPACK 3.12, pybind11 3.1 and
 CMake 4.4 with scikit-build-core 1.1.
 
 
@@ -13,20 +13,19 @@ Requirements
 - Python 3.10 or later with its development headers.
 - A C++ compiler supporting C++17 and a Fortran 77 compiler
   (e.g. g++ and gfortran).
-- The Boost Python library, built for the same Python version that will
-  run CAMFR (e.g. libboost_python314 for Python 3.14).
 - Blitz++ 0.9 or later.
 - BLAS and LAPACK. If possible, use an optimised implementation
   (OpenBLAS, Intel MKL, ...) for maximum performance.
 
 NumPy, Matplotlib and Pillow are installed by pip as dependencies; SciPy
 (for RCLED, GARCLED and the dispersive material helpers) with the 'scipy'
-extra. CMake and Ninja are downloaded for the build when they are missing.
+extra. pybind11, CMake and Ninja are downloaded for the build when they
+are missing.
 
 On Debian or Ubuntu the system requirements can be installed with
 
   sudo apt install g++ gfortran python3-dev python3-venv python3-tk \
-       libboost-python-dev libblitz0-dev libblas-dev liblapack-dev
+       libblitz0-dev libblas-dev liblapack-dev
 
 
 Building and installing
@@ -36,14 +35,10 @@ scikit-build-core, so a plain pip install builds and installs it:
 
   python3 -m pip install .
 
-CMake finds Python, NumPy, Blitz++ and BLAS/LAPACK by itself, and looks
-for Boost.Python in the system prefixes. If Boost.Python is installed
-elsewhere, set BOOST_ROOT to its prefix, either in the environment
-
-  BOOST_ROOT=/opt/boost python3 -m pip install .
-
-or, to make it permanent for a checkout, in a local.cmake file next to
-CMakeLists.txt (see local.cmake.example; local.cmake is not tracked).
+CMake finds Python, pybind11, Blitz++ and BLAS/LAPACK by itself. For
+libraries outside the system prefixes, put CMake settings (e.g.
+CMAKE_PREFIX_PATH) in a local.cmake file next to CMakeLists.txt (see
+local.cmake.example; local.cmake is not tracked).
 
 Distributions that mark the system Python as externally managed
 (PEP 668) require a virtual environment, e.g.

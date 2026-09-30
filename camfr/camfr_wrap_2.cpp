@@ -8,7 +8,7 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#include <boost/python.hpp>
+#include <pybind11/pybind11.h>
 
 #include "camfr_wrap.h"
 #include "cavity.h"
@@ -29,7 +29,7 @@
 /////////////////////////////////////////////////////////////////////////////
 //
 // Python wrappers for the CAMFR classes.
-// The wrappers are created with the Boost library.
+// The wrappers are created with pybind11 (Boost.Python until 2026).
 //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -39,8 +39,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-inline Complex planar_static_get_kt(Planar p) {return Planar::get_kt();}
-inline void planar_static_set_kt(Planar p, Complex kt) {Planar::set_kt(kt);}
+inline Complex planar_static_get_kt(Planar& p) {return Planar::get_kt();}
+inline void planar_static_set_kt(Planar& p, Complex kt) {Planar::set_kt(kt);}
 
 inline SectionMode* section_get_mode(const Section& s, int i)
 {
@@ -67,24 +67,24 @@ inline void cavity_set_general_source(Cavity& c,
                                       const cVector& fw, const cVector& bw) 
   {c.set_source(fw,bw);}
 
-inline boost::python::object blochmode_fw_bw(BlochMode& b, Real z)
+inline py::tuple blochmode_fw_bw(BlochMode& b, Real z)
 {
   cVector fw(global.N,fortranArray);
   cVector bw(global.N,fortranArray);
 
   b.fw_bw_field(Coord(0,0,z), &fw, &bw);
 
-  return boost::python::make_tuple(fw, bw);
+  return py::make_tuple(fw, bw);
 }
 
-inline boost::python::object blochmode_fw_bw_2(BlochMode& b, Real z, Limit l)
+inline py::tuple blochmode_fw_bw_2(BlochMode& b, Real z, Limit l)
 {
   cVector fw(global.N,fortranArray);
   cVector bw(global.N,fortranArray);
 
   b.fw_bw_field(Coord(0,0,z,Plus,Plus,l), &fw, &bw);
 
-  return boost::python::make_tuple(fw, bw);
+  return py::make_tuple(fw, bw);
 }
 
 inline Real blochstack_length(BlochStack& bs) 
@@ -122,11 +122,6 @@ inline Complex sectionmode_n(SectionMode& m, Coord &c)
 Real cavity_calc_sigma(Cavity& c)
   {return c.calc_sigma();}
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(cav_find_mode, Cavity::find_mode,2,5)
-
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(cav_find_modes, \
-  Cavity::find_modes_in_region,3,7)
-
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -136,7 +131,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(cav_find_modes, \
 //
 /////////////////////////////////////////////////////////////////////////////
 
-inline cVector slab_expand_field(Slab& s, PyObject* o, Real eps)
+inline cVector slab_expand_field(Slab& s, py::object o, Real eps)
   {PythonFunction f(o); return s.expand_field(&f, eps);}
 
 inline cVector slab_expand_gaussian
@@ -159,15 +154,21 @@ inline cVector slab_expand_plane_wave
 //
 /////////////////////////////////////////////////////////////////////////////
 
-void camfr_wrap_2()
+void camfr_wrap_2(py::module_& m)
 {
-  using namespace boost::python;
-
   // Wrap Cavity.
 
-  class_<Cavity>("Cavity", init<Stack&, Stack&>())
-    .def("find_mode",      &Cavity::find_mode, cav_find_mode())
-    .def("find_all_modes", &Cavity::find_modes_in_region,cav_find_modes())
+  py::class_<Cavity>(m, "Cavity")
+    .def(py::init<Stack&, Stack&>())
+    .def("find_mode",      &Cavity::find_mode,
+         py::arg("lambda_start"), py::arg("lambda_stop"),
+         py::arg("n_imag_start")=0.0, py::arg("n_imag_stop")=0.015,
+         py::arg("passes")=1)
+    .def("find_all_modes", &Cavity::find_modes_in_region,
+         py::arg("lambda_start"), py::arg("lambda_stop"),
+         py::arg("delta_lambda"),
+         py::arg("n_imag_start")=0.0, py::arg("n_imag_stop")=0.015,
+         py::arg("passes")=1, py::arg("number")=0)
     .def("sigma",          cavity_calc_sigma)
     .def("set_source",     cavity_set_current_source)
     .def("set_source",     cavity_set_general_source)
@@ -176,17 +177,17 @@ void camfr_wrap_2()
     .def("field",          &Cavity::field)
     .def("n",              &Cavity::n_at)
     .def("bot_stack",      &Cavity::get_bot,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("top_stack",      &Cavity::get_top,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     ;
 
   // Wrap BlochStack.
 
-  class_<BlochStack, bases<MultiWaveguide> >
-    ("BlochStack", init<const Expression&>())
+  py::class_<BlochStack, MultiWaveguide>(m, "BlochStack")
+    .def(py::init<const Expression&>())
     .def("mode",        blochstack_get_mode,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("length",      blochstack_length)
     .def("width",       blochstack_width)
     .def("beta_vector", &BlochStack::get_beta_vector)
@@ -195,7 +196,7 @@ void camfr_wrap_2()
 
   // Wrap BlochMode.
 
-  class_<BlochMode, bases<Mode> >("BlochMode", no_init)
+  py::class_<BlochMode, Mode>(m, "BlochMode")
     .def("fw_field", &BlochMode::fw_field)
     .def("bw_field", &BlochMode::bw_field)
     .def("fw_bw",    blochmode_fw_bw)
@@ -206,100 +207,108 @@ void camfr_wrap_2()
 
   // Wrap InfStack.
 
-  class_<InfStack, bases<DenseScatterer> >
-    ("InfStack", init<const Expression&>())
-    .def("R12", &InfStack::get_R12,
-         return_value_policy<reference_existing_object>())
+  py::class_<InfStack, DenseScatterer>(m, "InfStack")
+    .def(py::init<const Expression&>())
+    .def("R12", &InfStack::get_R12)
     ;
 
   // Wrap RealFunction.
 
-  class_<RealFunction, boost::noncopyable>("RealFunction", no_init)
+  py::class_<RealFunction>(m, "RealFunction")
     .def("times_called", &RealFunction::times_called)
     .def("__call__",     &RealFunction::operator())
     ;
 
-  // Wrap ComplexFunction.
+  // Wrap ComplexFunction. (Boost.Python registered it under the name
+  // 'RealFunction' too; pybind11 does not allow duplicate names.)
 
-  class_<ComplexFunction, boost::noncopyable>("RealFunction", no_init)
+  py::class_<ComplexFunction>(m, "ComplexFunction")
     .def("times_called", &ComplexFunction::times_called)
     .def("__call__",     &ComplexFunction::operator())
     ;
 
   // Wrap Planar.
 
-  class_<Planar, bases<MonoWaveguide> >("Planar", init<Material&>())
-    .def("set_theta", &Planar::set_theta)    
+  py::class_<Planar, MonoWaveguide>(m, "Planar")
+    .def(py::init<Material&>())
+    .def("set_theta", &Planar::set_theta)
     .def("set_kt",    planar_static_set_kt)
     .def("get_kt",    planar_static_get_kt)
     ;
 
   // Wrap Circ.
 
-  class_<Circ, bases<MultiWaveguide> >("Circ", init<Term&>())
-    .def(init<Expression&>())
+  py::class_<Circ, MultiWaveguide>(m, "Circ")
+    .def(py::init<Term&>())
+    .def(py::init<Expression&>())
     ;
 
   // Wrap SlabWall.
 
-  class_<SlabWall, boost::noncopyable>("SlabWall", no_init)
+  py::class_<SlabWall>(m, "SlabWall")
     .def("R", &SlabWall::get_R12)
     ;
 
   // Wrap SlabWallMixed.
 
-  class_<SlabWallMixed, bases<SlabWall> >
-    ("SlabWallMixed", init<const Complex&, const Complex&>());
+  py::class_<SlabWallMixed, SlabWall>(m, "SlabWallMixed")
+    .def(py::init<const Complex&, const Complex&>());
 
-  scope().attr("slab_E_wall")  = SlabWallMixed(1.0,  1.0);
-  scope().attr("slab_H_wall")  = SlabWallMixed(1.0, -1.0);
-  scope().attr("slab_no_wall") = SlabWallMixed(0.0,  1.0);
+  m.attr("slab_E_wall")  = SlabWallMixed(1.0,  1.0);
+  m.attr("slab_H_wall")  = SlabWallMixed(1.0, -1.0);
+  m.attr("slab_no_wall") = SlabWallMixed(0.0,  1.0);
 
   // Wrap SlabWall_TBC.
 
-  class_<SlabWall_TBC, bases<SlabWall> >
-    ("SlabWall_TBC", init<const Complex&, const Material&>());
+  py::class_<SlabWall_TBC, SlabWall>(m, "SlabWall_TBC")
+    .def(py::init<const Complex&, const Material&>());
 
   // Wrap SlabWall_PC.
 
-  class_<SlabWall_PC, bases<SlabWall> >
-    ("SlabWall_PC", init<const Expression&>());
+  py::class_<SlabWall_PC, SlabWall>(m, "SlabWall_PC")
+    .def(py::init<const Expression&>());
 
   // Wrap SlabDisp.
 
-  class_<SlabDisp, bases<ComplexFunction> >
-    ("SlabDisp", init<Expression&, Real>())
-    .def(init<Expression&, Real, SlabWall*, SlabWall*>())
+  py::class_<SlabDisp, ComplexFunction>(m, "SlabDisp")
+    .def(py::init<Expression&, Real>())
+    .def(py::init<Expression&, Real, SlabWall*, SlabWall*>())
     ;
 
   // Wrap Slab.
 
-  class_<Slab, bases<MultiWaveguide> >("Slab", init<const Term&>())
-    .def(init<const Expression&>())
+  py::class_<Slab, MultiWaveguide>(m, "Slab")
+    .def(py::init<const Term&>())
+    .def(py::init<const Expression&>())
     .def("set_lower_wall",    &Slab::set_lower_wall)
     .def("set_upper_wall",    &Slab::set_upper_wall)
     .def("width",             slab_width)
     //.def("disp",              &Slab::get_disp)
     .def("expand_field",      slab_expand_field)
-    .def("expand_gaussian",   slab_expand_gaussian) 
+    .def("expand_gaussian",   slab_expand_gaussian)
     .def("expand_plane_wave", slab_expand_plane_wave)
-    .def("set_dummy",         &Slab::set_dummy)    
+    .def("set_dummy",         &Slab::set_dummy)
     .def("add_kz2_estimate",  &Slab::add_kz2_estimate)
     ;
 
   // Wrap SectionDisp.
 
-  class_<SectionDisp, bases<ComplexFunction> >
-    ("SectionDisp", init<Stack&, Stack&, Real, int>());
+  py::class_<SectionDisp, ComplexFunction>(m, "SectionDisp")
+    .def(py::init<Stack&, Stack&, Real, int>());
 
-  // Wrap Section.
+  // Wrap Section. The default M1 and M2 depend on the global settings at
+  // the time of the call, so the optional arguments are overloads.
 
-  class_<Section, bases<MultiWaveguide> >
-  ("Section", init<Expression&, optional<int, int> >())
-    .def(init<Expression&, Expression&, optional<int, int> >())    
-    .def(init<const Term&>())
+  py::class_<Section, MultiWaveguide>(m, "Section")
+    .def(py::init<Expression&>())
+    .def(py::init<Expression&, int>())
+    .def(py::init<Expression&, int, int>())
+    .def(py::init<Expression&, Expression&>())
+    .def(py::init<Expression&, Expression&, int>())
+    .def(py::init<Expression&, Expression&, int, int>())
+    .def(py::init<const Term&>())
     .def("mode",         section_get_mode,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("disp",         &Section::get_disp)
     .def("width",        section_width)
     .def("height",       section_height)
@@ -312,44 +321,40 @@ void camfr_wrap_2()
 
   // Wrap RefSection.
 
-  class_<RefSection, bases<MultiWaveguide> >
-  ("RefSection", init<Material&, const Complex&, const Complex&, int>())
-    ;  
+  py::class_<RefSection, MultiWaveguide>(m, "RefSection")
+    .def(py::init<Material&, const Complex&, const Complex&, int>());
 
   // Wrap SectionMode.
 
-  class_<SectionMode, boost::noncopyable, bases<Mode> >
-    ("SectionMode", no_init)
+  py::class_<SectionMode, Mode>(m, "SectionMode")
     .def("n", sectionmode_n)
     ;
 
   // Wrap BlochSection.
 
-  class_<BlochSection, bases<MultiWaveguide> >
-  ("BlochSection", init<Expression& >())    
-    .def(init<const Term&>())
+  py::class_<BlochSection, MultiWaveguide>(m, "BlochSection")
+    .def(py::init<Expression&>())
+    .def(py::init<const Term&>())
     .def("mode",          blochsection_get_mode,
-         return_value_policy<reference_existing_object>())
+         py::return_value_policy::reference)
     .def("width",         blochsection_width)
     .def("height",        blochsection_height)
     .def("eps",           &BlochSection::eps_at)
     .def("mu",            &BlochSection::mu_at)
     .def("n",             &BlochSection::n_at)
     .def("order",         &BlochSection::order)
-    .def("set_theta_phi", &BlochSection::set_theta_phi)    
-    .def("set_kx0_ky0",   &BlochSection::set_kx0_ky0)    
-    .def("get_kx0",       &BlochSection::get_kx0)    
+    .def("set_theta_phi", &BlochSection::set_theta_phi)
+    .def("set_kx0_ky0",   &BlochSection::set_kx0_ky0)
+    .def("get_kx0",       &BlochSection::get_kx0)
     .def("get_ky0",       &BlochSection::get_ky0)
     ;
 
   // Wrap BlochSectionMode.
 
-  class_<BlochSectionMode, boost::noncopyable, bases<Mode> >
-    ("BlochSectionMode", no_init)
-    .def("get_Mx",   &BlochSectionMode::get_Mx)    
-    .def("get_My",   &BlochSectionMode::get_My)    
-    .def("get_kx",   &BlochSectionMode::get_kx)    
+  py::class_<BlochSectionMode, Mode>(m, "BlochSectionMode")
+    .def("get_Mx",   &BlochSectionMode::get_Mx)
+    .def("get_My",   &BlochSectionMode::get_My)
+    .def("get_kx",   &BlochSectionMode::get_kx)
     .def("get_ky",   &BlochSectionMode::get_ky)
     ;
-
 }

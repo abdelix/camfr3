@@ -6,8 +6,9 @@
 # 'pip install .'. Replaces the SCons build (SConstruct, camfr/SConscript,
 # machine_cfg.py); the source lists and flags are taken over unchanged.
 #
-# Machine-specific settings (e.g. Boost_ROOT when Boost is not in a system
-# prefix) go in an optional, gitignored local.cmake next to this file.
+# Machine-specific settings (e.g. CMAKE_PREFIX_PATH for libraries outside the
+# system prefixes) go in an optional, gitignored local.cmake next to this
+# file.
 #
 #############################################################################
 
@@ -26,24 +27,12 @@ endif()
 #
 #############################################################################
 
-find_package(Python REQUIRED
-             COMPONENTS Interpreter Development.Module NumPy)
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 
-# Boost.Python, versioned for this Python (e.g. libboost_python314). Only its
-# header and library are needed, so find them directly rather than through
-# Boost's CMake config: a partial install (e.g. Boost.Python unpacked from
-# distribution packages) ships a config that references missing components.
-# Set Boost_ROOT (local.cmake or the environment) for a non-system prefix.
+# pybind11 (header-only) generates the bindings. scikit-build-core makes the
+# pip-installed pybind11 visible to CMake.
 
-set(CAMFR_BOOST_PYTHON boost_python${Python_VERSION_MAJOR}${Python_VERSION_MINOR})
-
-find_path(BOOST_PYTHON_INCLUDE_DIR boost/python.hpp
-          HINTS ${Boost_ROOT} $ENV{Boost_ROOT} $ENV{BOOST_ROOT}
-          PATH_SUFFIXES include REQUIRED)
-find_library(BOOST_PYTHON_LIBRARY ${CAMFR_BOOST_PYTHON}
-             HINTS ${Boost_ROOT} $ENV{Boost_ROOT} $ENV{BOOST_ROOT}
-             PATH_SUFFIXES lib/${CMAKE_LIBRARY_ARCHITECTURE} lib REQUIRED)
-message(STATUS "Boost.Python: ${BOOST_PYTHON_LIBRARY}")
+find_package(pybind11 2.12 CONFIG REQUIRED)
 
 find_path(BLITZ_INCLUDE_DIR blitz/array.h REQUIRED)
 find_library(BLITZ_LIBRARY blitz REQUIRED)
@@ -187,7 +176,7 @@ list(TRANSFORM CAMFR_NOOPT_SOURCES   PREPEND camfr/)
 list(TRANSFORM CAMFR_FORTRAN_SOURCES PREPEND camfr/)
 
 # These files were built without optimisation in the SCons build (the
-# Boost.Python wrappers are slow to compile with -O3, and defs.cpp/limits.c
+# Python wrappers are slow to compile with -O3, and defs.cpp/limits.c
 # hold machine constants). Keep it that way.
 
 set_source_files_properties(${CAMFR_NOOPT_SOURCES}
@@ -206,30 +195,22 @@ Python_add_library(_camfr MODULE WITH_SOABI
 
 # Third-party headers as SYSTEM, so that -Wall -Wextra reports CAMFR's code only.
 
-target_include_directories(_camfr SYSTEM PRIVATE ${BOOST_PYTHON_INCLUDE_DIR}
-                                                 ${BLITZ_INCLUDE_DIR})
+target_include_directories(_camfr SYSTEM PRIVATE ${BLITZ_INCLUDE_DIR})
 
 target_compile_definitions(_camfr PRIVATE
                            FORTRAN_SYMBOLS_WITH_SINGLE_TRAILING_UNDERSCORE)
 
-# Only camfr_wrap.cpp includes NumPy headers. Keep their path off the other
-# files: uv builds in a fresh isolated environment each time, so the path
-# changes, and on every file it would force a full rebuild.
-
-get_target_property(CAMFR_NUMPY_INCLUDE_DIRS Python::NumPy
-                    INTERFACE_INCLUDE_DIRECTORIES)
-set_source_files_properties(camfr/camfr_wrap.cpp PROPERTIES
-                            INCLUDE_DIRECTORIES "${CAMFR_NUMPY_INCLUDE_DIRS}")
-
 target_link_libraries(_camfr PRIVATE
-                      ${BOOST_PYTHON_LIBRARY}
+                      pybind11::headers
                       ${BLITZ_LIBRARY}
                       LAPACK::LAPACK)
 
-# Find libboost_python at import time when Boost is outside the system
-# prefix (non-system link directories are added to the install rpath).
+# Hidden symbol visibility, as pybind11 recommends for extension modules.
+# Non-system link directories (e.g. a local Blitz++) go into the rpath.
 
-set_target_properties(_camfr PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_target_properties(_camfr PROPERTIES CXX_VISIBILITY_PRESET hidden
+                                        VISIBILITY_INLINES_HIDDEN ON
+                                        INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 #############################################################################
 #

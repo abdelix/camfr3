@@ -1,8 +1,8 @@
 [build-system]
 # The extension is built with CMake (CMakeLists.txt) through scikit-build-core,
-# against the NumPy headers of the build environment. CMake and Ninja come
-# from PyPI when they are not installed.
-requires = ["scikit-build-core>=0.11", "setuptools-scm>=8", "numpy"]
+# with pybind11 bindings (no NumPy headers needed). CMake and Ninja come from
+# PyPI when they are not installed.
+requires = ["scikit-build-core>=0.11", "setuptools-scm>=8", "pybind11>=2.12"]
 build-backend = "scikit_build_core.build"
 
 # Published as 'camfr3' because the PyPI name 'camfr' belongs to the original
@@ -32,7 +32,8 @@ Upstream = "https://github.com/demisjohn/CAMFR"
 [dependency-groups]
 # Installed by default with `uv sync`: SciPy, which GARCLED needs, and the
 # build tools for incremental rebuilds in .venv (`make dev`, see CLAUDE.md).
-dev = ["scipy", "scikit-build-core>=0.11", "setuptools-scm>=8", "cmake>=3.26", "ninja"]
+dev = ["scipy", "scikit-build-core>=0.11", "setuptools-scm>=8", "pybind11>=2.12",
+       "cmake>=3.26", "ninja"]
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"

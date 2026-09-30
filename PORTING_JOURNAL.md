@@ -1096,3 +1096,51 @@ candidates for the known crashes (second-`Section` segfault, temporary `Slab` in
 
 **Verification.** Normal build (with warnings) back in `.venv`: testsuite 47 tests, OK. The
 sanitizer build links `libasan.so.8` and `libubsan.so.1`.
+
+### 38. Bindings ported from Boost.Python to pybind11
+
+**Change.** `camfr_wrap.cpp`, `camfr_wrap_2.cpp` and `camfr_wrap.h` now use pybind11 (3.1.0 from
+PyPI, header-only). Boost is no longer a dependency: `CMakeLists.txt` finds `pybind11` instead
+of `boost/python.hpp`/`libboost_python314`, and the build no longer needs NumPy headers
+(`pybind11/numpy.h` talks to NumPy through Python). The `local.cmake` that pointed at the
+unpacked Boost is gone. Build requirements: scikit-build-core, setuptools-scm, pybind11.
+
+The translation is one-to-one: every module-level name, class, method and operator of the
+Boost version exists with the same name and argument order (checked by scanning the old sources
+against `dir()` of the new module). Details:
+
+- **NumPy conversion.** The hand-written converters (raw NumPy C API) became two
+  `type_caster`s in `camfr_wrap.h`. As before, a `cVector` argument must be a 1D array of
+  length `N()` (otherwise `TypeError`), cast to complex; results are new complex arrays.
+- **Integers.** The custom `__index__` converter (journal entry for NumPy integers) is not
+  needed: pybind11 accepts objects with `__index__`, so `set_N(np.int64(10))` still works.
+- **Enums.** `py::enum_` with `py::arithmetic()` and `export_values()` (module-level `TE`,
+  `Plus`, …); `__str__` returns the bare name, as Boost.Python did (`str(TE) == 'TE'`); `repr`
+  is now `<Polarisation.TE: 2>`.
+- **Optional arguments** are explicit overloads (as Boost's `optional<>`), not bound defaults:
+  `Section`'s C++ defaults `M1 = N*mode_surplus`, `M2 = N` depend on `global` at call time.
+  `Cavity.find_mode`/`find_all_modes` use `py::arg` defaults (constants), so they now also
+  accept keyword arguments.
+- **Call policies.** `reference_existing_object` → `return_value_policy::reference`. pybind11
+  returns the existing Python object for a known C++ pointer (`stack.inc() is space`).
+- **Errors.** `check_index` no longer calls `PyErr_SetString` before throwing
+  `std::out_of_range`; pybind11 maps the exception to `IndexError`.
+- **`PythonFunction`** holds a `py::object` and calls it through pybind11.
+- **`CMakeLists.txt`**: symbol visibility hidden, as pybind11 recommends.
+
+**Issues.**
+
+1. Boost.Python registered `ComplexFunction` under the name `"RealFunction"` as well
+   (copy-paste slip; the module attribute `RealFunction` ended up being `ComplexFunction`).
+   pybind11 rejects duplicate names. **Resolution:** it is now `ComplexFunction`.
+2. `Planar.get_kt`/`set_kt` took the `Planar` by value (copying the waveguide) to reach a
+   static member. **Resolution:** by reference.
+3. `Expression.__iadd__`: `Expression::operator+=` returns `void`, which pybind11's
+   `py::self += py::self` cannot wrap. **Resolution:** a lambda that returns `self`.
+
+**Verification.** Clean isolated build without any Boost on the search paths; `ldd` shows no
+Boost. Testsuite 47 tests, OK. Checked by hand: `set_N(np.int64)`, `R12()` → (N, N) complex
+array, `R12(np.int32(0), np.int64(0))`, `set_inc_field`/`fw_bw` with arrays, wrong-length array
+→ `TypeError`, out-of-range index → `IndexError`, `expand_field` with a Python callback, mode
+polarisation. Tutorials 2, 3, 4, 6, 7 run to completion; 1 and 5 open interactive Tk plot
+windows (expected). Si-wire check: TE0 2.4451, TM0 1.7702, TE1 1.4925.

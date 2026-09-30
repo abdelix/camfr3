@@ -1,4 +1,4 @@
 # Copy to local.cmake (gitignored) for machine-specific settings, read by
-# CMakeLists.txt. Example: Boost installed outside the system prefix.
+# CMakeLists.txt. Example: Blitz++ installed outside the system prefixes.
 #
-# set(Boost_ROOT "/path/to/boost-root/usr")
+# list(APPEND CMAKE_PREFIX_PATH "/opt/blitz")

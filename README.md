@@ -126,11 +126,11 @@ See the Examples directory for full examples, as some details are missing here.
 ## Installation
 CAMFR runs on Python 3. It has been tested with Python 3.14 and NumPy 2.5 on Linux. The original code base supported Python 2.7 only; `PORTING_JOURNAL.md` documents every change made for the port.
 
-You have to compile the CAMFR library. This requires a C++ and a Fortran compiler, Boost.Python built for your Python version, Blitz++, BLAS and LAPACK. The build uses CMake through scikit-build-core, so on Linux:
+You have to compile the CAMFR library. This requires a C++ and a Fortran compiler, Blitz++, BLAS and LAPACK; pybind11, which generates the Python bindings, is fetched automatically. The build uses CMake through scikit-build-core, so on Linux:
 
     python3 -m pip install .
 
-Set `BOOST_ROOT` if Boost.Python is not in a system prefix. See the `INSTALL` file for the full list of dependencies and further options.
+See the `INSTALL` file for the full list of dependencies and further options.
 
 Matplotlib and Pillow are installed as dependencies but only imported when something is plotted, so `import camfr` stays fast. `from camfr import *` provides the NumPy namespace but, unlike earlier versions, no Matplotlib names: scripts that call `figure()`, `savefig()` and similar directly need `from pylab import *`.
 
