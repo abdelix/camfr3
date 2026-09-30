@@ -1425,3 +1425,25 @@ clone of the branch (tags included, empty `.venv`): Python 3.10 (NumPy 2.2.6, Sc
 3.12: 51 passed, 2 xfailed each; sanitizer job (3.14): build ≈ 5 min, 51 passed, 2 xfailed in
 72 s. `actionlint` reports no problems. The workflow itself runs for the first time when the
 branch is pushed.
+
+### 51. First CI run on GitHub; actions moved to Node 24
+
+**Result.** The first run of the workflow (run 36758463105, push of `401f23b`) passed: all four
+jobs report **51 passed, 2 xfailed** (Python 3.10.21, 3.12.3 from the runner image, 3.14.7; the
+sanitizer job on 3.14.7). Wall time of the whole run: 5 min 5 s (jobs run in parallel; the
+sanitizer job is the longest).
+
+| Step | 3.10 | 3.12 | 3.14 | ASan + UBSan |
+|---|---|---|---|---|
+| apt install | 97 s | 14 s | 21 s | 11 s |
+| build (`uv sync`; + `make asan`) | 63 s | 48 s | 67 s | 234 s |
+| pytest | 24 s | 20 s | 24 s | 52 s |
+| job total | 3 min 11 s | 1 min 33 s | 2 min 6 s | 5 min 5 s |
+
+Local equivalents (fresh clone, 4 cores / 8 threads, entry 50): build 73 s (3.10), 90 s (3.12),
+47–60 s (3.14), ≈ 5 min 18 s (sanitizers); pytest 12–28 s, 72 s under the sanitizers.
+
+**Change.** The run warned that `actions/checkout@v4` and `astral-sh/setup-uv@v6` target the
+deprecated Node.js 20. Now `actions/checkout@v7` and `astral-sh/setup-uv@v10.2.0` (both
+`node24`; setup-uv no longer publishes a floating major tag, hence the exact version). The
+inputs used (`fetch-depth`, `enable-cache`) exist in both.
