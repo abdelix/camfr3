@@ -64,6 +64,22 @@ template = '''__version__ = "${version}"
 # Used when no git metadata is available (e.g. a plain source archive):
 fallback_version = "0+unknown"
 
+[tool.cibuildwheel]
+# Linux wheels for CPython 3.10-3.14 (x86_64, manylinux_2_28). Built by the
+# wheels job in .github/workflows/ci.yml, not published anywhere yet. Each
+# wheel is installed and the testsuite runs against it.
+build = ["cp310-manylinux_x86_64", "cp311-manylinux_x86_64",
+         "cp312-manylinux_x86_64", "cp313-manylinux_x86_64",
+         "cp314-manylinux_x86_64"]
+build-verbosity = 1
+test-sources = ["testsuite", "pyproject.toml"]
+test-requires = ["pytest>=8", "pytest-forked", "scipy"]
+test-command = "pytest -p no:cacheprovider"
+
+[tool.cibuildwheel.linux]
+before-all = "bash tools/ci/install_wheel_deps.sh"
+environment = { SKBUILD_CMAKE_DEFINE = "BLA_VENDOR=OpenBLAS" }
+
 [tool.pytest.ini_options]
 # The testsuite modules are unittest files without a test_ prefix; see
 # testsuite/conftest.py. --forked runs each test in its own process, so a

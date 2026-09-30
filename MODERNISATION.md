@@ -77,7 +77,8 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
       entry 50; Python 3.10/3.12/3.14 + an ASan/UBSan job).
 - [ ] GitHub Actions on macOS (Homebrew gcc for gfortran, Blitz++, Accelerate or OpenBLAS).
       Not added yet: it could not be tried locally.
-- [ ] `cibuildwheel` to publish binary wheels (manylinux + OpenBLAS), so users never compile.
+- [x] `cibuildwheel` to build binary wheels (manylinux + OpenBLAS), so users never compile.
+      Linux x86_64, CPython 3.10–3.14, built and tested in CI (entry 59). Not published yet.
 
 ## 6. Distribution
 

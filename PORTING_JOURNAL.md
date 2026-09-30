@@ -1594,3 +1594,38 @@ intrinsic version: all five `d1mach` values are bit-identical (2.225073858507201
 1.7976931348623157e+308, 1.1102230246251565e-16, 2.2204460492503131e-16, 0.3010299956639812),
 and `DBL_EPSILON` equals MACHAR's eps (the value `machine_eps()` returned). The build has no
 `machard` symbol. pytest 59 passed, 2 xfailed; Si-wire check unchanged.
+
+### 59. Linux wheels with cibuildwheel (not published)
+
+**Change.** Binary wheels for Linux, so that users need no compiler:
+
+- `pyproject.toml` `[tool.cibuildwheel]` (cibuildwheel 4.2.1): CPython 3.10–3.14,
+  `manylinux_x86_64` (image `manylinux_2_28`, AlmaLinux 8); each wheel is installed in a clean
+  environment and the testsuite runs against it (`test-sources = ["testsuite",
+  "pyproject.toml"]`, `test-requires = pytest, pytest-forked, scipy`). CMake is told to use
+  OpenBLAS (`SKBUILD_CMAKE_DEFINE=BLA_VENDOR=OpenBLAS`).
+- `tools/ci/install_wheel_deps.sh` (`before-all`): `dnf install openblas-devel` (BLAS + LAPACK,
+  PowerTools), Blitz++ 1.0.2 built from source (not packaged for AlmaLinux 8), and
+  `git config --global --add safe.directory '*'` so that setuptools-scm can read the version
+  from the project copied into the container. gfortran 14 is already in the image.
+- `.github/workflows/ci.yml`: a `wheels` job per CPython version (`pypa/cibuildwheel@v4.2.1`,
+  artifact `wheel-cpXYZ-manylinux_x86_64`) and an `sdist` job (`uv build --sdist`, artifact
+  `sdist`). The `release` job now also waits for them. Nothing is published to PyPI or attached
+  to the GitHub release.
+
+**Issues.**
+
+1. Blitz++ 1.0.2's `CMakeLists.txt` (2019) sets a policy version below 3.5, which CMake 4
+   refuses ("Compatibility with CMake < 3.5 has been removed"). **Resolution:**
+   `-DCMAKE_POLICY_VERSION_MINIMUM=3.5`, as CMake suggests.
+2. The first local run failed on a cibuildwheel usage error (`--platform` together with
+   `--only`); `--only` alone selects the platform.
+
+**Verification.** Locally with Docker, from a fresh clone: `cibuildwheel --only
+cp314-manylinux_x86_64` builds in ≈ 2 min; `auditwheel` produces
+`…-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl` (13.5 MB) bundling `libopenblas` 0.3.15,
+`libgfortran`, `libquadmath` and `libblitz`; the testsuite against the installed wheel gives 59
+passed, 2 xfailed. The wheel also installs into a fresh venv on the host (Ubuntu 26.04) and
+computes slab modes. (The local version carried a `.d…` dirty suffix only because the test
+clone had its log file committed; CI checks out clean.) OpenBLAS 0.3.15 (2021) is old; a newer
+build (e.g. from `scipy-openblas`) could come later.

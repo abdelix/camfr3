@@ -69,6 +69,14 @@ fails the run): both are deterministic and clean under ASan, but ill-conditioned
 45–46). A new test module just needs a `unittest.TestCase`; for the old runner also add it to
 the import list and `alltests` in `camfr_test.py`.
 
+**Wheels** (`[tool.cibuildwheel]` in `pyproject.toml`, `tools/ci/install_wheel_deps.sh`): Linux
+x86_64 manylinux_2_28 wheels for CPython 3.10–3.14, built in CI (`wheels` job, one per version)
+and kept as workflow artifacts — not published. The container gets OpenBLAS from `dnf` and
+builds Blitz++ 1.0.2 from source; `auditwheel` bundles OpenBLAS, Blitz++, libgfortran and
+libquadmath (wheel ≈ 13.5 MB). Each wheel is installed and the testsuite runs against it.
+Locally, from a clean clone (not the working tree, which has `.venv`/`build/`):
+`uvx cibuildwheel --only cp314-manylinux_x86_64` (needs Docker; ≈ 2 min).
+
 **CI** (`.github/workflows/ci.yml`, GitHub Actions, Ubuntu 24.04): `uv sync --locked` + `pytest`
 for Python 3.10, 3.12 and 3.14 (`UV_PYTHON` per job), and a job that runs the suite on the
 `make asan` build with UBSan `halt_on_error=1`. `uv.lock` resolves per Python version (e.g.
