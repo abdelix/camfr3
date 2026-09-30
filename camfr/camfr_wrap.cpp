@@ -40,6 +40,8 @@
 #include "primitives/blochsection/blochsection.h"
 #include "primitives/blochsection/blochsectionmode.h"
 #include "math/calculus/polyroot/polyroot.h"
+#include "math/calculus/quadrature/patterson.h"
+#include "math/calculus/croot/patterson_z_n.h"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -919,6 +921,42 @@ when needed again. Call it between independent calculations.)doc");
   }, py::arg("coefficients"),
      "Internal (tests): roots of a polynomial, coefficients from the highest "
      "degree down.");
+
+  // Internal: Patterson quadrature, for testsuite/patterson.py.
+
+  m.def("_patterson", [](py::object f, Real a, Real b, Real eps,
+                         unsigned int max_k)
+  {
+    struct F : public RealFunction
+    {
+      py::object f;
+      F(py::object f_) : f(f_) {}
+      Real operator()(const Real& x) {counter++; return f(x).cast<Real>();}
+    } func(f);
+
+    bool error;
+    Real abs_error;
+    Real result = patterson(func, a, b, eps, &error, max_k, &abs_error);
+    return py::make_tuple(result, error, func.times_called());
+  }, py::arg("f"), py::arg("a"), py::arg("b"), py::arg("eps"),
+     py::arg("max_k")=8,
+     "Internal (tests): integral of f from a to b with the Patterson "
+     "formulas; returns (result, not_converged, evaluations).");
+
+  m.def("_patterson_z_n", [](py::object f, Complex a, Complex b, int M,
+                             Real eps, unsigned int max_k)
+  {
+    PythonFunction func(f);
+    bool error;
+    std::vector<Complex> r
+      = patterson_z_n(func, a, b, M, eps, 1e300, &error, max_k);
+    py::array_t<Complex> out(r.size());
+    std::copy(r.begin(), r.end(), out.mutable_data());
+    return py::make_tuple(out, error);
+  }, py::arg("f"), py::arg("a"), py::arg("b"), py::arg("M"), py::arg("eps"),
+     py::arg("max_k")=8,
+     "Internal (tests): integrals of z**n/f(z), n = 0..M, along the segment "
+     "from a to b; returns (results, not_converged).");
 
   // Wrap Coord.
 

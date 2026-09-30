@@ -3,11 +3,13 @@
 //
 // File:     patterson_z_n.h
 // Author:   Peter.Bienstman@rug.ac.be
-//           converted to C++ from the CACM algorithms
 // Date:     20000320
 // Version:  1.0
 //
 // Copyright (C) 2001 Peter Bienstman - Ghent University
+//
+// camfr3: the implementation is based on the JPL MATH77 library since 2026
+// (PORTING_JOURNAL.md, entry 64); see quadrature/patterson_rule.h.
 //
 /////////////////////////////////////////////////////////////////////////////
 

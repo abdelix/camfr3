@@ -3,16 +3,20 @@
 //
 // File:     patterson.cpp
 // Author:   Peter.Bienstman@rug.ac.be
-//           converted to C++ from the CACM algorithms
 // Date:     20000320
 // Version:  1.0
 //
 // Copyright (C) 2001 Peter Bienstman - Ghent University
 //
+// camfr3: the formula evaluation was rewritten in 2026 on the basis of the
+// JPL MATH77 library (BSD licence), replacing a translation of ACM TOMS
+// Algorithm 699 (PORTING_JOURNAL.md, entry 64). See patterson_rule.h.
+//
 /////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
 #include "patterson.h"
+#include "patterson_rule.h"
 
 using namespace std;
 
@@ -20,12 +24,8 @@ using namespace std;
 //
 // patterson
 //
-//   This quadrature program uses formulae due to T. N. L. Patterson,
-//   Mathematics of computation, Volume 22, 1968, pages 847-856, as
-//   modified by F. T. Krogh and W. V. Snyder, ACM Transactions on
-//   Mathematical Software 17, 4 (December 1991) pp 457-461.  It is a
-//   functional replacement for Algorithm 468, T. N. L. Patterson,
-//   Communications of the ACM 16, 11 (November 1973) 694-699.
+//   Applies the Patterson formulas with 1, 3, 7, ... nodes in turn until
+//   two successive estimates agree to a relative precision eps.
 //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -37,106 +37,81 @@ Real patterson(RealFunction& f, Real a, Real b, Real eps,
 
   if (1. + abs(a-b) <= 1.)
     return 0.0;
-  
+
   // Check and coerce k.
-  
+
   if (max_k < 2)
   {
     py_print("Warning: increasing max_k to 2.");
     max_k = 3;
   }
-    
-  if (max_k > 8)
+
+  if (max_k > patterson_max_k)
   {
     py_print("Warning: restricting max_k to 8.");
-    max_k = 8;
+    max_k = patterson_max_k;
   }
-  
-  // Include the array 'p' with the coefficients used in these formulas. 
 
-  #include "patterson_coeff.cpp"
-
-  // Define constants and workspace containing previous function evaluations.
-
+  const Real* p = patterson_p;
   const Real diff = 0.5*(b-a);
-  
-  Real work[18];
-  
-  // Apply 1-point Gauss formula (midpoint rule).
-  
-  Real fx = f(a+diff); // Don't write 0.5*(b+a) if radix of arithmetic != 2.
 
-  work[1] = fx;
-  Real acum = fx*(b-a);
-  Real result = acum;
-  
-  // Go on to the next formulas.
+  // Samples kept for the corrections of later formulas (slots 1..17).
 
-  // fl, fh contain subscripts to indicate where to store integrand
-  //        samples in 'work'.
-  // kl, kh are bounds for indexes at which integrand samples are
-  //        retrieved from 'work' in order to begin applying a quadrature
-  //        formula.
-  // kx     is a list of bounds of subscripts into kh and kl.  kh is
-  //        indexed by k.  The set of indices from which to retrieve
-  //        integrand samples is given by the set of bounds in kl and kh
-  //        indexed by kx[k-1]+1 to kx[k] inclusively.
+  Real stored[patterson_n_stored+1];
 
-  static const int fl[] = {0, 0, 2, 3, 5, 9,12,14, 1};
-  static const int fh[] = {0, 0, 2, 4, 8,16,17,17, 0};
-  static const int kl[] = {0,       1, 1, 1, 1, 1, 3, 5, 9, 5, 9,12};
-  static const int kh[] = {0,       1, 2, 4, 8,16, 3, 6,17, 5, 9,17};
-  static const int kx[] = {0, 0,    1, 2, 3, 4, 5,       8,      11};
+  // 1-point formula: the midpoint rule. (Not 0.5*(a+b), in case the
+  // arithmetic is not binary.)
 
-  int ip=1; // Index in coefficient array 'p'.
-  int jh=0;
+  stored[1] = f(a+diff);
 
-  Real prev_result;
-  
-  for (int k=2; k<=max_k; k++)
+  Real estimate = (b-a)*stored[1];
+  Real previous = estimate;
+
+  int ip = 1;    // Next coefficient in p.
+  int n_new = 1; // New node pairs in the current formula.
+
+  for (unsigned int k=2; k<=max_k; k++, n_new*=2)
   {
-    prev_result = result;
-    Real prev_acum  = acum;
-    
-    acum = 0.0;
-    
-    // Compute contribution to current estimate due to function
-    // values used in previous formulas.
-    
-    for (int kk=kx[k-1]+1; kk<=kx[k]; kk++)
-      for (int j=kl[kk]; j<=kh[kk]; j++)
-        acum += p[ip++] * work[j];
+    const PattersonStep& step = patterson_steps[k];
 
-    // Compute contribution from new function values.
+    previous = estimate;
 
-    int jl=jh+1;  
-        jh=jl+jl-1;
-    int j1=fl[k];
-    int j2=fh[k];
+    // Corrections to the stored samples.
 
-    for (int j=jl; j<=jh; j++)
+    Real sum = 0.0;
+
+    for (int r=0; r<step.n_ranges; r++)
+      for (int i=step.lo[r]; i<=step.hi[r]; i++)
+        sum += p[ip++]*stored[i];
+
+    // New node pairs, symmetric about the midpoint.
+
+    int slot = step.store_first;
+
+    for (int i=0; i<n_new; i++)
     {
-      Real x = p[ip++]*diff;   
-      fx = f(a+x)+f(b-x);
-      
-      acum += p[ip++]*fx;
+      const Real x = p[ip++]*diff;
+      const Real f_pair = f(a+x) + f(b-x);
 
-      if (j1 <= j2)
-        work[j1++] = fx;
+      sum += p[ip++]*f_pair;
+
+      if (slot <= step.store_last)
+        stored[slot++] = f_pair;
     }
 
-    acum = diff*acum + 0.5*prev_acum;
-    result = acum;
-    
-    if (abs(result-prev_result) <= abs(eps*result))
+    estimate = diff*sum + 0.5*previous;
+
+    // Converged?
+
+    if (abs(estimate-previous) <= abs(eps*estimate))
     {
       if (error_ptr)
         *error_ptr = false;
 
       if (abs_error)
-        *abs_error = result - prev_result;
-      
-      return result;
+        *abs_error = estimate - previous;
+
+      return estimate;
     }
   }
 
@@ -146,7 +121,7 @@ Real patterson(RealFunction& f, Real a, Real b, Real eps,
     *error_ptr = true;
 
   if (abs_error)
-    *abs_error = result - prev_result;
+    *abs_error = estimate - previous;
 
-  return result;
+  return estimate;
 }

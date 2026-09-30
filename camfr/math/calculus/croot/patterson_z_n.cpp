@@ -8,10 +8,16 @@
 //
 // Copyright (C) 2001 Peter Bienstman - Ghent University
 //
+// camfr3: the formula evaluation in patterson_z_n was rewritten in 2026 on
+// the basis of the JPL MATH77 library (BSD licence), replacing a
+// translation of ACM TOMS Algorithm 699 (PORTING_JOURNAL.md, entry 64).
+// See ../quadrature/patterson_rule.h.
+//
 /////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
 #include "../function.h"
+#include "../quadrature/patterson_rule.h"
 
 using namespace std;
 
@@ -19,15 +25,11 @@ using namespace std;
 //
 // patterson_z_n
 //
-//   This quadrature program uses formulae due to T. N. L. Patterson,
-//   Mathematics of computation, Volume 22, 1968, pages 847-856, as
-//   modified by F. T. Krogh and W. V. Snyder, ACM Transactions on
-//   Mathematical Software 17, 4 (December 1991) pp 457-461.  It is a
-//   functional replacement for Algorithm 468, T. N. L. Patterson,
-//   Communications of the ACM 16, 11 (November 1973) 694-699.
-//
-//   The complex curve is taken to be the line segment between a and b
-//   and is parameterised by an independent variable t running from 0 to 1.
+//   Integrates z^n/f(z), n = 0..M, along the segment from a to b with the
+//   Patterson formulas. The segment is parameterised by t in [0,1], so the
+//   formulas are applied on [0,1] and the results scaled by b-a. All
+//   moments are computed from the same samples of 1/f; the formulas stop
+//   when every moment has converged.
 //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -42,167 +44,126 @@ vector<Complex> patterson_z_n(ComplexFunction& f,
   if (1. + abs(a-b) <= 1.)
   {
     vector<Complex> result;
-
     for (unsigned int i=0; i<=M; i++)
       result.push_back(0.0);
-    
     return result;
   }
-  
+
   // Check and coerce k.
-  
+
   if (max_k < 2)
   {
     py_print("Warning: increasing max_k to 2.");
     max_k = 3;
   }
-    
-  if (max_k > 8)
+
+  if (max_k > patterson_max_k)
   {
     py_print("Warning: restricting max_k to 8.");
-    max_k = 8;
+    max_k = patterson_max_k;
   }
-  
-  // Include the array 'p' with the coefficients used in these formulas. 
 
-  #include "patterson_coeff.cpp"
-
-  // Define constants and workspace containing previous function evaluations.
-
-  Complex* work[18];
-  for (unsigned int i=0; i<18; i++)
-    work[i] = new Complex[M+1];
-
-  Complex* fz     = new Complex[M+1];
-  Complex* acum   = new Complex[M+1];
-  Complex* result = new Complex[M+1];
-  
-  // Apply 1-point Gauss formula (midpoint rule).
-
+  const Real* p = patterson_p;
   const Complex delta = b-a;
-  fz[0] = 1.0 / f(a + 0.5*delta);
 
-  //if (abs(fz[0]) > 1e3)
-  //  cout << "Possible zero for " << a+0.5*delta << endl;
-  
-  result[0] = acum[0] = work[1][0] = fz[0];
+  // Moments of the samples kept for later formulas (slots 1..17), and the
+  // current and previous estimates of the moments on [0,1]. M decreases
+  // when round-off makes the higher moments meaningless (see header).
+
+  vector<vector<Complex> > stored(patterson_n_stored+1,
+                                  vector<Complex>(M+1));
+  vector<Complex> estimate(M+1), previous(M+1), sum(M+1);
+
+  // 1-point formula: the midpoint rule.
+
+  const Complex z_mid = a + 0.5*delta;
+  Complex moment = 1.0 / f(z_mid);
+
+  stored[1][0] = estimate[0] = moment;
 
   for (int n=1; n<=M; n++)
   {
-    fz[n] = fz[n-1]*(a + 0.5*delta);
-    
-    result[n] = acum[n] = work[1][n] = fz[n];
-    
-    if (machine_eps()*abs(fz[n]) > mu)
+    moment *= z_mid;
+    stored[1][n] = estimate[n] = moment;
+
+    if (machine_eps()*abs(moment) > mu)
       M = n-1;
   }
-  
-  // Go on to the next formulas.
 
-  // fl, fh contain subscripts to indicate where to store integrand
-  //        samples in 'work'.
-  // kl, kh are bounds for indexes at which integrand samples are
-  //        retrieved from 'work' in order to begin applying a quadrature
-  //        formula.
-  // kx     is a list of bounds of subscripts into kh and kl.  kh is
-  //        indexed by k.  The set of indices from which to retrieve
-  //        integrand samples is given by the set of bounds in kl and kh
-  //        indexed by kx[k-1]+1 to kx[k] inclusively.
+  int n_new = 1; // New node pairs in the current formula.
+  int ip = 1;    // Next coefficient in p.
 
-  static const int fl[] = {0, 0, 2, 3, 5, 9,12,14, 1};
-  static const int fh[] = {0, 0, 2, 4, 8,16,17,17, 0};
-  static const int kl[] = {0,       1, 1, 1, 1, 1, 3, 5, 9, 5, 9,12};
-  static const int kh[] = {0,       1, 2, 4, 8,16, 3, 6,17, 5, 9,17};
-  static const int kx[] = {0, 0,    1, 2, 3, 4, 5,       8,      11};
-
-  int ip=1; // Index in coefficient array 'p'.
-  int jh=0;
-
-  Complex* prev_result = new Complex[M+1];
-  Complex* prev_acum   = new Complex[M+1];
-  
-  for (int k=2; k<=max_k; k++)
+  for (unsigned int k=2; k<=max_k; k++, n_new*=2)
   {
-    for (unsigned int n=0; n<=M; n++)
+    const PattersonStep& step = patterson_steps[k];
+
+    for (int n=0; n<=M; n++)
     {
-      prev_result[n] = result[n];
-      prev_acum[n]   = acum[n];
-      acum[n] = 0.0;
+      previous[n] = estimate[n];
+      sum[n] = 0.0;
     }
-    
-    // Compute contribution to current estimate due to function
-    // values used in previous formulas.
-    
-    for (int kk=kx[k-1]+1; kk<=kx[k]; kk++)
-      for (int j=kl[kk]; j<=kh[kk]; j++)
-      {
-        for (unsigned int n=0; n<=M; n++)
-          acum[n] += p[ip] * work[j][n];
 
-        ip++;
-      }
-    
-    // Compute contribution from new function values.
-    
-    int jl=jh+1;  
-        jh=jl+jl-1;
-    int j1=fl[k];
-    int j2=fh[k];
+    // Corrections to the stored samples.
 
-    for (int j=jl; j<=jh; j++)
+    for (int r=0; r<step.n_ranges; r++)
+      for (int i=step.lo[r]; i<=step.hi[r]; i++, ip++)
+        for (int n=0; n<=M; n++)
+          sum[n] += p[ip]*stored[i][n];
+
+    // New node pairs at t and 1-t.
+
+    int slot = step.store_first;
+
+    for (int i=0; i<n_new; i++, slot++)
     {
-      Complex t = p[ip++]*0.5;
-      Complex f1 = 1.0 / f(a +      t *delta);
-      Complex f2 = 1.0 / f(a + (1.0-t)*delta);
+      const Real t = p[ip++]*0.5;
+      const Real w = p[ip++];
 
-      //if (abs(f1) > 1e3)
-      //  cout << "Possible zero for " << a+t*delta << endl;
-      
-      //if (abs(f2) > 1e3)
-      //  cout << "Possible zero for " << a+(1.0-t)*delta << endl;
-      
-      fz[0] = f1+f2;
-      acum[0] += p[ip]*fz[0];
-      
-      if (j1 <= j2)
-        work[j1][0] = fz[0];
-      
-      for (unsigned int n=1; n<=M; n++)
+      const Complex z1 = a +      t *delta;
+      const Complex z2 = a + (1.0-t)*delta;
+
+      Complex m1 = 1.0 / f(z1);
+      Complex m2 = 1.0 / f(z2);
+
+      for (int n=0; n<=M; n++)
       {
-        f1 *= a +      t *delta;
-        f2 *= a + (1.0-t)*delta;
-        
-        fz[n] = f1+f2;
-        acum[n] += p[ip]*fz[n];
+        if (n > 0)
+        {
+          m1 *= z1;
+          m2 *= z2;
+        }
 
-        if (j1 <= j2)
-          work[j1][n] = fz[n];
+        const Complex m_pair = m1 + m2;
 
-        if ( (machine_eps()*abs(f1) > mu) || (machine_eps()*abs(f2) > mu) )
+        sum[n] += w*m_pair;
+
+        if (slot <= step.store_last)
+          stored[slot][n] = m_pair;
+
+        if ( (n > 0) && ( (machine_eps()*abs(m1) > mu)
+                       || (machine_eps()*abs(m2) > mu) ) )
           M = n-1;
       }
-
-      ip++;
-      j1++;
     }
 
-    // Accumulate result.
+    // New estimates on [0,1]; converged when all moments have.
 
-    bool all_converged = true;
-    for (unsigned int n=0; n<=M; n++)
+    bool converged = true;
+
+    for (int n=0; n<=M; n++)
     {
-      result[n] = acum[n] = 0.5*(acum[n] + prev_acum[n]);
-      
-      if (abs(result[n]-prev_result[n]) > abs(eps*result[n]))
-        all_converged = false;
+      estimate[n] = 0.5*(sum[n] + previous[n]);
+
+      if (abs(estimate[n]-previous[n]) > abs(eps*estimate[n]))
+        converged = false;
     }
 
-    if (all_converged)
+    if (converged)
     {
       if (error_ptr)
         *error_ptr = false;
 
-      goto final;
+      goto done;
     }
   }
 
@@ -211,31 +172,22 @@ vector<Complex> patterson_z_n(ComplexFunction& f,
   if (error_ptr)
     *error_ptr = true;
 
-  // Finalise.
+  // Scale from [0,1] to the segment.
 
-  final:
+  done:
 
   if (abs_error)
   {
     abs_error->clear();
-    for (unsigned int n=0; n<=M; n++)
-      abs_error->push_back(delta*(result[n]-prev_result[n]));
+    for (int n=0; n<=M; n++)
+      abs_error->push_back(delta*(estimate[n]-previous[n]));
   }
 
-  vector<Complex> final;
-  for (unsigned int n=0; n<=M; n++)
-    final.push_back(delta*result[n]);
+  vector<Complex> result;
+  for (int n=0; n<=M; n++)
+    result.push_back(delta*estimate[n]);
 
-  for (unsigned int i=0; i<18; i++)
-    delete [] work[i];
-
-  delete [] fz;
-  delete [] acum;
-  delete [] result;
-  delete [] prev_result;
-  delete [] prev_acum;    
-
-  return final;
+  return result;
 }
 
 

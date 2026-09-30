@@ -77,6 +77,7 @@ set(CAMFR_CXX_SOURCES
   math/calculus/polyroot/polyroot.cpp
   math/calculus/traceroot/traceroot.cpp
   math/calculus/quadrature/patterson.cpp
+  math/calculus/quadrature/patterson_coeff.cpp
   math/calculus/quadrature/patterson_quad.cpp
   math/calculus/minimum/minimum.cpp
   math/calculus/fourier/fourier.cpp
