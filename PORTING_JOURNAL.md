@@ -1540,3 +1540,32 @@ therefore does not settle the ACM question by itself. `NOTICE` says so, and `MOD
 has a new item to check it (and replace the quadrature if needed). A `Circ` ADR scenario
 (`set_circ_PML(-0.1)`) did not finish within 10 minutes, stuck in the contour integration
 (one `polyroot` call); unrelated to this change, not investigated.
+
+### 57. Automatic releases with python-semantic-release; main branch
+
+**Change.** Releases are created automatically from the Conventional Commits the repository
+already uses:
+
+- `pyproject.toml` `[tool.semantic_release]`: tags `v{version}`, no version files (setuptools-scm
+  takes the version from the tag), the conventional parser, `main` as the release branch with
+  alpha pre-releases (`prerelease_token = "alpha"`), `CHANGELOG.md`, release commits
+  `chore(release): {version}` (a type that does not trigger a release itself).
+- `.github/workflows/ci.yml`: a `release` job, only on pushes to `main`, after `test` and
+  `sanitizers` pass; it resets the branch to the tested commit and runs
+  `python-semantic-release/python-semantic-release@v10.7.0` (`build: false`,
+  `contents: write`). It commits the changelog, tags and creates the GitHub release. No PyPI
+  upload yet (that comes with the wheels).
+- A new branch `main`, created from `modernisation`, becomes the fork's default branch; `master`
+  stays the upstream mirror.
+
+**Issue.** semantic-release parses tags as semver and cannot read the PEP 440 tag `v3.0.0a1`
+("not a valid Version"), so it would have seen no previous release. **Resolution:** a second
+tag `v3.0.0-alpha.1` on the same commit (`3ae9590`); `packaging` normalises it to `3.0.0a1`,
+so setuptools-scm gives the same version. Checked beforehand that semver pre-release tags
+normalise to PEP 440 (`3.0.0-alpha.2` → `3.0.0a2`, `3.0.0-rc.1` → `3.0.0rc1`).
+
+**Verification.** Dry runs of semantic-release 10.7.0 in a throwaway clone on `main`: next
+version `3.0.0-alpha.2` (3 `feat`, 7 `fix` commits since `v3.0.0-alpha.1`); the generated
+changelog has sections for bug fixes, build system, CI, documentation, features and testing,
+listing only Conventional Commits (the ~900 upstream commits do not appear). On `modernisation`
+the dry run correctly makes no release. `actionlint` passes.

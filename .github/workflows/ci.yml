@@ -72,3 +72,32 @@ jobs:
           export ASAN_OPTIONS=detect_leaks=0
           export UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1:suppressions=$PWD/ubsan.supp
           .venv/bin/python -m pytest
+
+  # On pushes to main, after the tests pass: compute the next version from the
+  # Conventional Commits, update CHANGELOG.md, tag and create a GitHub release
+  # (python-semantic-release, configured in pyproject.toml). Nothing is
+  # published to PyPI yet.
+  release:
+    name: Release
+    needs: [test, sanitizers]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    concurrency: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      # Release exactly the commit that was tested, even if main moved on.
+      - name: Reset the branch to the tested commit
+        run: git reset --hard ${{ github.sha }}
+
+      - name: Semantic release
+        id: release
+        uses: python-semantic-release/python-semantic-release@v10.7.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          build: false

@@ -81,6 +81,8 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 
 ## 6. Distribution
 
+- [x] Automatic versioning and GitHub releases from Conventional Commits (python-semantic-release
+      on `main`, entry 57). Wheels and PyPI publishing still to add to the release job.
 - [ ] Publish under the new name `camfr3` (the PyPI name `camfr` belongs to the original author).
       Metadata, `NOTICE` and `CITATION.cff` are done (journal entry 27); the upload is not.
 - [ ] conda-forge feedstock (Blitz++, pybind11 and OpenBLAS are already on conda-forge).

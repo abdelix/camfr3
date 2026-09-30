@@ -90,11 +90,20 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 
 - Remotes: `origin` is the user's fork `abdelix/camfr3` (renamed from `abdelix/CAMFR`); `upstream` is `demisjohn/CAMFR`.
   Never push to `upstream`.
-- **Branches.** `python3-port` is the Python 3 port (SCons, Boost.Python), ending at `89b6c2f`.
-  `modernisation` branches off it and holds the `MODERNISATION.md` work and what came out of
-  it: uv, CMake + scikit-build-core, lazy plotting, warnings/sanitizers, pybind11, the
-  lifetime and memory fixes, and the new tests (journal entries 31–46). New modernisation work
-  goes on `modernisation`; this `CLAUDE.md` describes that branch.
+- **Branches.** `main` is the fork's default and release branch (created from `modernisation`,
+  journal entry 57). `master` is left as the untouched upstream (Python 2) mirror.
+  `python3-port` is the Python 3 port (SCons, Boost.Python), ending at `89b6c2f`;
+  `modernisation` holds the `MODERNISATION.md` work (entries 31–56) and is merged into `main`.
+  New work: a feature branch, merged into `main`.
+- **Releases** are automatic (python-semantic-release, `[tool.semantic_release]` in
+  `pyproject.toml`, `release` job in `ci.yml`): on each push to `main` whose tests pass, `feat:`
+  commits bump the minor version, `fix:`/`perf:` the patch, `!`/`BREAKING CHANGE:` the major;
+  `docs`/`test`/`ci`/`build`/`style`/`chore` do not release. It updates `CHANGELOG.md`, commits
+  `chore(release): X`, tags `vX` and creates a GitHub release. Alpha pre-releases for now
+  (`v3.0.0-alpha.N` = PEP 440 `3.0.0aN`). Commit messages therefore decide versions: use the
+  right type. Dry run: `uvx --from python-semantic-release semantic-release --noop version --print`
+  (on `main`). No PyPI publishing yet. `v3.0.0-alpha.1` is a semver alias of the old
+  `v3.0.0a1` (same commit), which semantic-release cannot parse.
 - Tags `vX.Y.Z` set the package version (setuptools-scm); `v3.0.0a1` is pushed. Push new tags
   explicitly (`git push origin <tag>`).
 - Pushing: `origin` uses SSH (`git@github.com:abdelix/camfr3.git`); the key is accepted as
