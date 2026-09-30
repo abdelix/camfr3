@@ -1242,3 +1242,20 @@ lengths:
 
 **Verification.** Testsuite 48 tests, OK (within `eps.testing_eps`), also under ASan/UBSan
 (entry 43).
+
+### 43. Uninitialised bw_inc in Stack; sanitizer testsuite run clean
+
+**Change.** `Stack::bw_inc` (is a backward incident field set?) was only assigned in
+`set_inc_field`. None of the three constructors initialised it, and `operator=` did not copy
+it. `BlochMode::fw_bw_field` → `Stack::set_interface_field` reads it without `set_inc_field`
+having been called; UBSan reported a `bool` holding 190 (`stack.cpp:909`, reached from
+`BlochStack` during `DenseInterface::calcRT_bloch_wg`). It is now `false` in the two regular
+constructors, copied in the copy constructor and in `operator=`. `ubsan.supp` gained
+`pointer-overflow:blitz/array-impl.h`, the same Blitz++ empty-array idiom as the existing
+`methods.cc` entry.
+
+**Issue.** None.
+
+**Verification.** With entries 40–43 the ASan/UBSan testsuite run completes: **48 tests, OK,
+no AddressSanitizer or UBSan reports.** Normal build: 48 tests, OK. Si-wire check: TE0 2.4451,
+TM0 1.7702, TE1 1.4925.

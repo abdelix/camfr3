@@ -574,7 +574,7 @@ void MonoStack::calcRT()
 
 Stack::Stack(const Expression& e, unsigned int no_of_periods_)
   : expression(e), no_of_periods(no_of_periods_), 
-    inc_field(fortranArray), inc_field_bw(fortranArray)
+    inc_field(fortranArray), inc_field_bw(fortranArray), bw_inc(false)
 {
   sc = create_sc(expression, no_of_periods);
   flat_sc = create_sc(expression.flatten());
@@ -591,7 +591,7 @@ Stack::Stack(const Expression& e, unsigned int no_of_periods_)
 
 Stack::Stack(const Term& t)
   : expression(Expression(t)), no_of_periods(1), 
-    inc_field(fortranArray), inc_field_bw(fortranArray)
+    inc_field(fortranArray), inc_field_bw(fortranArray), bw_inc(false)
 {
   sc = create_sc(expression, no_of_periods);
   flat_sc = create_sc(expression.flatten());
@@ -610,7 +610,7 @@ Stack::Stack(const Stack& s)
   : expression(s.expression), no_of_periods(s.no_of_periods),
     interface_positions(s.interface_positions),
     interface_field(s.interface_field),
-    inc_field(fortranArray), inc_field_bw(fortranArray)
+    inc_field(fortranArray), inc_field_bw(fortranArray), bw_inc(s.bw_inc)
 {
   inc_field.resize(s.inc_field.shape());
   inc_field = s.inc_field;
@@ -673,6 +673,7 @@ Stack& Stack::operator=(const Stack& s)
   
   inc_field = s.inc_field;
   inc_field_bw = s.inc_field_bw;
+  bw_inc = s.bw_inc;
   interface_field = s.interface_field;
   
   return *this;

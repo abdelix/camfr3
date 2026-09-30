@@ -1,3 +1,5 @@
 # UBSan suppressions for third-party headers (used by 'make asan' runs; see
 # CLAUDE.md). Blitz++ offsets a null data pointer when it creates empty arrays.
 pointer-overflow:blitz/array/methods.cc
+# Same idiom in Blitz++'s data() for empty arrays.
+pointer-overflow:blitz/array-impl.h
