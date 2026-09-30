@@ -1366,3 +1366,12 @@ setuptools-scm commits (entries 27–29, tag `v3.0.0a1`) stay on `python3-port`.
 
 **Issue.** The C++ bug fixes of entries 40–43 (stack, polyroot, croot, bw_inc) are only on
 `modernisation`; they apply to the port as well, but were verified only on the modernised build.
+
+### 48. Invalid escape sequence in section_matplotlib
+
+**Change.** `section_matplotlib.py` built the mode label with `"$\mathregular{n_{eff} =}$ …"`.
+`\m` is not a valid escape; Python keeps the backslash but warns (`SyntaxWarning`, shown by
+pytest), and a future Python will reject it. It is now a raw string, with the same text. A scan
+of `camfr/`, `testsuite/` and `examples/` with `-W error::SyntaxWarning` found no other case.
+
+**Issue.** None.

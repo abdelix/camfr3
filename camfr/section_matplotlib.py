@@ -212,7 +212,7 @@ def __Section_plot(self, field="Ex", mode=0, dx=0.100, dy=0.100, annotations=Tru
                 #axis.set_title(  titlestr  )
                 axis.text( 0.05, 0.9, titlestr, transform=axis.transAxes, horizontalalignment='left', color='green', fontsize=9, fontweight='bold')
                 
-                n_str = "$\mathregular{n_{eff} =}$ %0.5f" % ( obj.mode(modeN).n_eff().real )
+                n_str = r"$\mathregular{n_{eff} =}$ %0.5f" % ( obj.mode(modeN).n_eff().real )
                 if f==0: axis.text( 0.05, 0.05, n_str, transform=axis.transAxes, horizontalalignment='left', color='green', fontsize=9, fontweight='bold')
             #end if(annotations)
             
