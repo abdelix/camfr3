@@ -1203,3 +1203,16 @@ a heap-buffer-overflow (read just past a 64-byte `vector<Complex>`) in `patterso
 `CLAUDE.md` as an open item.
 
 **Verification.** Testsuite 48 tests, OK. ASan run: no report from `stack.cpp`/`expression.h`.
+
+### 41. Use-after-free in polyroot
+
+**Change.** `polyroot` (`math/calculus/polyroot/polyroot.cpp`, the C++ wrapper around the
+Jenkins–Traub `cpoly`) freed `root_r`/`root_i` with `delete []` and only then copied them into
+the result vector. It worked because the freed blocks were normally not reused yet. The deletes
+now follow the copy (and the second `delete [] root_r, delete [] root_i` comma expression became
+two statements). Flagged by `-Wuse-after-free` (entry 37). `polyroot` is called from the contour
+root finder (`allroots.cpp`), see entry 42.
+
+**Issue.** None.
+
+**Verification.** Testsuite 48 tests, OK, also under ASan/UBSan (entry 43).
