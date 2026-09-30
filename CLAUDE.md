@@ -57,7 +57,7 @@ make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
 ## Test
 
 ```bash
-cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 48 tests, expected: OK
+cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 49 tests, expected: OK
 ```
 
 Use the venv interpreter (or `uv run`): `camfr` is installed there, not in the system Python.
@@ -67,8 +67,12 @@ test module defines a `suite` and runs standalone:
 `cd testsuite && MPLBACKEND=Agg ../.venv/bin/python wg.py`.
 A new test must be added to both the import list and `alltests` in `camfr_test.py`.
 Tests compare against hard-coded reference values with tolerance `eps.testing_eps`.
-`ADR_solver`, `stack2` and `metal_splitter` fail; upstream excludes all three from
-`camfr_test.py`, and it is unverified whether they ever passed on Python 2.
+Tests share CAMFR's global settings: a test that changes PML, walls or solver switches must
+restore them (or the next test must set what it needs), or later tests fail only inside the
+suite. `stack2` and `metal_splitter` still fail and stay out of `camfr_test.py` (entry 45):
+both are deterministic and clean under ASan, but their results depend strongly on `N` and the
+solver settings, so the stored expected values cannot be reproduced. `ADR_solver` passes since
+the `polyroot` fix (entry 41) and is back in the suite.
 
 ## Repository state
 
@@ -167,9 +171,12 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 - **Published name is `camfr3`** (free on PyPI as of 2026-09-30; the module is still
   `import camfr`). `pyproject.toml`, the README header, `NOTICE` and `CITATION.cff` are updated.
   Not yet uploaded — see the Distribution section of `MODERNISATION.md`.
-- **Sanitizer status:** the testsuite runs clean under ASan/UBSan (entries 37–43). The three
-  excluded tests (`ADR_solver`, `stack2`, `metal_splitter`) have not been run under the
-  sanitizers yet.
+- **Sanitizer status:** the testsuite, and `stack2`/`metal_splitter`, run clean under
+  ASan/UBSan (entries 37–45).
+- **`stack2` and `metal_splitter`** (entry 45): numerically ill-conditioned. `metal_splitter`
+  (a metal with epsr = −100) gives |R12| ≈ 1.72 > 1 with the default solver and anything from
+  −0.08 to 0.89+0.40j with other settings; the solver does not find this structure's modes
+  reliably. Needs solver work (and reference values from an independent method).
 - **`examples/other/OLED_grating_avg.py`** was stopped before it finished (it is very long-running).
   It is not verified.
 

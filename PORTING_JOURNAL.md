@@ -1279,3 +1279,41 @@ mode correction, E walls, `slab_E_wall`, PML −0.04 on all sides):
 crashing multi-`Section` pattern found is the lifetime bug fixed in entry 39 (a `Section` whose
 `Expression` points to a freed temporary `Slab`), which is the likely origin. `CLAUDE.md` no
 longer lists it as a gotcha; the open item is closed with that caveat.
+
+### 45. The excluded tests: ADR_solver fixed, stack2 and metal_splitter ill-conditioned
+
+**Background.** Upstream leaves `ADR_solver`, `stack2` and `metal_splitter` out of
+`camfr_test.py`; they failed on Python 3 and it was unknown whether they ever passed.
+
+**Results**, each run on its own, on the current build and on the pre-fix build `decf9d4`:
+
+| Test | pre-fix | current |
+|---|---|---|
+| `ADR_solver` | fails, n_eff 3.5655 − 7.1350j | **passes**, 3.51054 − 0.34986j (expected 3.51054 − 0.349863j) |
+| `stack2` | R12 −0.054823 + 0.000762j | identical (expected −0.053629 + 0.001099j, 2.3 % off) |
+| `metal_splitter` | `TypeError` in `plot(Slab)` | same; without the plots R12 1.71835 − 0.13203j (expected 0.84465 + 0.49929j) |
+
+- **`ADR_solver`** was cured by the `polyroot` use-after-free fix (entry 41): it passes on
+  `aea2d31` and fails on the commit before, where it even gave a different wrong n_eff on each
+  run (−0.0047 − 8.749j, 2.646 − 10.756j) — reading freed memory. It is stable (5/5 runs) and
+  clean under ASan, and is back in `camfr_test.py`. Inside the suite it first failed (it found
+  the mode 3.300 − 0.002j): running each module followed by `ADR_solver` showed that
+  `substacks` and `stack1` leave PML set, and `metal_coupler` leaves PML, solver, polarisation,
+  `mode_surplus`, `orthogonal`, `degenerate`, `chunk_tracing`, `low_index_core` and
+  `keep_all_1D_estimates` changed. **Resolution:** `ADR_solver` sets PML to 0 itself, and
+  `metal_coupler` restores the defaults it changed (read from the `Global`/`SlabGlobal`
+  initialisers in `defs.cpp` and `generalslab.cpp`).
+- **`stack2`**: deterministic, clean under ASan/UBSan, same before and after all fixes. The
+  result does not converge with the number of modes: N = 10, 20, 40, 60 give 2.3 %, 1.5 %,
+  2.4 %, 4.6 % from the expected value. The second slab's thickness `1.42338-5.2e-06` suggests a
+  deliberately near-degenerate case. Ill-conditioned; left excluded.
+- **`metal_splitter`**: its `plot(cen)`… calls never worked (no camfr module defines `plot`;
+  it resolved to pylab's, which cannot draw a `Slab`) and were removed. The real failure:
+  |R12| ≈ 1.72 > 1 for a passive structure, i.e. an incomplete or wrong mode set. The result
+  swings with the solver settings the test has commented out: `series` 0.905 − 0.243j;
+  `series` + `mode_surplus(4)` −0.079 + 0.010j; `orthogonal(0)` −0.056 − 0.810j; all three
+  0.886 + 0.402j (closest, 10.7 % off against the test's 10 % tolerance). Deterministic and
+  clean under ASan/UBSan. The mode solver does not handle this metal (epsr = −100) reliably;
+  left excluded.
+
+**Verification.** Testsuite 49 tests, OK.

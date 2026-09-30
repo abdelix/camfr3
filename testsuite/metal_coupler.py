@@ -110,6 +110,19 @@ class metal_coupler(unittest.TestCase):
 
         free_tmps()
 
+        # Restore the defaults changed above, for the tests that follow.
+
+        set_upper_PML(0)
+        set_lower_PML(0)
+        set_solver(track)
+        set_polarisation(TE)
+        set_mode_surplus(1.2)
+        set_orthogonal(True)
+        set_degenerate(True)
+        set_chunk_tracing(True)
+        set_low_index_core(False)
+        set_keep_all_1D_estimates(False)
+
         self.assertTrue(up_pass)
 
 suite = unittest.defaultTestLoader.loadTestsFromTestCase(metal_coupler)

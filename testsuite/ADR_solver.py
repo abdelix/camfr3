@@ -18,6 +18,11 @@ class ADR_solver(unittest.TestCase):
         print()
         print("Running ADR solver...")
         
+        # Earlier tests in camfr_test.py leave PML settings behind.
+
+        set_upper_PML(0)
+        set_lower_PML(0)
+
         set_solver(ADR)
         set_N(10)
         set_polarisation(TM)
