@@ -1706,4 +1706,8 @@ after `docs` and `test` pass (`actions/upload-pages-artifact@v5`, `actions/deplo
 5. `Section.disp` took an unnamed argument (`arg0`): it evaluates the dispersion relation at
    `kz`; named and documented.
 
+GitHub Pages is enabled with the "GitHub Actions" source. The owner's user site has the custom
+domain `abdelix.com`, which project sites inherit: the site is <https://abdelix.com/camfr3/>
+(`abdelix.github.io/camfr3/` redirects there).
+
 **Verification.** `make docs`: builds without warnings; pages checked in headless Chrome.

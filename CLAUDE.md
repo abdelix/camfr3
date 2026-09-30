@@ -83,7 +83,7 @@ Locally, from a clean clone (not the working tree, which has `.venv`/`build/`):
 `autoclass`/`autofunction` lists inside `{eval-rst}` blocks (MyST would otherwise parse autodoc's
 reST output as Markdown); `docs/conf.py` shortens pybind11's type names and overload
 docstrings. A new public name needs an entry there. The `docs` CI job builds the site on every
-push; `pages` deploys it to <https://abdelix.github.io/camfr3/> from `main`. The Texinfo manual
+push; `pages` deploys it to <https://abdelix.com/camfr3/> from `main`. The Texinfo manual
 (`docs/camfr.texi`) is separate, still unmigrated (issue #16).
 
 **CI** (`.github/workflows/ci.yml`, GitHub Actions, Ubuntu 24.04): `uv sync --locked` + `pytest`

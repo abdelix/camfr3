@@ -149,7 +149,7 @@ jobs:
         with:
           path: docs/_build/html
 
-  # Publish the site on GitHub Pages (https://abdelix.github.io/camfr3/) from
+  # Publish the site on GitHub Pages (https://abdelix.com/camfr3/) from
   # main, once the tests pass too.
   pages:
     name: Deploy documentation
