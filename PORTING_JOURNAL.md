@@ -1629,3 +1629,13 @@ passed, 2 xfailed. The wheel also installs into a fresh venv on the host (Ubuntu
 computes slab modes. (The local version carried a `.d…` dirty suffix only because the test
 clone had its log file committed; CI checks out clean.) OpenBLAS 0.3.15 (2021) is old; a newer
 build (e.g. from `scipy-openblas`) could come later.
+
+### 60. `Cavity.plot` raised NameError
+
+**Change.** `camfr_PIL.py` assigned `Cavity.plot = lambda self: stack_plot.StackPlot(self)`.
+Since the plot windows are imported lazily (entry 34), `stack_plot` is no longer a module-level
+name there, so `cavity.plot()` raised `NameError`. It now uses `_stack_plot`, like `Stack` and
+`BlochStack`, which imports the module on use.
+
+**Verification.** Found while adding docstrings (entry 61). `Cavity.plot is Stack.plot` now; the
+Tk window itself remains unverified (no display).

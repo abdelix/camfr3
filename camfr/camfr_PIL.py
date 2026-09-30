@@ -1269,7 +1269,7 @@ def _stack_plot(self):
 Slab.plot       = _slab_plot
 Stack.plot      = _stack_plot
 BlochStack.plot = _stack_plot
-Cavity.plot     = lambda self : stack_plot.StackPlot(self)
+Cavity.plot     = _stack_plot
 
 Slab.plot_n = plot_n
 Circ.plot_n = plot_n
