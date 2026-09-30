@@ -7,6 +7,7 @@
 ###################################################################
 
 from camfr import *
+from matplotlib.pyplot import plot
 from cmath import *
 
 import unittest, eps

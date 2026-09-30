@@ -103,8 +103,9 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   affects every object in the process. Call `free_tmps()` between independent calculations.
 - **Python surface.** `camfr_wrap.cpp` (`BOOST_PYTHON_MODULE(_camfr)`) plus
   `camfr_wrap_2.cpp` (Cavity, Planar, Slab, Section, BlochSection) expose the C++ classes.
-  `camfr/__init__.py` star-imports `_camfr`, the pure-Python geometry and material helpers
-  and (unless `NO_CAMFR_GRAPHICS` is set) `pylab`. Expressions such as `Slab(air(2) + Si(0.5))`
+  `camfr/__init__.py` star-imports the NumPy namespace (what `pylab` used to provide, minus
+  Matplotlib), `_camfr` and the pure-Python helpers. Matplotlib, Pillow and tkinter are imported
+  only when something is plotted (`[plot]` extra). Expressions such as `Slab(air(2) + Si(0.5))`
   are built by `expression.*` from `Material(length)` terms.
 - **Build.** `SConstruct` reads `machine_cfg.py` and delegates to `camfr/SConscript`. Object
   files (`*.os`) and `_camfr.so` land *in the source tree* (gitignored). The docs are
@@ -126,7 +127,11 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   variables. This is upstream behaviour, not a porting bug.
 - **One `Section` solve per process.** Solving a second `Section` in the same interpreter
   segfaults (not yet investigated). Scripts take solver settings as CLI arguments instead.
-- **Headless runs:** `NO_CAMFR_GRAPHICS=1` skips the pylab import; `MPLBACKEND=Agg` avoids Tk. Do not set `NO_CAMFR_GRAPHICS` for the testsuite: the tests use `zeros`/`arange` that only arrive through the `pylab` star-import (15 tests fail without it).
+- **Headless runs:** `import camfr` no longer loads Matplotlib, so nothing is needed for
+  computation-only scripts. `MPLBACKEND=Agg` avoids Tk when plotting. `NO_CAMFR_GRAPHICS` is
+  obsolete and ignored (entry 34). `from camfr import *` still provides NumPy names (`zeros`,
+  `arange`, …) but no longer pyplot names (`figure`, `savefig`, …): scripts that use those
+  need `from pylab import *` or explicit Matplotlib imports.
   Tk GUI plotting is unverified — there was no display server available.
 - **Machine:** 4 physical cores / 8 threads. When running several CAMFR processes in parallel,
   set `OPENBLAS_NUM_THREADS=1` or they oversubscribe the CPU.
@@ -174,7 +179,7 @@ femwell agree to within 3e-4 (TE0 2.4454). The command is
 (about 1 s):
 
 ```bash
-NO_CAMFR_GRAPHICS=1 .venv/bin/python ../demultiplexers/scripts/si_wire_neff_camfr.py \
+.venv/bin/python ../demultiplexers/scripts/si_wire_neff_camfr.py \
     --plane-waves 32 --slab-modes 70 --modes 3 --estimate 2.445 --estimate 1.770 --estimate 1.4925
 ```
 

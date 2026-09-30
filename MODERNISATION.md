@@ -9,9 +9,9 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 
 ## 1. Quick wins (hours each)
 
-- [ ] Stop importing everything from `pylab` in `camfr/__init__.py`. It slows `import camfr`,
+- [x] Stop importing everything from `pylab` in `camfr/__init__.py`. It slows `import camfr`,
       floods the namespace with Matplotlib names, and is why `NO_CAMFR_GRAPHICS` exists.
-      Import plotting lazily; make Matplotlib and Pillow optional extras (`[plot]`).
+      Import plotting lazily; make Matplotlib and Pillow optional extras (`[plot]`). Entry 34.
 - [x] Move the `visualisation/` modules into the package (`camfr/visualisation/` or `camfr/`),
       so the `find_package_modules` override in `setup.py` can go and the source tree matches
       the installed layout.

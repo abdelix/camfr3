@@ -1255,11 +1255,20 @@ def animate_field(o, component, r1, r2, r3=0, filename=0, overlay_n=1,
 #
 ##############################################################################
 
-from . import slab_plot, stack_plot
+# The Tk plot windows are imported when used, so that importing camfr does not
+# require tkinter.
 
-Slab.plot       = lambda self : slab_plot.SlabPlot(self)
-Stack.plot      = lambda self : stack_plot.StackPlot(self)
-BlochStack.plot = lambda self : stack_plot.StackPlot(self)
+def _slab_plot(self):
+    from . import slab_plot
+    return slab_plot.SlabPlot(self)
+
+def _stack_plot(self):
+    from . import stack_plot
+    return stack_plot.StackPlot(self)
+
+Slab.plot       = _slab_plot
+Stack.plot      = _stack_plot
+BlochStack.plot = _stack_plot
 Cavity.plot     = lambda self : stack_plot.StackPlot(self)
 
 Slab.plot_n = plot_n

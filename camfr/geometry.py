@@ -17,9 +17,8 @@ from camfr import *
 import numpy as np
 from functools import cmp_to_key
 
-import PIL.Image as Image
-import PIL.ImageFile as ImageFile
-import PIL.ImageDraw as ImageDraw
+# PIL (Pillow) is imported where images are used, so that the rest of camfr
+# works without it.
 
 ############################################################################
 #
@@ -394,6 +393,7 @@ class Picture(object):
         #   '------------------>z              \|/               
         #  (0,0)                                z                             
 
+        import PIL.Image as Image
         im = Image.open(self.imageName).rotate(270)
         im = im.convert("L")               # Convert image to gray scale.
         xPixels, zPixels =  im.size[0], im.size[1]      
@@ -538,9 +538,11 @@ class Picture(object):
 ############################################################################ 
 
 def rescale_nearest(self, image, Xsteps, Zsteps):
+    import PIL.Image as Image
     return image.resize((Xsteps,Zsteps),Image.NEAREST)    
 
 def rescale_antialias(image, Xsteps, Zsteps):
+    import PIL.Image as Image
     return image.resize((Xsteps,Zsteps),Image.LANCZOS )
 
 def rescale_custom(image, x, z, Xsteps, Zsteps, method='AVERAGE'):
@@ -558,6 +560,7 @@ def rescale_custom(image, x, z, Xsteps, Zsteps, method='AVERAGE'):
     dx = x / image.size[0]
     dz = z / image.size[1]
     
+    import PIL.Image as Image
     im = Image.new ("L", (Xsteps,Zsteps))
     L = list(im.getdata())
     Ln = 0

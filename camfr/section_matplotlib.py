@@ -13,7 +13,8 @@
 
 from ._camfr import *    # import the Section and Slab classes, in order to add functions to them.
 import numpy as np
-import matplotlib.pyplot as plt
+# matplotlib.pyplot is imported when a plot is made, so that importing camfr
+# does not load Matplotlib.
 
 
 
@@ -38,7 +39,7 @@ import matplotlib.pyplot as plt
 ############################################################################
 
 ## Colormap
-colormap = plt.get_cmap('hot')
+colormap = 'hot'    # any Matplotlib colormap name
 
 AxisBGColor = 'black'   # background color of every axis
 
@@ -99,6 +100,7 @@ def __Section_plot(self, field="Ex", mode=0, dx=0.100, dy=0.100, annotations=Tru
         >>> XAxisObj = ax.get_children()[5]
 
     '''
+    import matplotlib.pyplot as plt
     
     ## sanitize `field` argument, check if iterable
     if hasattr(field, '__iter__'):

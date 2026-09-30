@@ -4,9 +4,19 @@
 
 import numpy as np
 
-import os
-if not os.environ.get('NO_CAMFR_GRAPHICS'):
-    from pylab import *
+# 'from camfr import *' has always provided the NumPy namespace, which used to
+# come from 'from pylab import *'. Import the same NumPy names directly, so
+# that Matplotlib is not loaded until something is plotted. As in pylab, the
+# builtins below are not shadowed by their NumPy versions.
+
+from numpy import *
+from numpy.fft import *
+from numpy.random import *
+from numpy.linalg import *
+import builtins as _builtins
+bytes, abs, bool, max, min, pow, round = (_builtins.bytes, _builtins.abs,
+  _builtins.bool, _builtins.max, _builtins.min, _builtins.pow, _builtins.round)
+del _builtins
 
 from ._camfr import *
 from .camfr_PIL import *     # converted numpy* to np.*

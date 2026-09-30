@@ -17,9 +17,12 @@ license-files = ["LICENSE", "COPYRIGHT", "AUTHORS", "NOTICE"]
 authors = [{ name = "Peter Bienstman", email = "Peter.Bienstman@UGent.be" }]
 maintainers = [{ name = "Abdelfettah Hadij-ElHouati", email = "abdel.14@gmail.com" }]
 requires-python = ">=3.10"
-dependencies = ["numpy", "matplotlib", "pillow"]
+dependencies = ["numpy"]
 
 [project.optional-dependencies]
+# Plotting: Section.plot and RCLED/GARCLED use Matplotlib; the image-based
+# geometry and the camfr_PIL/Tk plots use Pillow.
+plot = ["matplotlib", "pillow"]
 scipy = ["scipy"]
 
 [project.urls]
@@ -28,8 +31,8 @@ Upstream = "https://github.com/demisjohn/CAMFR"
 
 [dependency-groups]
 # Installed by default with `uv sync`: tools for an in-place build
-# (python -m SCons) and SciPy, which GARCLED needs.
-dev = ["scons", "setuptools>=77", "setuptools-scm>=8", "scipy"]
+# (python -m SCons), the plotting libraries (the `plot` extra) and SciPy.
+dev = ["scons", "setuptools>=77", "setuptools-scm>=8", "matplotlib", "pillow", "scipy"]
 
 [tool.setuptools_scm]
 # Version from the latest git tag (vX.Y.Z); untagged commits get a .devN suffix.

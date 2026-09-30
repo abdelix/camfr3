@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from camfr import *
+from matplotlib.pyplot import figure, polar, savefig, title
 
 #############################################################################
 #

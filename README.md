@@ -129,7 +129,9 @@ CAMFR runs on Python 3. It has been tested with Python 3.14 and NumPy 2.3 on Lin
 You have to compile the CAMFR library. This requires a C++ and a Fortran compiler, SCons, Boost.Python built for your Python version, Blitz++, BLAS and LAPACK. On Linux:
 
     cp machine_cfg.py.linux machine_cfg.py
-    python3 -m pip install .
+    python3 -m pip install ".[plot]"
+
+The `plot` extra installs Matplotlib and Pillow, which the plotting functions need; the solver itself only needs NumPy. `from camfr import *` provides the NumPy namespace but, unlike earlier versions, no Matplotlib names: scripts that call `figure()`, `savefig()` and similar directly need `from pylab import *`.
 
 For development, [uv](https://docs.astral.sh/uv/) sets up an environment with an editable install: `uv sync`, then `uv run python myScript.py`.
 

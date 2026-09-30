@@ -958,3 +958,38 @@ reference with a note at the top saying how to recover the templates from git hi
 and `CLAUDE.md` now name only the Linux template.
 
 **Issue.** None. The templates will be superseded entirely by the CMake build (`MODERNISATION.md` §2).
+
+### 34. No pylab star-import; Matplotlib and Pillow are optional
+
+**Change.** `camfr/__init__.py` no longer runs `from pylab import *`. It imports the NumPy names
+that pylab used to supply (`from numpy import *`, plus `numpy.fft`, `numpy.random` and
+`numpy.linalg`, in pylab's order) and, as pylab does, keeps the builtins `bytes`, `abs`, `bool`,
+`max`, `min`, `pow` and `round` instead of their NumPy versions. Plotting libraries load on use:
+
+- `geometry.py` imports `PIL.Image` inside the four functions that handle images;
+- `section_matplotlib.py` imports `pyplot` inside `Section.plot`; the module-level
+  `colormap = plt.get_cmap('hot')` became the name `'hot'`, which Matplotlib accepts as `cmap`;
+- `camfr_PIL.py` imports the Tk windows `slab_plot`/`stack_plot` when `Slab.plot`/`Stack.plot`
+  are called, instead of at the end of the module (which pulled in tkinter);
+- `RCLED.py` and `GARCLED.py`, which used pyplot names from the old star-import, import them
+  explicitly; so does `testsuite/metal_splitter.py` (`plot`; the test is excluded).
+
+`pyproject.toml`: dependencies reduced to `numpy`; new extra `plot = ["matplotlib", "pillow"]`;
+the `dev` group includes both. `NO_CAMFR_GRAPHICS` is obsolete and ignored.
+
+**Compatibility.** An AST scan of the 77 scripts using `from camfr import *` (testsuite,
+examples, package modules) found NumPy names (`zeros`, `arange`, `linspace`, `meshgrid`, …) and
+pyplot names only in the modules fixed above. Compared with the old namespace, every NumPy and
+builtin name is the same object; the names no longer exported are Matplotlib's (285, including
+stdlib modules such as `sys`/`time` that pylab happened to carry). User scripts that call
+`figure()`, `savefig()` etc. directly need `from pylab import *`; README says so.
+
+**Issue.** `geometry.py` (verbose branch of the image-to-expression code) calls `plot(s)` on a
+`Slab`. It relied on pylab's `plot`, which cannot plot a `Slab`, so the branch was already
+broken (TypeError); it now raises NameError. Left unchanged: the intended call is unclear.
+
+**Verification.** `import camfr`: 0.97 s → 0.23 s; Matplotlib, PIL and tkinter are not loaded,
+and the import succeeds with all three blocked. Testsuite 47 tests, OK in `.venv`, with
+`NO_CAMFR_GRAPHICS=1`, and in a core-only environment (`uv sync --no-dev`: NumPy only) — the
+testsuite no longer needs pylab. `Section.plot` (Agg) returns a Figure; `camfr.RCLED` and
+`camfr.GARCLED` import. Si-wire check: TE0 2.4451, TM0 1.7702, TE1 1.4925.

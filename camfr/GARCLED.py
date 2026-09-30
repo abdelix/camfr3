@@ -1,6 +1,8 @@
 #! /usr/bin/env python
   
 from camfr import *
+from matplotlib import cm
+from matplotlib.pyplot import axis, figure, pcolor, savefig, title, xlabel, ylabel
 from numpy.linalg import *
 from cmath import *
 import sys
