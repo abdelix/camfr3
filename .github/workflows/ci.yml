@@ -73,13 +73,58 @@ jobs:
           export UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1:suppressions=$PWD/ubsan.supp
           .venv/bin/python -m pytest
 
+  # Linux wheels (manylinux_2_28, x86_64) with cibuildwheel, one job per
+  # CPython version; configuration in [tool.cibuildwheel] in pyproject.toml.
+  # Each wheel is tested in a clean environment and kept as a workflow
+  # artifact; nothing is published.
+  wheels:
+    name: Wheel (${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [cp310, cp311, cp312, cp313, cp314]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0          # setuptools-scm needs the tags for the version
+
+      - uses: pypa/cibuildwheel@v4.2.1
+        with:
+          only: ${{ matrix.python }}-manylinux_x86_64
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheel-${{ matrix.python }}-manylinux_x86_64
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+
+  sdist:
+    name: Source distribution
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v10.2.0   # no floating v10 tag upstream
+
+      - name: Build the sdist
+        run: uv build --sdist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
   # On pushes to main, after the tests pass: compute the next version from the
   # Conventional Commits, update CHANGELOG.md, tag and create a GitHub release
   # (python-semantic-release, configured in pyproject.toml). Nothing is
   # published to PyPI yet.
   release:
     name: Release
-    needs: [test, sanitizers]
+    needs: [test, sanitizers, wheels, sdist]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     concurrency: release

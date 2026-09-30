@@ -2,9 +2,9 @@
 
 `camfr3` is a Python 3 port of CAMFR. It is distributed as `camfr3` because the PyPI name `camfr` belongs to the original author; the module is still imported as `import camfr`. See `NOTICE` for attribution and `CITATION.cff` for how to cite.
 
-Forked from [Sourceforge project](http://camfr.sourceforge.net/) for maintenance.
+**Maintained by Abdelfettah Hadij-ElHouati ([@abdelix](https://github.com/abdelix)).** camfr3 is a side project to keep CAMFR alive: the Python 3 port, a modern build (CMake, pybind11) and fixes. Please report problems in the [issue tracker](https://github.com/abdelix/camfr3/issues).
 
-Originally written by [Peter Bienstman at Ghent University, Belgium](http://www.photonics.intec.ugent.be/contact/people.asp?ID=5).
+Originally written by [Peter Bienstman at Ghent University, Belgium](http://www.photonics.intec.ugent.be/contact/people.asp?ID=5), with contributions from the people listed in `AUTHORS`. History: the original [SourceForge project](http://camfr.sourceforge.net/) (Python 2), maintained on GitHub by [Demis D. John](https://github.com/demisjohn/CAMFR), and ported to Python 3 as camfr3.
 
 
 ## Introduction
@@ -143,4 +143,4 @@ Modules shipped inside the package are imported through the package, e.g. `from 
 
 
 ## License and support
-All the code is released under the GPL.
+All the code is released under the GPL (version 2, see `LICENSE`; `NOTICE` lists third-party code). camfr3 is maintained by Abdelfettah Hadij-ElHouati; questions and bug reports go to the [issue tracker](https://github.com/abdelix/camfr3/issues).
