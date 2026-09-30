@@ -1,3 +1,8 @@
+NOTE (python3-port): these instructions are from the Python 2 era and are kept for
+reference only. The machine_cfg.py.MacOSX/.MSVC templates they relied on were removed
+(see PORTING_JOURNAL.md entry 33); recover them with
+'git show 89b6c2f:machine_cfg.py.MSVC' if needed. See INSTALL for the supported build.
+
 COMPILING AND INSTALLING
 
 For the compilation of CAMFR on MacOSX, it is relatively straightforward to use MacPorts to install all dependencies, although with the drawback that the built-in Mac OS installation of Python will be superseded by the MacPorts python installation.

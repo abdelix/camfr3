@@ -43,7 +43,7 @@ uv sync                                  # creates .venv, builds and installs ca
 - All package metadata is in `pyproject.toml`; `setup.py` only keeps the SCons hook and
   the platform-wheel flag. `include-package-data = false` keeps the C++ sources out of wheels.
 - Full build ≈ 70 s on 8 threads (SCons reuses the in-tree `*.os`, so rebuilds are faster).
-  Only `machine_cfg.py.linux` is maintained; the MacOSX/MSVC/gentoo templates are Python 2 era.
+  `machine_cfg.py.linux` is the only template; the Python 2-era ones were removed.
 
 ## Test
 

@@ -947,3 +947,14 @@ come from PyPI. The `../demultiplexers/deps/venv314` symlink (entry 31) still po
 **Verification.** Scratch environments first (editable and `--no-editable`), then the real
 `.venv`: testsuite 47 tests, OK, in each. Si-wire check through `deps/venv314`: TE0 2.4451,
 TM0 1.7702, TE1 1.4925. `import scipy, camfr.GARCLED` works.
+
+### 33. Python 2-era machine_cfg templates removed
+
+**Change.** Deleted `machine_cfg.py.MSVC`, `.MacOSX`, `.gcc` and `.gentoo`. None had been updated
+for Python 3 (hard-coded Python 2.x include paths and `boost_python` names); only
+`machine_cfg.py.linux` is maintained. `INSTALL.MacOSX` and `INSTALL.Windows` are kept for
+reference with a note at the top saying how to recover the templates from git history
+(`git show 89b6c2f:machine_cfg.py.MSVC`). `INSTALL`, `setup.py`'s error message, `.gitignore`
+and `CLAUDE.md` now name only the Linux template.
+
+**Issue.** None. The templates will be superseded entirely by the CMake build (`MODERNISATION.md` §2).

@@ -17,9 +17,8 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
       the installed layout.
 - [x] Replace the fixed version `20090406` in `camfrversion.py` with real versioning
       (e.g. `setuptools-scm` from git tags). Done in journal entry 29.
-- [ ] Delete dead build paths: ~~the `distrib` target in `makefile`~~ (removed in entry 29),
-      and the Python 2-era
-      `machine_cfg.py.{MacOSX,MSVC,gentoo,gcc}` templates.
+- [x] Delete dead build paths: the `distrib` target in `makefile` (entry 29) and the Python
+      2-era `machine_cfg.py.{MacOSX,MSVC,gentoo,gcc}` templates (entry 33).
 - [ ] Enable `-Wall -Wextra`, and add a debug build with AddressSanitizer and
       UndefinedBehaviorSanitizer. Both crashes fixed in the port (journal entries 16 and 19)
       would have been caught immediately.

@@ -3,7 +3,7 @@
 # Build and install CAMFR.
 #
 # The compiled extension _camfr.so is built with SCons, using the settings in
-# machine_cfg.py (copy one of the machine_cfg.py.* templates first). The
+# machine_cfg.py (copy machine_cfg.py.linux first). The
 # package metadata and the version (setuptools-scm, from git tags) are in
 # pyproject.toml.
 #
@@ -24,8 +24,8 @@ class camfr_build_py(build_py):
   def run(self):
 
     if not os.path.exists("machine_cfg.py"):
-      sys.exit("machine_cfg.py not found: copy one of the machine_cfg.py.* "
-               "templates to machine_cfg.py and edit it for your system.")
+      sys.exit("machine_cfg.py not found: copy machine_cfg.py.linux to "
+               "machine_cfg.py and edit it for your system.")
 
     subprocess.check_call([sys.executable, "-m", "SCons",
                            "-j", str(os.cpu_count() or 1)])

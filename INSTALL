@@ -60,8 +60,9 @@ Distributions that mark the system Python as externally managed
 
 To build the library in place without installing, run 'python3 -m SCons'.
 
-The other machine_cfg.py.* templates (macOS, MSVC, Gentoo, old gcc) have
-not been updated for Python 3 and need to be adapted by hand.
+Only machine_cfg.py.linux is provided. The Python 2-era templates for
+macOS, MSVC, Gentoo and old gcc were removed; INSTALL.MacOSX and
+INSTALL.Windows are kept for reference.
 
 
 Testing
