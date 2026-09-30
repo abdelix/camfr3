@@ -15,8 +15,8 @@ scikit-build-core instead of SCons, pybind11 instead of Boost.Python, a pytest
 testsuite with sanitizer runs in CI, and binary wheels. Every change is
 recorded in
 [PORTING_JOURNAL.md](https://github.com/abdelix/camfr3/blob/main/PORTING_JOURNAL.md).
-camfr3 is maintained by Abdelfettah Hadij-ElHouati
-([@abdelix](https://github.com/abdelix)) as a side project.
+I'm Abdelfettah Hadij-ElHouati ([@abdelix](https://github.com/abdelix)), and I
+maintain camfr3 in my free time.
 
 ## Citing
 

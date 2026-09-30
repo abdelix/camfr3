@@ -2,7 +2,7 @@
 
 `camfr3` is a Python 3 port of CAMFR. It is distributed as `camfr3` because the PyPI name `camfr` belongs to the original author; the module is still imported as `import camfr`. See `NOTICE` for attribution and `CITATION.cff` for how to cite.
 
-**Maintained by Abdelfettah Hadij-ElHouati ([@abdelix](https://github.com/abdelix)).** camfr3 is a side project to keep CAMFR alive: the Python 3 port, a modern build (CMake, pybind11) and fixes. Please report problems in the [issue tracker](https://github.com/abdelix/camfr3/issues).
+**Maintainer:** I'm Abdelfettah Hadij-ElHouati ([@abdelix](https://github.com/abdelix)), and I maintain camfr3 in my free time to keep CAMFR alive: the Python 3 port, a modern build (CMake, pybind11) and fixes. Please report problems in the [issue tracker](https://github.com/abdelix/camfr3/issues).
 
 **Documentation:** <https://abdelix.com/camfr3/> (tutorial, solver guide, API reference).
 
