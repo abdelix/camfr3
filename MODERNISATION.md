@@ -78,14 +78,15 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 - [ ] GitHub Actions on macOS (Homebrew gcc for gfortran, Blitz++, Accelerate or OpenBLAS).
       Not added yet: it could not be tried locally.
 - [x] `cibuildwheel` to build binary wheels (manylinux + OpenBLAS), so users never compile.
-      Linux x86_64, CPython 3.10–3.14, built and tested in CI (entry 59). Not published yet.
+      Linux x86_64, CPython 3.10–3.14, built and tested in CI (entry 59). Published with each release (entry 63).
 
 ## 6. Distribution
 
 - [x] Automatic versioning and GitHub releases from Conventional Commits (python-semantic-release
-      on `main`, entry 57). Wheels and PyPI publishing still to add to the release job.
-- [ ] Publish under the new name `camfr3` (the PyPI name `camfr` belongs to the original author).
-      Metadata, `NOTICE` and `CITATION.cff` are done (journal entry 27); the upload is not.
+      on `main`, entry 57).
+- [x] Publish under the new name `camfr3` (the PyPI name `camfr` belongs to the original author):
+      trusted publishing from the release job (entry 63).
+      Metadata, `NOTICE` and `CITATION.cff`: journal entry 27.
 - [ ] conda-forge feedstock (Blitz++, pybind11 and OpenBLAS are already on conda-forge).
 
 ## 6b. Documentation

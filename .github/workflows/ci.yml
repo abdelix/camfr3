@@ -179,6 +179,9 @@ jobs:
     concurrency: release
     permissions:
       contents: write
+    outputs:
+      released: ${{ steps.release.outputs.released }}
+      tag: ${{ steps.release.outputs.tag }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -195,3 +198,74 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           build: false
+
+  # When a release was made: rebuild the wheels and the sdist at the new tag
+  # (the ones above carry a .devN+g<hash> version, which PyPI rejects) and
+  # upload them to PyPI with trusted publishing (no token; configured on PyPI
+  # for this repository, workflow ci.yml, environment pypi).
+  release-wheels:
+    name: Release wheel (${{ matrix.python }})
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python: [cp310, cp311, cp312, cp313, cp314]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release.outputs.tag }}
+
+      - uses: pypa/cibuildwheel@v4.2.1
+        with:
+          only: ${{ matrix.python }}-manylinux_x86_64
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-wheel-${{ matrix.python }}
+          path: wheelhouse/*.whl
+          if-no-files-found: error
+
+  release-sdist:
+    name: Release sdist
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release.outputs.tag }}
+
+      - uses: astral-sh/setup-uv@v10.2.0   # no floating v10 tag upstream
+
+      - name: Build the sdist
+        run: uv build --sdist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: [release-wheels, release-sdist]
+    runs-on: ubuntu-24.04
+    environment:
+      name: pypi
+      url: https://pypi.org/project/camfr3/
+    permissions:
+      id-token: write          # trusted publishing
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: List the distributions
+        run: ls -l dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

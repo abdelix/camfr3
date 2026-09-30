@@ -72,7 +72,7 @@ the import list and `alltests` in `camfr_test.py`. New bindings need a docstring
 
 **Wheels** (`[tool.cibuildwheel]` in `pyproject.toml`, `tools/ci/install_wheel_deps.sh`): Linux
 x86_64 manylinux_2_28 wheels for CPython 3.10–3.14, built in CI (`wheels` job, one per version)
-and kept as workflow artifacts — not published. The container gets OpenBLAS from `dnf` and
+and kept as workflow artifacts. Releases rebuild them at the tag and publish them (below). The container gets OpenBLAS from `dnf` and
 builds Blitz++ 1.0.2 from source; `auditwheel` bundles OpenBLAS, Blitz++, libgfortran and
 libquadmath (wheel ≈ 13.5 MB). Each wheel is installed and the testsuite runs against it.
 Locally, from a clean clone (not the working tree, which has `.venv`/`build/`):
@@ -119,7 +119,11 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   `chore(release): X`, tags `vX` and creates a GitHub release. Alpha pre-releases for now
   (`v3.0.0-alpha.N` = PEP 440 `3.0.0aN`). Commit messages therefore decide versions: use the
   right type. Dry run: `uvx --from python-semantic-release semantic-release --noop version --print`
-  (on `main`). No PyPI publishing yet. `v3.0.0-alpha.1` is a semver alias of the old
+  (on `main`). **PyPI:** when a release is made, `release-wheels`/`release-sdist` rebuild at the
+  new tag (the earlier CI wheels carry `.devN+g…` versions, which PyPI rejects) and `publish`
+  uploads them with trusted publishing (pending publisher on PyPI: repo `abdelix/camfr3`,
+  workflow `ci.yml`, environment `pypi`; no token). Every `fix:`/`feat:` merge to `main`
+  therefore publishes to PyPI. `v3.0.0-alpha.1` is a semver alias of the old
   `v3.0.0a1` (same commit), which semantic-release cannot parse.
 - Tags `vX.Y.Z` set the package version (setuptools-scm); `v3.0.0a1` is pushed. Push new tags
   explicitly (`git push origin <tag>`).
@@ -216,7 +220,8 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 
 - **Published name is `camfr3`** (free on PyPI as of 2026-09-30; the module is still
   `import camfr`). `pyproject.toml`, the README header, `NOTICE` and `CITATION.cff` are updated.
-  Not yet uploaded — see the Distribution section of `MODERNISATION.md`.
+  Published from CI with each release since `3.0.0a3` (journal entry 63), to claim the name
+  while the ACM licence question (Patterson quadrature, issue #6) is still open.
 - **Sanitizer status:** the testsuite, and `stack2`/`metal_splitter`, run clean under
   ASan/UBSan (entries 37–45).
 - **`stack2`** (entry 45): numerically ill-conditioned (result does not converge with `N`).
