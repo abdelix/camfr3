@@ -97,11 +97,10 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   goes on `modernisation`; this `CLAUDE.md` describes that branch.
 - Tags `vX.Y.Z` set the package version (setuptools-scm); `v3.0.0a1` is pushed. Push new tags
   explicitly (`git push origin <tag>`).
-- Pushing: `gh` is authenticated as `abdelix`; plain `git push` over HTTPS prompts for another
-  account's password and fails here. Push with gh as credential helper:
-  `git -c credential.helper= -c 'credential.https://github.com.helper=!gh auth git-credential'
-  -c credential.https://github.com.username=abdelix push`. Changing `.github/workflows/` needs
-  the token's `workflow` scope (`gh auth refresh -h github.com -s workflow`, interactive).
+- Pushing: `origin` uses SSH (`git@github.com:abdelix/camfr3.git`); the key is accepted as
+  `abdelix`, so plain `git push` works from here, including changes to `.github/workflows/`
+  (over HTTPS those need a token with the `workflow` scope). `gh` is authenticated too, for
+  `gh run watch`/`gh run view`. Push only while debugging CI, otherwise leave it to the user.
 - The upstream `py35_compat` branch is an earlier, abandoned attempt. It was not merged, and
   this port was done independently.
 - `TODO` is Peter Bienstman's original feature wishlist. Leave it alone and track new work in

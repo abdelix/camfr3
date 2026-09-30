@@ -1460,3 +1460,15 @@ another account's HTTPS password.
 (entry 51) needs the token's `workflow` scope, and the `gh` token had only `gist`, `read:org`,
 `repo`. **Resolution:** the scope is added with `gh auth refresh -h github.com -s workflow`,
 which needs an interactive login by the user.
+
+### 53. origin switched to SSH
+
+**Change.** `origin` is now `git@github.com:abdelix/camfr3.git`. The user's SSH key is accepted
+as `abdelix` (`ssh -T git@github.com`), so `git push` works from this environment without the
+`gh` credential-helper workaround of entry 52, and pushes that change `.github/workflows/` no
+longer need the token's `workflow` scope (SSH pushes are authorised by the key). `CLAUDE.md`
+updated.
+
+**Issue.** Over HTTPS, a wrong username typed into the `ksshaskpass` dialog had been saved in
+KWallet (folder `ksshaskpass`, entry `https://github.com`) and was replayed on every push; the
+user removed it. With SSH that dialog is no longer involved.
