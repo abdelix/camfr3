@@ -104,7 +104,6 @@ set(CAMFR_CXX_SOURCES
 
 set(CAMFR_NOOPT_SOURCES
   defs.cpp
-  math/bessel/slatec/limits.c
   camfr_wrap.cpp
   camfr_wrap_2.cpp)
 
@@ -175,8 +174,8 @@ list(TRANSFORM CAMFR_NOOPT_SOURCES   PREPEND camfr/)
 list(TRANSFORM CAMFR_FORTRAN_SOURCES PREPEND camfr/)
 
 # These files were built without optimisation in the SCons build (the
-# Python wrappers are slow to compile with -O3, and defs.cpp/limits.c
-# hold machine constants). Keep it that way.
+# Python wrappers are slow to compile with -O3, and defs.cpp once computed
+# machine constants at run time). Keep it that way.
 
 set_source_files_properties(${CAMFR_NOOPT_SOURCES}
                             PROPERTIES COMPILE_OPTIONS "-O0")

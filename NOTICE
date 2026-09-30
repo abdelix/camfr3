@@ -33,6 +33,9 @@ The older permissive notice in COPYRIGHT is kept as distributed.
 
 camfr/math/ contains third-party numerical code: the SLATEC Bessel routines
 (US government work, public domain) and Brent root and minimum finders.
+SLATEC's machine constants (d1mach) come from Fortran intrinsics; the MACHAR
+routine (W. J. Cody, ACM TOMS 14, 1988) that computed them was removed
+(PORTING_JOURNAL.md, entry 58).
 
 The Jenkins-Traub polynomial root finder (ACM Algorithm 419, under ACM's
 software licence, which permits free non-commercial use) was removed in

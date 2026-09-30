@@ -1569,3 +1569,28 @@ version `3.0.0-alpha.2` (3 `feat`, 7 `fix` commits since `v3.0.0-alpha.1`); the 
 changelog has sections for bug fixes, build system, CI, documentation, features and testing,
 listing only Conventional Commits (the ~900 upstream commits do not appear). On `modernisation`
 the dry run correctly makes no release. `actionlint` passes.
+
+### 58. MACHAR removed: machine constants from the language
+
+**Change.** `math/bessel/slatec/machar.c` is W. J. Cody's MACHAR (ACM TOMS 14, 1988), which
+determines the floating-point parameters at run time; like the other pre-2013 ACM algorithms it
+falls under the ACM Software License Agreement (non-commercial only). It was not listed in
+`CMakeLists.txt`, but it *was* compiled: `limits.c` `#include`d it (single and double
+precision), and SLATEC's `d1mach.f` called `machard`. `defs.cpp` also carried an inlined copy of
+the same algorithm in `machine_eps()`. Now:
+
+- `d1mach.f` returns the Fortran intrinsics: `tiny(1d0)`, `huge(1d0)`, `epsilon(1d0)/radix(1d0)`,
+  `epsilon(1d0)`, `log10(radix)` (used by 37 SLATEC files);
+- `machine_eps()` returns `std::numeric_limits<Real>::epsilon()`;
+- deleted: `machar.c`, `limits.c` (only a wrapper that included it), `d1mach.f.new` (an unused
+  copy of the old `d1mach.f`); `limits.c` removed from `CMakeLists.txt`. No C sources remain.
+
+**Issue.** Entry 57's review had called `machar.c` "not compiled" after checking only
+`CMakeLists.txt`; the `#include` in `limits.c` was missed. Found when deleting it: `grep`
+showed the include and the `machard` call. **Resolution:** replace rather than just delete.
+
+**Verification.** A standalone program linked the old `limits.c`/`machar.c` and the new
+intrinsic version: all five `d1mach` values are bit-identical (2.2250738585072014e-308,
+1.7976931348623157e+308, 1.1102230246251565e-16, 2.2204460492503131e-16, 0.3010299956639812),
+and `DBL_EPSILON` equals MACHAR's eps (the value `machine_eps()` returned). The build has no
+`machard` symbol. pytest 59 passed, 2 xfailed; Si-wire check unchanged.
