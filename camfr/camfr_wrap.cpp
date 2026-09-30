@@ -481,9 +481,16 @@ Complex basematerial_mur(Material& m, int i)
 //
 /////////////////////////////////////////////////////////////////////////////
 
+// Assigned rather than added with .def(): .def() would only append an overload
+// to the enum's own __str__, which matches first (pybind11 3.0).
+
 template <class E>
 void name_as_str(py::enum_<E>& e)
-  {e.def("__str__", [](py::handle h) {return py::str(h.attr("name"));});}
+{
+  py::setattr(e, "__str__",
+              py::cpp_function([](py::handle h) {return py::str(h.attr("name"));},
+                               py::name("__str__"), py::is_method(e)));
+}
 
 
 

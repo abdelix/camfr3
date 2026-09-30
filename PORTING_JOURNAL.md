@@ -1480,3 +1480,19 @@ published as `camfr3`, whether or not it becomes the engine of their AWG/demulti
 `CLAUDE.md` (Context) now states that goal. Consequence for the plan in `MODERNISATION.md`:
 public-release work (licence-clean root finder, wheels and PyPI, documentation) comes before
 AWG-specific evaluation.
+
+### 55. Enum str() regression under pybind11 3.0
+
+**Change.** Entry 38 made `str()` of the enum values return the bare name (`str(TE) == 'TE'`),
+as Boost.Python did, by adding a `__str__` with `.def()`. That was checked with pybind11 3.1.0;
+after the pin to 3.0.4 (entry 39) `str()` returned the qualified name (`'Polarisation.TE'`) for
+every enum, unnoticed. With pybind11 3.0, `.def("__str__", …)` appends an overload to the enum's
+own `__str__` (the "sibling" chain), and that one accepts any value and always matches first.
+`name_as_str` now assigns a fresh `cpp_function` with `py::setattr`, which replaces it. New test
+`testsuite/enum_names.py` (in `camfr_test.py` too) checks `str()`, f-strings, `int()`, equality
+and `repr` for the enums, so a pybind11 upgrade cannot change this silently again.
+
+**Issue.** Found while writing the ADR test for entry 56 (`str(ADR)` gave `'Solver.ADR'`).
+
+**Verification.** `str()` of all enums gives the bare name; `repr(TE)` is `<Polarisation.TE: 2>`,
+`int(TE) == 2`. pytest: 52 passed, 2 xfailed.

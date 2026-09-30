@@ -16,7 +16,7 @@ import blazed_grating, substacks, planarTE, planarTM, VCSEL, SpE, \
        degenerate4, backward, planar_VCSEL, shift, blochstack, w1reson, \
        surface_plasmon, plasmon_biosensor, backward2, backward3, slab3, \
        section1, section2, section3, metal_coupler, lifetime, ADR_solver, \
-       metal_slab_modes
+       metal_slab_modes, enum_names
 
 alltests = unittest.TestSuite((blazed_grating.suite, substacks.suite, 
        planarTE.suite, planarTM.suite, VCSEL.suite, SpE.suite, fw_bw.suite,
@@ -32,7 +32,7 @@ alltests = unittest.TestSuite((blazed_grating.suite, substacks.suite,
        surface_plasmon.suite, plasmon_biosensor.suite, backward2.suite,
        backward3.suite, section1.suite, section2.suite, section3.suite,
        metal_coupler.suite, lifetime.suite, ADR_solver.suite,
-       metal_slab_modes.suite ))
+       metal_slab_modes.suite, enum_names.suite ))
 
 if __name__ == "__main__":
     r = unittest.TextTestRunner()
