@@ -1472,3 +1472,11 @@ updated.
 **Issue.** Over HTTPS, a wrong username typed into the `ksshaskpass` dialog had been saved in
 KWallet (folder `ksshaskpass`, entry `https://github.com`) and was replayed on every push; the
 user removed it. With SSH that dialog is no longer involved.
+
+### 54. Project scope: CAMFR revival as a side project
+
+**Change.** The user decided to revive CAMFR as a maintained open-source side project,
+published as `camfr3`, whether or not it becomes the engine of their AWG/demultiplexer tool.
+`CLAUDE.md` (Context) now states that goal. Consequence for the plan in `MODERNISATION.md`:
+public-release work (licence-clean root finder, wheels and PyPI, documentation) comes before
+AWG-specific evaluation.

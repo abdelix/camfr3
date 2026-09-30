@@ -238,5 +238,7 @@ Give exactly as many `--estimate`s as `--modes`. Surplus modes come back with ze
 script crashes with `ZeroDivisionError`. Without estimates the same run takes about 200 s, and the
 script's default 24/50 setting is coarser (TE0 2.4464).
 
-The user's end goal is their own AWG/demux modelling tool, which needs PML, bent-waveguide modes
-and nonuniform meshing. CAMFR is being kept alive as one candidate engine.
+**Project goal (since 2026-09-30):** revive CAMFR as a maintained open-source side project,
+published as `camfr3` — independent of whether it ends up as the engine of the user's own
+AWG/demux modelling tool (which needs PML, bent-waveguide modes and nonuniform meshing).
+Priorities therefore follow a public release: clean licensing, wheels/PyPI, documentation.
