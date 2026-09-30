@@ -1735,5 +1735,13 @@ cannot resolve relative ones), and the README and `docs/install.md` give
 `pip install --pre camfr3` (alpha releases are pre-releases, which pip skips without `--pre`).
 `twine check` passes on the sdist.
 
-**Verification.** `actionlint` clean. The jobs run for the first time on the release after this
-is merged.
+A manual run publishes an existing tag: `gh workflow run ci.yml --ref main -f tag=v3.0.0-alpha.3`
+(`workflow_dispatch` input `tag`). The `release` job is skipped then, so the build jobs use
+`!cancelled()` in their conditions, and `publish` requires both build jobs to have succeeded.
+
+**Issue.** PR #22 was merged while this commit was still being written: `v3.0.0-alpha.3` was
+released (GitHub release, docs site deployed) without it. This commit and the README wording
+were restored from the deleted branch onto a new one; since they are `build:`/`docs:` commits,
+merging them releases nothing, hence the manual input to publish `3.0.0a3`.
+
+**Verification.** `actionlint` clean.

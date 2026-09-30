@@ -123,7 +123,8 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   new tag (the earlier CI wheels carry `.devN+g…` versions, which PyPI rejects) and `publish`
   uploads them with trusted publishing (pending publisher on PyPI: repo `abdelix/camfr3`,
   workflow `ci.yml`, environment `pypi`; no token). Every `fix:`/`feat:` merge to `main`
-  therefore publishes to PyPI. `v3.0.0-alpha.1` is a semver alias of the old
+  therefore publishes to PyPI. To (re)publish an existing tag:
+  `gh workflow run ci.yml --ref main -f tag=vX`. `v3.0.0-alpha.1` is a semver alias of the old
   `v3.0.0a1` (same commit), which semantic-release cannot parse.
 - Tags `vX.Y.Z` set the package version (setuptools-scm); `v3.0.0a1` is pushed. Push new tags
   explicitly (`git push origin <tag>`).
