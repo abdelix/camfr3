@@ -16,34 +16,36 @@ changing the build, and tick items off as they land.
 
 ## Build and install
 
-The environment is managed with uv (`pyproject.toml`, `uv.lock`, `.python-version`):
+The extension is built with CMake (`CMakeLists.txt`) through scikit-build-core; the
+environment is managed with uv (`pyproject.toml`, `uv.lock`, `.python-version`):
 
 ```bash
-cp machine_cfg.py.linux machine_cfg.py   # gitignored; on this machine it already exists
-uv sync                                  # creates .venv, builds and installs camfr3 (editable)
+uv sync      # creates .venv, builds camfr3 (isolated) and installs it editable
+make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
 ```
 
-- `uv sync` installs the project **editable**: Python edits in `camfr/` take effect at once;
-  C++/Fortran edits need another `uv sync`, which rebuilds because the sources are listed in
-  `[tool.uv] cache-keys`. `uv sync --reinstall-package camfr3` forces a rebuild.
-- `.venv` is self-contained (NumPy, Matplotlib, SciPy from PyPI; no system site-packages) and
-  runs on the system Python 3.14. The `dev` group (installed by default) adds SCons,
-  setuptools, setuptools-scm and SciPy.
-- `machine_cfg.py.linux` detects Python, NumPy and the versioned Boost.Python library
-  (e.g. `libboost_python314`) from the interpreter running the build. `BOOST_ROOT` (env var)
-  defaults to `/usr`; the local `machine_cfg.py` defaults it to
-  `../demultiplexers/deps/boost-root/usr` (unpacked without root). It must be an absolute
-  path: SCons resolves relative include paths from `camfr/`. Do not add a `uv.toml`: uv then
-  ignores `[tool.uv]` in `pyproject.toml`, including the cache keys.
-- Without uv: `python3 -m pip install .` also works (build isolation fetches the build deps).
-- To build in place without installing: `uv run python -m SCons` (SCons drives the C++/Fortran
-  build; `setup.py` calls it from `build_py`).
-- The version comes from git tags via setuptools-scm (`v3.0.0a1` → `3.0.0a1`; untagged commits
-  get `.devN+g<hash>`). The generated `camfr/_version.py` is gitignored.
-- All package metadata is in `pyproject.toml`; `setup.py` only keeps the SCons hook and
-  the platform-wheel flag. `include-package-data = false` keeps the C++ sources out of wheels.
-- Full build ≈ 70 s on 8 threads (SCons reuses the in-tree `*.os`, so rebuilds are faster).
-  `machine_cfg.py.linux` is the only template; the Python 2-era ones were removed.
+- **Rebuilds.** `uv sync` builds in a fresh isolated environment, and scikit-build-core then
+  clears the CMake cache (by design), so a C++ change costs a full rebuild (~60 s on 8 threads).
+  `make dev` (`uv pip install --no-build-isolation --no-deps -e .`) builds with the tools from
+  the `dev` group in `.venv`, reusing `build/cp314-…` incrementally; afterwards `uv sync`/`uv run`
+  accept that install and do not rebuild. The first `make dev` after a `uv sync` is full.
+- **Editable install:** Python edits in `camfr/` take effect at once; the extension
+  (`_camfr.cpython-314-….so`) and `_version.py` are installed in site-packages.
+- **Boost.Python** is found as header + `libboost_python<XY>` directly (not via Boost's CMake
+  config, which is broken for partial installs). This machine's Boost is unpacked in
+  `../demultiplexers/deps/boost-root/usr`; the gitignored `local.cmake` sets `Boost_ROOT` to it
+  (template: `local.cmake.example`). `BOOST_ROOT`/`Boost_ROOT` in the environment also work.
+  Do not add a `uv.toml`: uv then ignores `[tool.uv]` in `pyproject.toml`.
+- `cmake` and `ninja` are also installed as uv tools in `~/.local/bin`; scikit-build-core uses
+  them instead of downloading them for each isolated build.
+- **Flags** match the old SCons build: C/C++ `-O3 -DNDEBUG`, Fortran `-O3`, and `defs.cpp`,
+  `limits.c` and the two `camfr_wrap*.cpp` at `-O0`. Only `camfr_wrap.cpp` gets the NumPy
+  include path.
+- **Wheel contents** are controlled by `wheel.exclude` in `pyproject.toml` (`camfr/` also holds
+  the C++/Fortran sources). Check with `uv build --wheel` + `unzip -l` after adding files.
+- **Version** from git tags via setuptools-scm (`v3.0.0a1` → `3.0.0a1`; untagged commits get
+  `.devN+g<hash>`), written to `camfr/_version.py` by scikit-build-core's `generate`.
+- Without uv: `python3 -m pip install .` works (build deps, CMake and Ninja come from PyPI).
 
 ## Test
 
@@ -52,7 +54,7 @@ cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 47 tests, e
 ```
 
 Use the venv interpreter (or `uv run`): `camfr` is installed there, not in the system Python.
-The install is editable, so rebuild with `uv sync` only after C++/Fortran changes.
+The install is editable, so rebuild (`make dev`) only after C++/Fortran changes.
 Per-module runs are useful when a test crashes (one segfault aborts the whole suite). Each
 test module defines a `suite` and runs standalone:
 `cd testsuite && MPLBACKEND=Agg ../.venv/bin/python wg.py`.
@@ -107,9 +109,9 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   Matplotlib), `_camfr` and the pure-Python helpers. Matplotlib, Pillow and tkinter are imported
   only when something is plotted (they are still required dependencies). Expressions such as `Slab(air(2) + Si(0.5))`
   are built by `expression.*` from `Material(length)` terms.
-- **Build.** `SConstruct` reads `machine_cfg.py` and delegates to `camfr/SConscript`. Object
-  files (`*.os`) and `_camfr.so` land *in the source tree* (gitignored). The docs are
-  Texinfo (`docs/camfr.texi`).
+- **Build.** `CMakeLists.txt` builds the single module `camfr._camfr` from all C++/Fortran
+  sources (lists taken over from the removed `camfr/SConscript`). Build products go to
+  `build/` (gitignored), not the source tree. The docs are Texinfo (`docs/camfr.texi`).
 
 ## Conventions
 
@@ -146,7 +148,7 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 ## Open items
 
 - **Published name is `camfr3`** (free on PyPI as of 2026-09-30; the module is still
-  `import camfr`). `setup.py`, the README header, `NOTICE` and `CITATION.cff` are updated.
+  `import camfr`). `pyproject.toml`, the README header, `NOTICE` and `CITATION.cff` are updated.
   Not yet uploaded — see the Distribution section of `MODERNISATION.md`.
 - **Second-`Section` segfault** (see Gotchas): not yet investigated. An ASan/UBSan build is the
   suggested first step (`MODERNISATION.md`).

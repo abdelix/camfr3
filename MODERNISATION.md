@@ -26,13 +26,16 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 
 ## 2. Modernise the build system (days)
 
-- [ ] Replace SCons + `machine_cfg.py` + the `setup.py` `build_py` hook with
+- [x] Replace SCons + `machine_cfg.py` + the `setup.py` `build_py` hook with
       **scikit-build-core + CMake** (or meson-python):
   - declarative `pyproject.toml` + `CMakeLists.txt`; no hand-edited, gitignored config;
   - `find_package(Python)`, `find_package(LAPACK)`, `find_package(Boost COMPONENTS python)`
     instead of manual paths and guessing the `boost_python314` library name;
   - working editable installs (`pip install -e .`), correct wheel tags, first-class Fortran;
   - incremental builds, ccache, Ninja.
+
+  Done in entry 36 (CMake + scikit-build-core, Ninja, incremental via `make dev`). Not done:
+  ccache, and Boost's CMake config is bypassed (broken for partial installs).
 
 - [x] Project metadata in `pyproject.toml` `[project]` (setup.py keeps only the SCons hook), and
       a uv-managed dev environment (`uv sync`, `uv.lock`). Journal entry 32.

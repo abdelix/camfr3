@@ -1,8 +1,9 @@
 [build-system]
-# The extension is compiled by SCons (driven from setup.py) against the NumPy
-# headers of the build environment.
-requires = ["setuptools>=77", "setuptools-scm>=8", "numpy", "scons"]
-build-backend = "setuptools.build_meta"
+# The extension is built with CMake (CMakeLists.txt) through scikit-build-core,
+# against the NumPy headers of the build environment. CMake and Ninja come
+# from PyPI when they are not installed.
+requires = ["scikit-build-core>=0.11", "setuptools-scm>=8", "numpy"]
+build-backend = "scikit_build_core.build"
 
 # Published as 'camfr3' because the PyPI name 'camfr' belongs to the original
 # author. The import name is still 'camfr'.
@@ -29,35 +30,44 @@ Homepage = "https://github.com/abdelix/CAMFR"
 Upstream = "https://github.com/demisjohn/CAMFR"
 
 [dependency-groups]
-# Installed by default with `uv sync`: tools for an in-place build
-# (python -m SCons) and SciPy, which GARCLED needs.
-dev = ["scons", "setuptools>=77", "setuptools-scm>=8", "scipy"]
+# Installed by default with `uv sync`: SciPy, which GARCLED needs, and the
+# build tools for incremental rebuilds in .venv (`make dev`, see CLAUDE.md).
+dev = ["scipy", "scikit-build-core>=0.11", "setuptools-scm>=8", "cmake>=3.26", "ninja"]
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+# Persistent build directory, so rebuilds are incremental.
+build-dir = "build/{wheel_tag}"
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+sdist.include = ["camfr/_version.py"]
+# camfr/ holds both the Python package and the C++/Fortran sources; ship only
+# the Python modules (the extension is installed by CMake). No subdirectory of
+# camfr/ holds Python code.
+wheel.packages = ["camfr"]
+wheel.exclude = ["camfr/*/", "*.cpp", "*.h", "*.c", "*.f", "ChangeLog",
+                 "camfr/_camfr.so"]
+
+[[tool.scikit-build.generate]]
+path = "camfr/_version.py"
+template = '''__version__ = "${version}"
+'''
 
 [tool.setuptools_scm]
 # Version from the latest git tag (vX.Y.Z); untagged commits get a .devN suffix.
-version_file = "camfr/_version.py"
-# Used when no git metadata is available (e.g. a plain source archive).
+# Used when no git metadata is available (e.g. a plain source archive):
 fallback_version = "0+unknown"
-
-[tool.setuptools]
-# Ship only the Python modules and _camfr.so (package_data in setup.py), not
-# the C++/Fortran sources that sit in the same directory.
-include-package-data = false
 
 [tool.uv]
 # uv only rebuilds the project when a cache key changes; the defaults cover
-# pyproject.toml and setup.py only, so list the C++/Fortran sources and the
-# build configuration too.
+# pyproject.toml only, so list the sources and the build configuration too.
 cache-keys = [
   { file = "pyproject.toml" },
-  { file = "setup.py" },
-  { file = "SConstruct" },
-  { file = "machine_cfg.py" },
+  { file = "CMakeLists.txt" },
+  { file = "local.cmake" },
   { file = "camfr/**/*.cpp" },
   { file = "camfr/**/*.h" },
   { file = "camfr/**/*.c" },
   { file = "camfr/**/*.f" },
   { file = "camfr/**/*.py" },
-  { file = "camfr/**/SConscript*" },
   { git = { commit = true, tags = true } },
 ]

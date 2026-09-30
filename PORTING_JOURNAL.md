@@ -1003,3 +1003,53 @@ separately. README, `CLAUDE.md` and `MODERNISATION.md` updated.
 
 **Issue.** None. The core-only test from entry 34 (NumPy alone) still describes what the code
 needs, but it is no longer an installable configuration.
+
+### 36. CMake + scikit-build-core replace SCons
+
+**Change.** The extension is now built by `CMakeLists.txt` through scikit-build-core
+(`build-backend = "scikit_build_core.build"`). Removed: `SConstruct`, `camfr/SConscript`,
+`camfr/SConscript.LAPACK`, `setup.py`, `machine_cfg.py.linux`, and the 19 pre-SCons `makefile`s
+under `camfr/` (they included a `make.inc` that no longer exists). The root `makefile` now runs
+`uv sync` and has a `dev` target.
+
+- **Sources and flags taken over unchanged:** the 55 C++ files, the 4 files built without
+  optimisation (`defs.cpp`, `limits.c`, `camfr_wrap.cpp`, `camfr_wrap_2.cpp`, now `-O0`), the 61
+  SLATEC files plus `jenkins_traub.f`, `FORTRAN_SYMBOLS_WITH_SINGLE_TRAILING_UNDERSCORE`, Release
+  flags `-O3 -DNDEBUG` (C/C++) and `-O3` (Fortran). Lists were generated from the SConscript.
+- **Dependencies:** `find_package(Python … NumPy)`, `find_package(LAPACK)` (also BLAS), Blitz++
+  by header + library, gfortran runtime linked implicitly by CMake. The module is
+  `_camfr.cpython-314-x86_64-linux-gnu.so`, installed into `camfr/`, with the non-system Boost
+  directory in its runpath (`INSTALL_RPATH_USE_LINK_PATH`).
+- **Machine settings:** `machine_cfg.py` is replaced by an optional, gitignored `local.cmake`
+  (template `local.cmake.example`); here it sets `Boost_ROOT`. `BOOST_ROOT` in the environment
+  also works.
+- **Packaging:** version via `scikit_build_core.metadata.setuptools_scm`, `_version.py` via
+  `[[tool.scikit-build.generate]]`; `wheel.exclude` keeps sources, `ChangeLog`s and the `camfr/`
+  subdirectories out of the wheel; `build-dir = "build/{wheel_tag}"`. uv cache keys now list
+  `CMakeLists.txt` and `local.cmake`. The `dev` group holds scikit-build-core, setuptools-scm,
+  CMake and Ninja (plus SciPy).
+
+**Issues.**
+
+1. Boost's CMake config for the unpacked Boost 1.90 requires `boost_container`, which is not
+   there, and even an unused broken `Boost::python` target fails CMake's generate step.
+   **Resolution:** find `boost/python.hpp` and `libboost_python<XY>` directly, as SCons did.
+2. The first wheel contained `camfr/math/bessel/BENCH`: `wheel.packages` copies every file.
+   **Resolution:** exclude `camfr/*/` (no subdirectory has Python code) and source patterns.
+3. Every `uv sync` after a C++ edit was a full rebuild (~60 s). Two causes: the NumPy include
+   path and the `cmake` executable path both live in the temporary isolated environment; and
+   scikit-build-core deliberately clears `CMakeCache.txt`/`CMakeFiles` whenever it runs from a
+   new isolated environment. Limiting the NumPy include to `camfr_wrap.cpp` and installing
+   `cmake`/`ninja` as uv tools did not help against the second. `no-build-isolation-package`
+   for camfr3 in `[tool.uv]` cannot bootstrap: the dynamic version makes uv build the project
+   for its metadata before the build tools are installed. **Resolution:** `uv sync` stays
+   isolated (robust, full rebuild); `make dev` runs `uv pip install --no-build-isolation
+   --no-deps -e .` with the tools from the `dev` group: 6.9 s for a one-file change, and uv
+   treats the result as up to date. The NumPy include restriction and the uv-tool `cmake`/`ninja`
+   are kept (they help `make dev` and keep build files stable).
+
+**Verification.** Clean build 47–60 s (SCons: ~70 s). Wheel: 16 Python modules, the extension,
+`_version.py`, licences. An sdist built without `.git` and with `BOOST_ROOT` from the
+environment builds a wheel with the right version. `ldd`: libboost_python314 (via runpath),
+blitz, lapack, blas, gfortran. Testsuite 47 tests, OK. Si-wire check through the
+`demultiplexers` symlink: TE0 2.4451, TM0 1.7702, TE1 1.4925.

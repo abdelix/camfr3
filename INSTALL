@@ -3,66 +3,60 @@ COMPILING AND INSTALLING
 CAMFR is a C++/Fortran library with a Python 3 interface built on
 Boost.Python.
 
-It has been tested on Ubuntu 26.04 with Python 3.14, NumPy 2.3, GCC and
+It has been tested on Ubuntu 26.04 with Python 3.14, NumPy 2.5, GCC and
 gfortran 15, Boost 1.90, Blitz++ 1.0.2, reference BLAS/LAPACK 3.12 and
-SCons 4.8.
+CMake 4.4 with scikit-build-core 1.1.
 
 
 Requirements
 
-- Python 3 with its development headers.
-- NumPy, Matplotlib and Pillow. SciPy is needed for the RCLED, GARCLED
-  and dispersive material helpers.
+- Python 3.10 or later with its development headers.
 - A C++ compiler supporting C++17 and a Fortran 77 compiler
   (e.g. g++ and gfortran).
-- SCons.
 - The Boost Python library, built for the same Python version that will
   run CAMFR (e.g. libboost_python314 for Python 3.14).
 - Blitz++ 0.9 or later.
 - BLAS and LAPACK. If possible, use an optimised implementation
   (OpenBLAS, Intel MKL, ...) for maximum performance.
 
-On Debian or Ubuntu these can be installed with
+NumPy, Matplotlib and Pillow are installed by pip as dependencies; SciPy
+(for RCLED, GARCLED and the dispersive material helpers) with the 'scipy'
+extra. CMake and Ninja are downloaded for the build when they are missing.
 
-  sudo apt install g++ gfortran scons python3-dev python3-venv \
-       python3-numpy python3-scipy python3-matplotlib python3-pil \
-       python3-pil.imagetk python3-tk libboost-python-dev libblitz0-dev \
-       libblas-dev liblapack-dev
+On Debian or Ubuntu the system requirements can be installed with
+
+  sudo apt install g++ gfortran python3-dev python3-venv python3-tk \
+       libboost-python-dev libblitz0-dev libblas-dev liblapack-dev
 
 
 Building and installing
 
-Copy a machine configuration template to machine_cfg.py, then install
-the package with pip:
+The extension is built with CMake (CMakeLists.txt) through
+scikit-build-core, so a plain pip install builds and installs it:
 
-  cp machine_cfg.py.linux machine_cfg.py
   python3 -m pip install .
 
-pip runs SCons to build camfr/_camfr.so and installs the 'camfr'
-package. machine_cfg.py.linux detects the Python and NumPy include
-directories from the interpreter that runs the build, and looks for
-Boost in /usr. If Boost.Python is installed elsewhere, point BOOST_ROOT
-at its prefix:
+CMake finds Python, NumPy, Blitz++ and BLAS/LAPACK by itself, and looks
+for Boost.Python in the system prefixes. If Boost.Python is installed
+elsewhere, set BOOST_ROOT to its prefix, either in the environment
 
   BOOST_ROOT=/opt/boost python3 -m pip install .
 
-By default pip builds in an isolated environment and downloads
-setuptools, NumPy and SCons for it. To build against the packages that
-are already installed instead, use
-
-  python3 -m pip install --no-build-isolation .
+or, to make it permanent for a checkout, in a local.cmake file next to
+CMakeLists.txt (see local.cmake.example; local.cmake is not tracked).
 
 Distributions that mark the system Python as externally managed
 (PEP 668) require a virtual environment, e.g.
 
-  python3 -m venv --system-site-packages venv
-  venv/bin/pip install --no-build-isolation .
+  python3 -m venv venv
+  venv/bin/pip install .
 
-To build the library in place without installing, run 'python3 -m SCons'.
+For development, uv (https://docs.astral.sh/uv/) creates a virtual
+environment with an editable install: 'uv sync'. After C++ or Fortran
+changes, 'make dev' rebuilds incrementally in that environment.
 
-Only machine_cfg.py.linux is provided. The Python 2-era templates for
-macOS, MSVC, Gentoo and old gcc were removed; INSTALL.MacOSX and
-INSTALL.Windows are kept for reference.
+The SCons build (SConstruct, machine_cfg.py) was replaced by CMake; the
+Python 2-era INSTALL.MacOSX and INSTALL.Windows are kept for reference.
 
 
 Testing

@@ -1,0 +1,4 @@
+# Copy to local.cmake (gitignored) for machine-specific settings, read by
+# CMakeLists.txt. Example: Boost installed outside the system prefix.
+#
+# set(Boost_ROOT "/path/to/boost-root/usr")

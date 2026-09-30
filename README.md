@@ -124,18 +124,17 @@ See the Examples directory for full examples, as some details are missing here.
 
 
 ## Installation
-CAMFR runs on Python 3. It has been tested with Python 3.14 and NumPy 2.3 on Linux. The original code base supported Python 2.7 only; `PORTING_JOURNAL.md` documents every change made for the port.
+CAMFR runs on Python 3. It has been tested with Python 3.14 and NumPy 2.5 on Linux. The original code base supported Python 2.7 only; `PORTING_JOURNAL.md` documents every change made for the port.
 
-You have to compile the CAMFR library. This requires a C++ and a Fortran compiler, SCons, Boost.Python built for your Python version, Blitz++, BLAS and LAPACK. On Linux:
+You have to compile the CAMFR library. This requires a C++ and a Fortran compiler, Boost.Python built for your Python version, Blitz++, BLAS and LAPACK. The build uses CMake through scikit-build-core, so on Linux:
 
-    cp machine_cfg.py.linux machine_cfg.py
     python3 -m pip install .
+
+Set `BOOST_ROOT` if Boost.Python is not in a system prefix. See the `INSTALL` file for the full list of dependencies and further options.
 
 Matplotlib and Pillow are installed as dependencies but only imported when something is plotted, so `import camfr` stays fast. `from camfr import *` provides the NumPy namespace but, unlike earlier versions, no Matplotlib names: scripts that call `figure()`, `savefig()` and similar directly need `from pylab import *`.
 
 For development, [uv](https://docs.astral.sh/uv/) sets up an environment with an editable install: `uv sync`, then `uv run python myScript.py`.
-
-See the `INSTALL` file for the full list of dependencies and further options.
 
 CAMFR scripts can be run like any other Python script with `python3 myScript.py`, or with `python3 -i myScript.py` to stay in the interpreter afterwards.
 
