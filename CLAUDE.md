@@ -105,7 +105,7 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   `camfr_wrap_2.cpp` (Cavity, Planar, Slab, Section, BlochSection) expose the C++ classes.
   `camfr/__init__.py` star-imports the NumPy namespace (what `pylab` used to provide, minus
   Matplotlib), `_camfr` and the pure-Python helpers. Matplotlib, Pillow and tkinter are imported
-  only when something is plotted (`[plot]` extra). Expressions such as `Slab(air(2) + Si(0.5))`
+  only when something is plotted (they are still required dependencies). Expressions such as `Slab(air(2) + Si(0.5))`
   are built by `expression.*` from `Material(length)` terms.
 - **Build.** `SConstruct` reads `machine_cfg.py` and delegates to `camfr/SConscript`. Object
   files (`*.os`) and `_camfr.so` land *in the source tree* (gitignored). The docs are

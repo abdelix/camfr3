@@ -993,3 +993,13 @@ and the import succeeds with all three blocked. Testsuite 47 tests, OK in `.venv
 `NO_CAMFR_GRAPHICS=1`, and in a core-only environment (`uv sync --no-dev`: NumPy only) — the
 testsuite no longer needs pylab. `Section.plot` (Agg) returns a Figure; `camfr.RCLED` and
 `camfr.GARCLED` import. Si-wire check: TE0 2.4451, TM0 1.7702, TE1 1.4925.
+
+### 35. Matplotlib and Pillow required again
+
+**Change.** The user always plots, so the `plot` extra from entry 34 is removed and Matplotlib
+and Pillow are back in `dependencies`. The lazy imports stay: `import camfr` still takes 0.23 s
+and loads no plotting library until something is plotted. The `dev` group no longer lists them
+separately. README, `CLAUDE.md` and `MODERNISATION.md` updated.
+
+**Issue.** None. The core-only test from entry 34 (NumPy alone) still describes what the code
+needs, but it is no longer an installable configuration.
