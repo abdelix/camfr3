@@ -59,7 +59,16 @@ vector<Complex> roots_contour(const Contour& contour,
 
   vector<Complex> G = integrals / 2. / pi / I;
 
-  unsigned int N = (unsigned int)(ceil(G.size() / 2.0));
+  // N roots need G[0] ... G[2N-1]. Round down: with an odd number of
+  // coefficients, ceil() used to read one past the end of G.
+
+  unsigned int N = G.size() / 2;
+
+  if (N == 0)
+  {
+    vector<Complex> empty;
+    return empty;
+  }
 
   // Check if all G's are zero.
 

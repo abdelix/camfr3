@@ -1216,3 +1216,29 @@ root finder (`allroots.cpp`), see entry 42.
 **Issue.** None.
 
 **Verification.** Testsuite 48 tests, OK, also under ASan/UBSan (entry 43).
+
+### 42. Out-of-bounds reads in the contour root finder
+
+**Change.** Two reads past the end of a vector in `math/calculus/croot/`, with one root cause:
+`patterson_z_n` lowers the number of moments `M` it returns when the higher moments
+`z^n / f(z)` would lose precision (`if (machine_eps()*abs(fz[n]) > mu) M = n-1;`). That
+depends on the interval, so results for different intervals can have different lengths. The
+callers in `contour.cpp` already take the shortest length, but two places assumed equal or even
+lengths:
+
+- `patterson_quad_z_n_sub` (`patterson_z_n.cpp:271`) compares each subinterval error with the
+  whole-interval estimate, looping over the subinterval's moments. The estimate can be shorter
+  (ASan: a 64-byte, 4-element estimate). **Fix:** where the estimate has no entry, compare with
+  the subinterval's own result instead.
+- `roots_contour` (`allroots.cpp:68`) solves for `N = ceil(G.size()/2)` roots from the moments
+  `G`, which needs `G[0] … G[2N-1]`. With an odd number of moments that reads one past the end,
+  and the garbage value entered the last equation of the linear system and so the polynomial
+  whose roots are the estimates (ASan: `G` with a single element). **Fix:** `N = G.size()/2`,
+  returning no roots when `N == 0` (the unsigned loop bound `2*N-1` would otherwise wrap).
+  `allroots` subdivides the contour adaptively and checks root counts, so fewer roots from one
+  contour is safe.
+
+**Issue.** The first fix let ASan get one step further, where it found the second.
+
+**Verification.** Testsuite 48 tests, OK (within `eps.testing_eps`), also under ASan/UBSan
+(entry 43).

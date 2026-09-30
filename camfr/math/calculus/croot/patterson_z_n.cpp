@@ -264,12 +264,22 @@ vector<Complex> patterson_quad_z_n_sub
     return result;
 
   // Check if relaxed convergence is satisfied.
+  //
+  // patterson_z_n lowers M when the higher moments would lose precision,
+  // and that depends on the interval, so the estimate for the entire
+  // interval can have fewer moments than this subinterval. For those, fall
+  // back on the subinterval's own result. (It used to read past the end of
+  // result_estimate.)
 
   bool converged = true;
 
   for (unsigned int i=0; i<abs_error.size(); i++)
-    if ( abs(abs_error[i]) > abs(result_estimate[i] * eps) )
+  {
+    const Complex scale = (i < result_estimate.size()) ? result_estimate[i]
+                                                        : result[i];
+    if ( abs(abs_error[i]) > abs(scale * eps) )
       converged = false;
+  }
 
   if (converged)
     return result;
