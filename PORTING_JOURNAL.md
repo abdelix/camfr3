@@ -1259,3 +1259,23 @@ constructors, copied in the copy constructor and in `operator=`. `ubsan.supp` ga
 **Verification.** With entries 40–43 the ASan/UBSan testsuite run completes: **48 tests, OK,
 no AddressSanitizer or UBSan reports.** Normal build: 48 tests, OK. Si-wire check: TE0 2.4451,
 TM0 1.7702, TE1 1.4925.
+
+### 44. The second-Section segfault: investigation
+
+**Background.** The demultiplexers benchmark (`si_wire_neff_camfr.py`) says that solving a second
+`Section` in one process crashes, so it solves one configuration per run. No reproducer was kept.
+
+**Investigation.** All runs on both the current build and a pre-fix build (`decf9d4`, still
+Boost.Python, built in a separate worktree), with the benchmark's settings (`L` solver, `full`
+mode correction, E walls, `slab_E_wall`, PML −0.04 on all sides):
+
+| Scenario | pre-fix | current |
+|---|---|---|
+| benchmark geometry solved twice, with and without `set_estimate` | OK | OK (also ASan) |
+| different plane waves / slab modes / `set_N` per solve, earlier Sections dropped or kept | OK | OK |
+| three Sections, each built from a temporary `Slab` inside a function | **segfault** | OK (also ASan) |
+
+**Conclusion.** The reported crash is not reproducible with the benchmark as written. The only
+crashing multi-`Section` pattern found is the lifetime bug fixed in entry 39 (a `Section` whose
+`Expression` points to a freed temporary `Slab`), which is the likely origin. `CLAUDE.md` no
+longer lists it as a gotcha; the open item is closed with that caveat.

@@ -142,11 +142,10 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   `testsuite/lifetime.py` covers the pattern.
 - **pybind11 must stay below 3.1** (pinned in `pyproject.toml`): 3.1.0 crashes in `keep_alive`
   on overloaded functions (entry 39). Re-run `testsuite/lifetime.py` before raising the pin.
-- **One `Section` solve per process.** Solving a second `Section` in the same interpreter
-  segfaulted in the demultiplexers benchmarks (not yet investigated; scripts take solver
-  settings as CLI arguments instead). Three `Section` solves with `set_estimate` in one process
-  run fine, before and after entry 39, so the trigger is something else (perhaps the
-  plane-wave estimation path).
+- **Several `Section` solves per process** work (journal entry 44). A second solve used to
+  segfault in the demultiplexers benchmarks; the only crashing pattern found is `Section`s built
+  from a temporary `Slab`, which is a lifetime bug fixed in entry 39. The benchmark scripts
+  still take one configuration per run; that is no longer necessary.
 - **Headless runs:** `import camfr` no longer loads Matplotlib, so nothing is needed for
   computation-only scripts. `MPLBACKEND=Agg` avoids Tk when plotting. `NO_CAMFR_GRAPHICS` is
   obsolete and ignored (entry 34). `from camfr import *` still provides NumPy names (`zeros`,
@@ -168,13 +167,9 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 - **Published name is `camfr3`** (free on PyPI as of 2026-09-30; the module is still
   `import camfr`). `pyproject.toml`, the README header, `NOTICE` and `CITATION.cff` are updated.
   Not yet uploaded — see the Distribution section of `MODERNISATION.md`.
-- **Second-`Section` segfault** (see Gotchas): not yet investigated. Start with `make asan`.
-- **Memory errors found by the sanitizer build** (journal entry 37): the invalid-vptr calls on
-  `Material` objects are gone with `keep_alive` (entry 39), the `get_term` overflow is fixed
-  (entry 40). Still open: a heap-buffer-overflow in `patterson_quad_z_n_sub`
-  (`math/calculus/croot/patterson_z_n.cpp:271`, from `Contour::get_integrals` in the
-  contour root finder), which now stops the ASan testsuite run; and a use-after-free flagged
-  by the compiler in `polyroot.cpp:64` (roots read after `delete []`).
+- **Sanitizer status:** the testsuite runs clean under ASan/UBSan (entries 37–43). The three
+  excluded tests (`ADR_solver`, `stack2`, `metal_splitter`) have not been run under the
+  sanitizers yet.
 - **`examples/other/OLED_grating_avg.py`** was stopped before it finished (it is very long-running).
   It is not verified.
 
