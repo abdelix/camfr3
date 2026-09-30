@@ -27,11 +27,31 @@ requires-python = ">=3.10"
 # something is plotted (fast `import camfr`).
 dependencies = ["numpy", "matplotlib", "pillow"]
 
+keywords = ["eigenmode expansion", "Maxwell solver", "photonics", "waveguide",
+            "mode solver", "perfectly matched layers"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: C++",
+  "Programming Language :: Fortran",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+
 [project.optional-dependencies]
 scipy = ["scipy"]
 
 [project.urls]
 Homepage = "https://github.com/abdelix/camfr3"
+Documentation = "https://abdelix.com/camfr3/"
+Issues = "https://github.com/abdelix/camfr3/issues"
+Changelog = "https://github.com/abdelix/camfr3/blob/main/CHANGELOG.md"
 Upstream = "https://github.com/demisjohn/CAMFR"
 
 [dependency-groups]

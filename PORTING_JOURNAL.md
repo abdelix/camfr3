@@ -1711,3 +1711,37 @@ domain `abdelix.com`, which project sites inherit: the site is <https://abdelix.
 (`abdelix.github.io/camfr3/` redirects there).
 
 **Verification.** `make docs`: builds without warnings; pages checked in headless Chrome.
+
+### 63. Publishing to PyPI (trusted publishing)
+
+**Change.** Releases are published to PyPI as `camfr3`, to claim the name before someone else
+does, while the licence question of the ACM-derived Patterson quadrature (issue #6, `NOTICE`)
+is still open. New jobs in `ci.yml`, run when the `release` job made a release (its outputs
+`released` and `tag`, from python-semantic-release):
+
+- `release-wheels` (the cibuildwheel matrix, CPython 3.10–3.14) and `release-sdist` rebuild at
+  the new tag. The wheels of the earlier `wheels` job cannot be reused: they are built before
+  the release commit and tag exist, so setuptools-scm gives them `3.0.0a3.devN+g<hash>`, and
+  PyPI rejects local versions. At a tag the version is clean (`v3.0.0-alpha.9` → `3.0.0a9`,
+  checked in a scratch clone).
+- `publish` downloads them and uploads with `pypa/gh-action-pypi-publish` using trusted
+  publishing (OIDC, `id-token: write`, environment `pypi`): no API token is stored. PyPI needs a
+  matching (pending) publisher: owner `abdelix`, repository `camfr3`, workflow `ci.yml`,
+  environment `pypi`.
+
+Metadata: keywords, classifiers (Alpha, Linux, Python 3.10–3.14) and Documentation/Issues/
+Changelog URLs in `pyproject.toml`. The README's example image now has an absolute URL (PyPI
+cannot resolve relative ones), and the README and `docs/install.md` give
+`pip install --pre camfr3` (alpha releases are pre-releases, which pip skips without `--pre`).
+`twine check` passes on the sdist.
+
+A manual run publishes an existing tag: `gh workflow run ci.yml --ref main -f tag=v3.0.0-alpha.3`
+(`workflow_dispatch` input `tag`). The `release` job is skipped then, so the build jobs use
+`!cancelled()` in their conditions, and `publish` requires both build jobs to have succeeded.
+
+**Issue.** PR #22 was merged while this commit was still being written: `v3.0.0-alpha.3` was
+released (GitHub release, docs site deployed) without it. This commit and the README wording
+were restored from the deleted branch onto a new one; since they are `build:`/`docs:` commits,
+merging them releases nothing, hence the manual input to publish `3.0.0a3`.
+
+**Verification.** `actionlint` clean.

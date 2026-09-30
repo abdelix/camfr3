@@ -1,19 +1,20 @@
 # Installation
 
-camfr3 supports CPython 3.10 to 3.14. It is not on PyPI yet: install a wheel
-built by CI, or build from source.
+camfr3 supports CPython 3.10 to 3.14.
 
-## Wheels (Linux)
+## From PyPI (Linux)
 
-CI builds Linux wheels (x86_64, manylinux_2_28) for every commit. They contain
-everything, including OpenBLAS and Blitz++, so nothing needs compiling. Download
-the `wheel-cpXYZ-manylinux_x86_64` artifact of a
-[CI run](https://github.com/abdelix/camfr3/actions/workflows/ci.yml) for your
-Python version (`cp312` for Python 3.12, …), unzip it and install the `.whl`:
+On Linux x86_64, pip installs a pre-built wheel that contains everything,
+including OpenBLAS and Blitz++, so nothing needs compiling. Releases are alpha
+versions for now, which pip only installs with `--pre`:
 
 ```bash
-python3 -m pip install camfr3-*.whl
+python3 -m pip install --pre camfr3
 ```
+
+CI also builds wheels for every commit: the `wheel-cpXYZ-manylinux_x86_64`
+artifacts of a [CI run](https://github.com/abdelix/camfr3/actions/workflows/ci.yml)
+(`cp312` for Python 3.12, …) install with `pip install camfr3-*.whl`.
 
 ## From source
 

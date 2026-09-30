@@ -2,7 +2,7 @@
 
 `camfr3` is a Python 3 port of CAMFR. It is distributed as `camfr3` because the PyPI name `camfr` belongs to the original author; the module is still imported as `import camfr`. See `NOTICE` for attribution and `CITATION.cff` for how to cite.
 
-**Maintained by Abdelfettah Hadij-ElHouati ([@abdelix](https://github.com/abdelix)).** camfr3 is a side project to keep CAMFR alive: the Python 3 port, a modern build (CMake, pybind11) and fixes. Please report problems in the [issue tracker](https://github.com/abdelix/camfr3/issues).
+**Maintainer:** I'm Abdelfettah Hadij-ElHouati ([@abdelix](https://github.com/abdelix)), and I maintain camfr3 in my free time to keep CAMFR alive: the Python 3 port, a modern build (CMake, pybind11) and fixes. Please report problems in the [issue tracker](https://github.com/abdelix/camfr3/issues).
 
 **Documentation:** <https://abdelix.com/camfr3/> (tutorial, solver guide, API reference).
 
@@ -58,7 +58,7 @@ The end user does not deal with this C++ code directly, but rather through bindi
 ### Silicon Waveguide Mode Solver
 Silicon waveguide, Power, Ex and Ey plotted with matplotlib:
 
-<img src="examples/contrib/Silicon_WG_-_Modesolver_example_v1.png" width="350">
+<img src="https://raw.githubusercontent.com/abdelix/camfr3/main/examples/contrib/Silicon_WG_-_Modesolver_example_v1.png" width="350">
 
 See the file `examples/contrib/Example - Silicon-Waveguide ModeSim v2018-01.py` for a full working example.
 
@@ -128,7 +128,11 @@ See the Examples directory for full examples, as some details are missing here.
 ## Installation
 CAMFR runs on Python 3. It has been tested with Python 3.14 and NumPy 2.5 on Linux. The original code base supported Python 2.7 only; `PORTING_JOURNAL.md` documents every change made for the port.
 
-You have to compile the CAMFR library. This requires a C++ and a Fortran compiler, Blitz++, BLAS and LAPACK; pybind11, which generates the Python bindings, is fetched automatically. The build uses CMake through scikit-build-core, so on Linux:
+On Linux (x86_64), install the pre-built wheel from PyPI. Releases are alpha versions for now, so pip needs `--pre`:
+
+    python3 -m pip install --pre camfr3
+
+On other platforms, or to build it yourself, you have to compile the CAMFR library. This requires a C++ and a Fortran compiler, Blitz++, BLAS and LAPACK; pybind11, which generates the Python bindings, is fetched automatically. The build uses CMake through scikit-build-core, so from a clone of the repository:
 
     python3 -m pip install .
 
