@@ -1353,3 +1353,16 @@ them, matching Palace to 7 digits.
 a driven 2D simulation of the whole splitter. `metal_splitter` stays out of the suite.
 
 **Verification.** Testsuite 50 tests, OK.
+
+### 47. Modernisation work moved to its own branch
+
+**Change.** The commits after `89b6c2f` (journal entries 31–46: uv, removal of the machine_cfg
+templates, lazy plotting, CMake + scikit-build-core, warnings and sanitizers, the pybind11 port,
+`keep_alive`, the memory-error fixes, the re-enabled and new tests, the Palace check) moved from
+`python3-port` to a new branch `modernisation`, which branches off `python3-port`.
+`python3-port` now ends at `89b6c2f`, one commit after what is published on the fork
+(`3ae9590`), so no published history was rewritten. The already-published rename, licence and
+setuptools-scm commits (entries 27–29, tag `v3.0.0a1`) stay on `python3-port`.
+
+**Issue.** The C++ bug fixes of entries 40–43 (stack, polyroot, croot, bw_inc) are only on
+`modernisation`; they apply to the port as well, but were verified only on the modernised build.

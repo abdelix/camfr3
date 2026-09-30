@@ -77,7 +77,12 @@ the `polyroot` fix (entry 41) and is back in the suite.
 ## Repository state
 
 - Remotes: `origin` is the user's fork `abdelix/CAMFR`; `upstream` is `demisjohn/CAMFR`.
-  `python3-port` tracks `origin/python3-port`. Never push to `upstream`.
+  Never push to `upstream`.
+- **Branches.** `python3-port` is the Python 3 port (SCons, Boost.Python), ending at `89b6c2f`.
+  `modernisation` branches off it and holds the `MODERNISATION.md` work and what came out of
+  it: uv, CMake + scikit-build-core, lazy plotting, warnings/sanitizers, pybind11, the
+  lifetime and memory fixes, and the new tests (journal entries 31–46). New modernisation work
+  goes on `modernisation`; this `CLAUDE.md` describes that branch.
 - Tags `vX.Y.Z` set the package version (setuptools-scm); `v3.0.0a1` is pushed. Push new tags
   explicitly (`git push origin <tag>`).
 - Pushing needs the user's credentials (HTTPS prompt), which this environment cannot supply:
