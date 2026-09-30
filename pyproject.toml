@@ -40,6 +40,8 @@ Upstream = "https://github.com/demisjohn/CAMFR"
 # incremental rebuilds in .venv (`make dev`, see CLAUDE.md).
 dev = ["scipy", "pytest>=8", "pytest-forked", "scikit-build-core>=0.11", "setuptools-scm>=8", "pybind11>=2.12,<3.1",
        "cmake>=3.26", "ninja"]
+# The documentation site (docs/, Sphinx + MyST + Furo): `make docs`.
+docs = ["sphinx>=8", "myst-parser>=4", "furo"]
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"

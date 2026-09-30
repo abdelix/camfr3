@@ -57,7 +57,7 @@ make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
 ## Test
 
 ```bash
-uv run pytest                   # 51 passed, 2 xfailed; each test in its own process (--forked)
+uv run pytest                   # 61 passed, 2 xfailed; each test in its own process (--forked)
 uv run pytest testsuite/wg.py   # one module
 ```
 
@@ -67,7 +67,8 @@ test only, and CAMFR's global settings (PML, walls, solver switches) cannot leak
 `stack2` and `metal_splitter` are strict `xfail` (listed in `conftest.py`; an unexpected pass
 fails the run): both are deterministic and clean under ASan, but ill-conditioned (entries
 45–46). A new test module just needs a `unittest.TestCase`; for the old runner also add it to
-the import list and `alltests` in `camfr_test.py`.
+the import list and `alltests` in `camfr_test.py`. New bindings need a docstring and `py::arg` names
+(`testsuite/docstrings.py` fails otherwise; journal entry 61).
 
 **Wheels** (`[tool.cibuildwheel]` in `pyproject.toml`, `tools/ci/install_wheel_deps.sh`): Linux
 x86_64 manylinux_2_28 wheels for CPython 3.10–3.14, built in CI (`wheels` job, one per version)
@@ -76,6 +77,14 @@ builds Blitz++ 1.0.2 from source; `auditwheel` bundles OpenBLAS, Blitz++, libgfo
 libquadmath (wheel ≈ 13.5 MB). Each wheel is installed and the testsuite runs against it.
 Locally, from a clean clone (not the working tree, which has `.venv`/`build/`):
 `uvx cibuildwheel --only cp314-manylinux_x86_64` (needs Docker; ≈ 2 min).
+
+**Docs** (`docs/`, Sphinx + MyST + Furo, `docs` dependency group): `make docs` builds
+`docs/_build/html` with `-W` (warnings are errors). The API pages (`docs/api/*.md`) are
+`autoclass`/`autofunction` lists inside `{eval-rst}` blocks (MyST would otherwise parse autodoc's
+reST output as Markdown); `docs/conf.py` shortens pybind11's type names and overload
+docstrings. A new public name needs an entry there. The `docs` CI job builds the site on every
+push; `pages` deploys it to <https://abdelix.com/camfr3/> from `main`. The Texinfo manual
+(`docs/camfr.texi`) is separate, still unmigrated (issue #16).
 
 **CI** (`.github/workflows/ci.yml`, GitHub Actions, Ubuntu 24.04): `uv sync --locked` + `pytest`
 for Python 3.10, 3.12 and 3.14 (`UV_PYTHON` per job), and a job that runs the suite on the
@@ -87,7 +96,7 @@ The old runner still works and runs everything in one process, so tests must res
 global setting they change (or later tests fail only there):
 
 ```bash
-cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 51 tests, expected: OK
+cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 61 tests, expected: OK
 ```
 
 Use the venv interpreter (or `uv run`): `camfr` is installed there, not in the system Python.

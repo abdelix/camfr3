@@ -88,6 +88,13 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
       Metadata, `NOTICE` and `CITATION.cff` are done (journal entry 27); the upload is not.
 - [ ] conda-forge feedstock (Blitz++, pybind11 and OpenBLAS are already on conda-forge).
 
+## 6b. Documentation
+
+- [x] Docstrings and argument names in the bindings (issue #14, entry 61).
+- [x] Documentation site: Sphinx + MyST + Furo in `docs/`, built in CI and deployed to GitHub
+      Pages from `main` (issue #15, entry 62).
+- [ ] Migrate the Texinfo manual (`docs/camfr.texi`) and add an examples gallery (issue #16).
+
 ## 7. Related correctness work (not build issues)
 
 - [x] Investigate the segfault when a second `Section` is solved in the same process — likely

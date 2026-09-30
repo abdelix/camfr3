@@ -829,6 +829,15 @@ def plot_n_section(stack, r_x, r_y, filename, colormap):
 ##############################################################################
 
 def plot_n(o, r1, r2=0, r3=0, filename=0, colormap=whiteblack):
+    """Plot the refractive index profile.
+
+    ``wg.plot_n(r_x)`` plots a waveguide along x; ``stack.plot_n(r_x, r_z)``
+    a Stack, BlochStack or Cavity in the x-z plane (``r_x, r_y, r_z`` for a
+    3D stack); ``plot_n(section, r_x, r_y)`` a Section. The ranges are
+    arrays such as ``arange(x0, x1, dx)``. For stacks and sections,
+    ``filename`` saves the picture instead of showing it (format from the
+    suffix: png, gif, jpg, pdf, ...).
+    """
 
     if type(r2)!=np.ndarray or np.asarray(r2).shape[0]==1:
         plot_n_waveguide(o, r1)
@@ -1104,6 +1113,17 @@ def plot_field_section_mode(mode, component, r_x, r_y, filename, colormap,
 
 def plot_field(o, component, r1, r2=0, r3=0, filename=0,
                colormap=0, overlay_n=1, contour=1, arrow=0):
+    """Plot a field component.
+
+    ``component`` maps a Field to a real number, e.g.
+    ``lambda f: f.E2().real``. ``mode.plot_field(component, r_x)`` plots a
+    waveguide mode along x; ``stack.plot_field(component, r_x, r_z)`` the
+    field in a Stack, Cavity or BlochMode, after an incident field or source
+    has been set (``r_x, r_y, r_z`` for a 3D stack); a SectionMode takes
+    ``r_x, r_y``. ``overlay_n`` overlays the index profile, drawn as contours
+    if ``contour``; except for waveguide modes, ``filename`` saves the
+    picture instead of showing it.
+    """
 
     if type(r2)!=np.ndarray or np.asarray(r2).shape[0]==1:
         plot_field_waveguide(o, component, r1)
@@ -1233,6 +1253,11 @@ def animate_field_section_mode(mode, component, r_x, r_y, filename=0,
 
 def animate_field(o, component, r1, r2, r3=0, filename=0, overlay_n=1,
                   contour=1, ln=0):
+    """Animate the time evolution of a complex field component.
+
+    As ``plot_field``, but ``component`` returns a complex number, e.g.
+    ``lambda f: f.E2()``. ``filename`` writes the animation to a GIF file.
+    """
 
     if type(o) == Stack or type(o) == BlochMode or type(o) == Cavity:
       if type(r3)!=np.ndarray: # 2D
@@ -1259,17 +1284,19 @@ def animate_field(o, component, r1, r2, r3=0, filename=0, overlay_n=1,
 # require tkinter.
 
 def _slab_plot(self):
+    """Open an interactive (Tk) window with the modes of this slab."""
     from . import slab_plot
     return slab_plot.SlabPlot(self)
 
 def _stack_plot(self):
+    """Open an interactive (Tk) window with the fields in this structure."""
     from . import stack_plot
     return stack_plot.StackPlot(self)
 
 Slab.plot       = _slab_plot
 Stack.plot      = _stack_plot
 BlochStack.plot = _stack_plot
-Cavity.plot     = lambda self : stack_plot.StackPlot(self)
+Cavity.plot     = _stack_plot
 
 Slab.plot_n = plot_n
 Circ.plot_n = plot_n

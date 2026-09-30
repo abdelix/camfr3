@@ -1,0 +1,7 @@
+/* The figures from the original manual are black line art on a transparent
+   background: keep them readable in the dark theme. */
+img.manual-fig {
+  background: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+}

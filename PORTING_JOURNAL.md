@@ -1629,3 +1629,85 @@ passed, 2 xfailed. The wheel also installs into a fresh venv on the host (Ubuntu
 computes slab modes. (The local version carried a `.d…` dirty suffix only because the test
 clone had its log file committed; CI checks out clean.) OpenBLAS 0.3.15 (2021) is old; a newer
 build (e.g. from `scipy-openblas`) could come later.
+
+### 60. `Cavity.plot` raised NameError
+
+**Change.** `camfr_PIL.py` assigned `Cavity.plot = lambda self: stack_plot.StackPlot(self)`.
+Since the plot windows are imported lazily (entry 34), `stack_plot` is no longer a module-level
+name there, so `cavity.plot()` raised `NameError`. It now uses `_stack_plot`, like `Stack` and
+`BlochStack`, which imports the module on use.
+
+**Verification.** Found while adding docstrings (entry 61). `Cavity.plot is Stack.plot` now; the
+Tk window itself remains unverified (no display).
+
+### 61. Docstrings and argument names in the bindings (issue #14)
+
+**Change.** Every public function, class, method and enum value of `camfr._camfr` has a
+docstring and named arguments (`py::arg`), so `help()`, editor completion and keyword calls work
+(`set_N(N=7)`, `Material(n=1.5)`, `Coord(c1=…, c2=…, z=…)`). The texts come from the reference
+chapter of `docs/camfr.texi`, checked against the C++ sources: defaults are those of the
+`global*` initialisers (`defs.cpp`, `generalslab.cpp`, `section.cpp`, `circ.cpp`), and the
+settings the manual never documented (`set_NOV`, `A_switch`…) are described from their use in
+`section.cpp`. Docstrings use the Google style, for Sphinx napoleon (issue #15); pybind11
+prepends the signature. The Python-side public API got docstrings too: the plotting functions
+attached to the classes (`camfr_PIL.py`), the geometry shapes and `to_expression`
+(`geometry.py`, `geometry3d.py`) and the material factories.
+
+- `set_fourier_orders` was two overloads (a C++ default argument pybind11 cannot see); it is one
+  function with `My=0` now.
+- The manual's `Material(n, mur)` is wrong: the second argument is `etar`, with
+  eps_r = n·etar and mu_r = n/etar (`material.h`). The docstring says so.
+- `Stack(expression, n)` repeats the expression n times (`no_of_periods`); the argument is
+  named `periods`. `R12_power`/`T12_power` work only for `BlochSection` stacks.
+
+**Test.** `testsuite/docstrings.py` fails for any public name of the extension (69 functions,
+~230 methods) without a docstring beyond the signature, and checks keyword arguments. It avoids
+`from camfr import *`, which shadows `any` with NumPy's (always truthy on a generator: the first
+version passed for that reason). In the old single-process runner, other tests leave module
+attributes such as `_gain_material`, so only public names and functions are checked.
+
+**Verification.** `uv run pytest`: 61 passed, 2 xfailed; old runner: 61 tests, OK. The test
+found the undocumented plotting methods, and with them the `Cavity.plot` bug (entry 60).
+
+### 62. Documentation site (issue #15)
+
+**Change.** A Sphinx site in `docs/` (MyST Markdown, Furo theme, `docs` dependency group:
+Sphinx 9.1, myst-parser 5.1): home page, installation, a tutorial (slab modes, a stack's
+reflection, fields in a stack with a figure, a silicon-wire `Section`), a solver guide (global
+state, convergence in `N`, walls and PML, `set_solver` options, metallic structures, the
+`Section` solver and `set_estimate`), the API reference from the docstrings of entry 61, and an
+About page (history, citation, licence). `make docs` builds it with `-W`. CI: a `docs` job
+builds it on every push and uploads it as a Pages artifact; a `pages` job deploys it from `main`
+after `docs` and `test` pass (`actions/upload-pages-artifact@v5`, `actions/deploy-pages@v5`).
+
+- Every example on the site was run and its output pasted in; the slab result matches the old
+  manual (n_eff 3.07669), the silicon wire the reference values (TE0 2.4451).
+- The API pages list the names explicitly, grouped by topic; a one-off check confirmed every
+  public name of `camfr._camfr` is on one of them.
+- `docs/conf.py` hooks autodoc: pybind11's `typing.SupportsInt | typing.SupportsIndex` → `int`
+  (likewise float and complex), `camfr._camfr.X` → `X`, no `self:` argument, no
+  `(*args, **kwargs)` signature for classes and overloaded methods (their overloads are listed
+  in the text instead).
+- The Texinfo manual is untouched; its figures `fig1`/`fig2` are reused (with a white
+  background for the dark theme).
+
+**Issues.**
+
+1. MyST's own `{autoclass}` directive syntax renders autodoc's generated reST as Markdown
+   (literal `.. py:method::` text). **Resolution:** the directives sit in `{eval-rst}` blocks.
+2. A first version of the field example used a closed air box whose width (4.5 µm at λ = 1 µm)
+   puts a mode exactly at cutoff: |R12|² came out as 1e34. With PML on the claddings it
+   converges (|R|² = 0.3557 at N = 40 and 60). The tutorial explains the cutoff warning.
+3. The guide initially claimed `ASR` works for both polarisations; `Slab_M::find_kt` falls back
+   to `track` for TE. Corrected.
+4. Two docstrings were invalid reST (`get_` read as a link target in `get_lambda`; the old
+   NumPy-style `Section.plot` text). Rewritten; `Section.plot`'s claim that `field='P'` is not
+   implemented was wrong (it plots |S|).
+5. `Section.disp` took an unnamed argument (`arg0`): it evaluates the dispersion relation at
+   `kz`; named and documented.
+
+GitHub Pages is enabled with the "GitHub Actions" source. The owner's user site has the custom
+domain `abdelix.com`, which project sites inherit: the site is <https://abdelix.com/camfr3/>
+(`abdelix.github.io/camfr3/` redirects there).
+
+**Verification.** `make docs`: builds without warnings; pages checked in headless Chrome.

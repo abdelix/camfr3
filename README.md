@@ -4,6 +4,8 @@
 
 **Maintained by Abdelfettah Hadij-ElHouati ([@abdelix](https://github.com/abdelix)).** camfr3 is a side project to keep CAMFR alive: the Python 3 port, a modern build (CMake, pybind11) and fixes. Please report problems in the [issue tracker](https://github.com/abdelix/camfr3/issues).
 
+**Documentation:** <https://abdelix.com/camfr3/> (tutorial, solver guide, API reference).
+
 Originally written by [Peter Bienstman at Ghent University, Belgium](http://www.photonics.intec.ugent.be/contact/people.asp?ID=5), with contributions from the people listed in `AUTHORS`. History: the original [SourceForge project](http://camfr.sourceforge.net/) (Python 2), maintained on GitHub by [Demis D. John](https://github.com/demisjohn/CAMFR), and ported to Python 3 as camfr3.
 
 
