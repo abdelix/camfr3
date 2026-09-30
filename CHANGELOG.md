@@ -2,6 +2,36 @@
 
 <!-- version list -->
 
+## v3.0.0-alpha.3 (2026-09-30)
+
+### Bug Fixes
+
+- **plot**: Cavity.plot raised NameError since the lazy plot imports
+  ([`3a9d17b`](https://github.com/abdelix/camfr3/commit/3a9d17b8bb45a2c143597a185bc6c4871023861d))
+
+### Build System
+
+- Build and test Linux wheels with cibuildwheel
+  ([`cfd959c`](https://github.com/abdelix/camfr3/commit/cfd959cf323667305b7ef2b6165b7c96a26c51e0))
+
+- Replace MACHAR with the language's machine constants
+  ([`3f8ded3`](https://github.com/abdelix/camfr3/commit/3f8ded3c995194ec857025d1182938628bada682))
+
+### Documentation
+
+- Documentation site with Sphinx, deployed to GitHub Pages
+  ([`d2b7bb3`](https://github.com/abdelix/camfr3/commit/d2b7bb321241059eea931350115116a976f33db1))
+
+- Name the maintainer in the README
+  ([`eb6ccf2`](https://github.com/abdelix/camfr3/commit/eb6ccf26598d9692d042224b5b92d6e8539d5736))
+
+- The site's address is abdelix.com/camfr3 (custom domain)
+  ([`f6f7832`](https://github.com/abdelix/camfr3/commit/f6f7832ce901a94eb12447f0d08a3a00b0d02cb4))
+
+- **wrap**: Docstrings and argument names for the bindings
+  ([`9641145`](https://github.com/abdelix/camfr3/commit/96411455df2602b9aafbb72203112a0ae1b71b6e))
+
+
 ## v3.0.0-alpha.2 (2026-09-30)
 
 ### Bug Fixes
