@@ -20,9 +20,10 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
       (e.g. `setuptools-scm` from git tags). Done in journal entry 29.
 - [x] Delete dead build paths: the `distrib` target in `makefile` (entry 29) and the Python
       2-era `machine_cfg.py.{MacOSX,MSVC,gentoo,gcc}` templates (entry 33).
-- [ ] Enable `-Wall -Wextra`, and add a debug build with AddressSanitizer and
+- [x] Enable `-Wall -Wextra`, and add a debug build with AddressSanitizer and
       UndefinedBehaviorSanitizer. Both crashes fixed in the port (journal entries 16 and 19)
-      would have been caught immediately.
+      would have been caught immediately. Done in entry 37 (`make asan`); its first run found
+      new memory errors, listed there.
 
 ## 2. Modernise the build system (days)
 

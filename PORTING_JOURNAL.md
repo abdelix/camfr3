@@ -1053,3 +1053,46 @@ under `camfr/` (they included a `make.inc` that no longer exists). The root `mak
 environment builds a wheel with the right version. `ldd`: libboost_python314 (via runpath),
 blitz, lapack, blas, gfortran. Testsuite 47 tests, OK. Si-wire check through the
 `demultiplexers` symlink: TE0 2.4451, TM0 1.7702, TE1 1.4925.
+
+### 37. Compiler warnings and a sanitizer build
+
+**Change.** `CMakeLists.txt` gained two options:
+
+- `CAMFR_WARNINGS` (ON): `-Wall -Wextra -Wno-unused-parameter` for the C and C++ sources (not the
+  vendored Fortran). Boost and Blitz++ include directories are now `SYSTEM`, so their headers do
+  not warn. `-Wunused-parameter` alone produced ~800 warnings from deliberately unused
+  parameters in the virtual interfaces.
+- `CAMFR_SANITIZE` (OFF): `-fsanitize=address,undefined -fno-omit-frame-pointer -g`. The
+  `make asan` target builds it as RelWithDebInfo in `build/asan` and installs it into `.venv`;
+  `make dev` switches back. `ubsan.supp` suppresses a Blitz++ header finding (see below).
+
+**Warnings.** 318 unique warnings remain: `sign-compare` 183, `template-id-cdtor` 39, `reorder`
+37, unused variables 35, `dangling-else` 12, and a few that point at real problems:
+
+- `polyroot.cpp:64` `-Wuse-after-free`: `root_r`/`root_i` are read after `delete []` (the
+  deletes precede the loop that copies the results). A real bug.
+- `traceroot.cpp:345` `-Wsequence-point`: `oldest = (…) ? &zeros_bis : oldest = &zeros;` — odd
+  but yields the intended value.
+- `util/storage.h:101` `-Wdelete-non-virtual-dtor`: `Stack` is deleted through a pointer to a
+  polymorphic type without a virtual destructor.
+- `slab.cpp:1587`, `:1669` `-Wmaybe-uninitialized`; `blochsectionmode.cpp:67`
+  `-Wmisleading-indentation`; `tracesorter.cpp:85` `-Wparentheses`.
+
+**Sanitizer run** (testsuite under `LD_PRELOAD=libasan.so`, `detect_leaks=0`):
+
+- UBSan first stopped on `blitz/array/methods.cc:324` (non-zero offset applied to a null
+  pointer when Blitz++ builds an empty array) — third-party and benign. **Resolution:** UBSan
+  is recoverable (no `-fno-sanitize-recover`) so a run reports every finding, and `ubsan.supp`
+  suppresses this one.
+- UBSan: member calls on `Material` objects whose vptr is invalid, at `stack.cpp:417`,
+  `interface.cpp:90`, `slab.cpp:1725`, `slab.cpp:1980`, `circ.cpp:1491`, `material.h:95` — the
+  signature of objects used after being freed.
+- ASan aborts the run with a **heap-buffer-overflow in `Expression::get_term`**
+  (`expression.h:84`), reading past a `vector<Term*>`, from `Term(Expression)` → `Stack` →
+  `DiagStack` → `StackImpl::StackImpl` (`stack.cpp:116`).
+
+None of these is fixed here; they are recorded as open items in `CLAUDE.md`. They are
+candidates for the known crashes (second-`Section` segfault, temporary `Slab` in a `Stack`).
+
+**Verification.** Normal build (with warnings) back in `.venv`: testsuite 47 tests, OK. The
+sanitizer build links `libasan.so.8` and `libubsan.so.1`.

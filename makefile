@@ -12,6 +12,17 @@ dev: FORCE
 install:
 	python3 -m pip install .
 
+# AddressSanitizer + UBSan build (RelWithDebInfo, own build directory),
+# installed into .venv in place of the normal one; 'make dev' switches back.
+# Run Python with the ASan runtime preloaded, e.g.
+#   LD_PRELOAD=$(gcc -print-file-name=libasan.so) ASAN_OPTIONS=detect_leaks=0 \
+#   UBSAN_OPTIONS=print_stacktrace=1:suppressions=$PWD/ubsan.supp \
+#     .venv/bin/python script.py
+asan: FORCE
+	uv pip install --no-build-isolation --no-deps -e . \
+	  -C cmake.define.CAMFR_SANITIZE=ON -C cmake.build-type=RelWithDebInfo \
+	  -C build-dir=build/asan
+
 test: FORCE
 	cd testsuite ; make
 

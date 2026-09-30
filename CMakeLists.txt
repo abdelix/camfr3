@@ -204,8 +204,10 @@ Python_add_library(_camfr MODULE WITH_SOABI
                    ${CAMFR_NOOPT_SOURCES}
                    ${CAMFR_FORTRAN_SOURCES})
 
-target_include_directories(_camfr PRIVATE ${BOOST_PYTHON_INCLUDE_DIR}
-                                          ${BLITZ_INCLUDE_DIR})
+# Third-party headers as SYSTEM, so that -Wall -Wextra reports CAMFR's code only.
+
+target_include_directories(_camfr SYSTEM PRIVATE ${BOOST_PYTHON_INCLUDE_DIR}
+                                                 ${BLITZ_INCLUDE_DIR})
 
 target_compile_definitions(_camfr PRIVATE
                            FORTRAN_SYMBOLS_WITH_SINGLE_TRAILING_UNDERSCORE)
@@ -228,5 +230,33 @@ target_link_libraries(_camfr PRIVATE
 # prefix (non-system link directories are added to the install rpath).
 
 set_target_properties(_camfr PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+#############################################################################
+#
+# Warnings and sanitizers.
+#
+#############################################################################
+
+# Compiler warnings for the C and C++ sources (the vendored Fortran is left
+# alone). -Wunused-parameter is off: the virtual interfaces have many
+# deliberately unused parameters (~800 warnings of pure noise).
+
+option(CAMFR_WARNINGS "Compile C/C++ with -Wall -Wextra" ON)
+if(CAMFR_WARNINGS)
+  target_compile_options(_camfr PRIVATE
+    $<$<COMPILE_LANGUAGE:C,CXX>:-Wall -Wextra -Wno-unused-parameter>)
+endif()
+
+# Debug build with AddressSanitizer and UndefinedBehaviorSanitizer ('make
+# asan'). The module is loaded into an uninstrumented Python, so run it with
+# LD_PRELOAD=$(gcc -print-file-name=libasan.so) (see CLAUDE.md).
+
+option(CAMFR_SANITIZE "Build with AddressSanitizer and UBSan" OFF)
+if(CAMFR_SANITIZE)
+  set(CAMFR_SANITIZE_FLAGS -fsanitize=address,undefined
+                           -fno-omit-frame-pointer)
+  target_compile_options(_camfr PRIVATE ${CAMFR_SANITIZE_FLAGS} -g)
+  target_link_options(_camfr PRIVATE ${CAMFR_SANITIZE_FLAGS})
+endif()
 
 install(TARGETS _camfr LIBRARY DESTINATION camfr)

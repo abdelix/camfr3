@@ -46,6 +46,14 @@ make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
 - **Version** from git tags via setuptools-scm (`v3.0.0a1` → `3.0.0a1`; untagged commits get
   `.devN+g<hash>`), written to `camfr/_version.py` by scikit-build-core's `generate`.
 - Without uv: `python3 -m pip install .` works (build deps, CMake and Ninja come from PyPI).
+- **Warnings:** C/C++ compile with `-Wall -Wextra -Wno-unused-parameter` (option
+  `CAMFR_WARNINGS`); Boost and Blitz++ headers are `SYSTEM`. ~318 unique warnings remain, mostly
+  `sign-compare`/`reorder`; the ones that matter are listed in journal entry 37.
+- **Sanitizers:** `make asan` installs an ASan+UBSan build (`CAMFR_SANITIZE`, RelWithDebInfo,
+  `build/asan`) into `.venv` in place of the normal one; `make dev` switches back. Run with
+  `LD_PRELOAD=$(gcc -print-file-name=libasan.so) ASAN_OPTIONS=detect_leaks=0
+  UBSAN_OPTIONS=print_stacktrace=1:suppressions=$PWD/ubsan.supp` (absolute path). A full
+  sanitizer build takes ~2.5 min.
 
 ## Test
 
@@ -150,8 +158,13 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 - **Published name is `camfr3`** (free on PyPI as of 2026-09-30; the module is still
   `import camfr`). `pyproject.toml`, the README header, `NOTICE` and `CITATION.cff` are updated.
   Not yet uploaded — see the Distribution section of `MODERNISATION.md`.
-- **Second-`Section` segfault** (see Gotchas): not yet investigated. An ASan/UBSan build is the
-  suggested first step (`MODERNISATION.md`).
+- **Second-`Section` segfault** (see Gotchas): not yet investigated. Start with `make asan`.
+- **Memory errors found by the sanitizer build** (journal entry 37), not yet fixed: a
+  heap-buffer-overflow in `Expression::get_term` (`expression.h:84`, reached from
+  `StackImpl::StackImpl`, `stack.cpp:116`) that aborts the ASan testsuite run; calls on
+  `Material` objects with an invalid vptr (`stack.cpp:417`, `interface.cpp:90`, `slab.cpp`,
+  `circ.cpp`), i.e. likely use after free; and a use-after-free flagged by the compiler in
+  `polyroot.cpp:64` (roots read after `delete []`).
 - **`examples/other/OLED_grating_avg.py`** was stopped before it finished (it is very long-running).
   It is not verified.
 
