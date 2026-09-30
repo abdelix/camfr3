@@ -683,7 +683,8 @@ PYBIND11_MODULE(_camfr, m)
         "Set the wavelength. All lengths are in the same unit, normally "
         "micrometre (Material.gain assumes it).");
   m.def("get_lambda",                 get_lambda,
-        "Return the wavelength. ('lambda' is a Python keyword, hence 'get_'.)");
+        "Return the wavelength. (``lambda`` is a Python keyword, hence the "
+        "``get_`` prefix.)");
   m.def("set_N",                      set_N, py::arg("N"),
         "Set the number of modes used in the eigenmode expansion.");
   m.def("N",                          get_N,
@@ -1221,7 +1222,7 @@ Examples: ``material(d)``, ``waveguide(d)``, a Stack or Scatterer, ``2*expr``.)d
 
 ``Stack(wg1(d1) + wg2(d2) + ...)``. The first and last waveguides are the
 semi-infinite incidence and exit media (their lengths only matter for field
-plots). ``Stack(expression, n)`` repeats the expression n times. The
+plots). ``Stack(expression, periods)`` repeats the expression. The
 reflection and transmission matrices are computed on demand (``calc``).
 Matrix 12 is for light incident from the left (z = 0), 21 from the right
 (z = length()).)doc")

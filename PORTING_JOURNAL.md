@@ -1668,3 +1668,42 @@ attributes such as `_gain_material`, so only public names and functions are chec
 
 **Verification.** `uv run pytest`: 61 passed, 2 xfailed; old runner: 61 tests, OK. The test
 found the undocumented plotting methods, and with them the `Cavity.plot` bug (entry 60).
+
+### 62. Documentation site (issue #15)
+
+**Change.** A Sphinx site in `docs/` (MyST Markdown, Furo theme, `docs` dependency group:
+Sphinx 9.1, myst-parser 5.1): home page, installation, a tutorial (slab modes, a stack's
+reflection, fields in a stack with a figure, a silicon-wire `Section`), a solver guide (global
+state, convergence in `N`, walls and PML, `set_solver` options, metallic structures, the
+`Section` solver and `set_estimate`), the API reference from the docstrings of entry 61, and an
+About page (history, citation, licence). `make docs` builds it with `-W`. CI: a `docs` job
+builds it on every push and uploads it as a Pages artifact; a `pages` job deploys it from `main`
+after `docs` and `test` pass (`actions/upload-pages-artifact@v5`, `actions/deploy-pages@v5`).
+
+- Every example on the site was run and its output pasted in; the slab result matches the old
+  manual (n_eff 3.07669), the silicon wire the reference values (TE0 2.4451).
+- The API pages list the names explicitly, grouped by topic; a one-off check confirmed every
+  public name of `camfr._camfr` is on one of them.
+- `docs/conf.py` hooks autodoc: pybind11's `typing.SupportsInt | typing.SupportsIndex` → `int`
+  (likewise float and complex), `camfr._camfr.X` → `X`, no `self:` argument, no
+  `(*args, **kwargs)` signature for classes and overloaded methods (their overloads are listed
+  in the text instead).
+- The Texinfo manual is untouched; its figures `fig1`/`fig2` are reused (with a white
+  background for the dark theme).
+
+**Issues.**
+
+1. MyST's own `{autoclass}` directive syntax renders autodoc's generated reST as Markdown
+   (literal `.. py:method::` text). **Resolution:** the directives sit in `{eval-rst}` blocks.
+2. A first version of the field example used a closed air box whose width (4.5 µm at λ = 1 µm)
+   puts a mode exactly at cutoff: |R12|² came out as 1e34. With PML on the claddings it
+   converges (|R|² = 0.3557 at N = 40 and 60). The tutorial explains the cutoff warning.
+3. The guide initially claimed `ASR` works for both polarisations; `Slab_M::find_kt` falls back
+   to `track` for TE. Corrected.
+4. Two docstrings were invalid reST (`get_` read as a link target in `get_lambda`; the old
+   NumPy-style `Section.plot` text). Rewritten; `Section.plot`'s claim that `field='P'` is not
+   implemented was wrong (it plots |S|).
+5. `Section.disp` took an unnamed argument (`arg0`): it evaluates the dispersion relation at
+   `kz`; named and documented.
+
+**Verification.** `make docs`: builds without warnings; pages checked in headless Chrome.

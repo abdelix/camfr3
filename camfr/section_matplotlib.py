@@ -52,54 +52,33 @@ AxisBGColor = 'black'   # background color of every axis
 ############################################################################
 
 def __Section_plot(self, field="Ex", mode=0, dx=0.100, dy=0.100, annotations=True):
-    '''
-    Plot a 2D mode profile of the specified field, using MatPlotLib.
-    
+    """Plot mode profiles of the Section with Matplotlib.
+
     Parameters
     ----------
-    ModeObj: a CAMFR Mode object, often acquired via `SectionObj.mode(0)`.
-    
-    field : {'Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz'}
-        Electric (E) or Magnetic (H) field, x/y/z component.  
-        Case-insensitive.
-        Defaults to 'Ex', x-component (horizontal) of the electric field, or `E1` in CAMFR parlance.
-        Can pass an iterable of strings, such as 
-            ['Ex', 'Ey']
-        to plot multiple fields on a single figure.  Each field will be plotted along the rows of figure axes.
-    
-    mode : integer
-        Which waveguide mode to plot, an integer from 0 to get_N(), however many modes are calculated for the Section
-        Defaults to 0.
-        Can pass an iterable of integers, such as
-            [0, 1, 2]
-        to plot multiple modes on a single figure.  Each mode will be plotted along the columns of figure axes.
-    
-    dx, dy: float
-        x & y resolution for Mode Profiles & Gamma/field plotting. Default is 0.100um for both.
-    
-    annotations : boolean, optional
-        If true, the effective index, mode number and field component will written on each mode plot.  True by default.
-    
-    Not Implemented:
-        field = 'P' will plot normalized Power.
+    field : str or list of str
+        Field component: ``'Ex'``, ``'Ey'``, ``'Ez'``, ``'Hx'``, ``'Hy'``,
+        ``'Hz'`` or ``'P'`` (magnitude of the Poynting vector), case
+        insensitive. Default ``'Ex'`` (``E1`` in CAMFR terms). A list plots
+        several fields, one per row.
+    mode : int or list of int
+        Mode index, from 0 (default). A list plots several modes, one per
+        column.
+    dx, dy : float
+        Resolution of the plot in x and y (default 0.1).
+    annotations : bool
+        Write the effective index, mode number and field component on each
+        plot (default True).
 
-    
-    
     Returns
     -------
-    Returns the handle to the matplotlib figure object. This allows you to save or close the figure etc., via
-        modeplot(mode=0).savefig('savedimage.png')
-    or
-        >>> fig = modeplot(mode=0, field='Ez')
-        >>> fig.savefig('savedimage.png')
-        >>> from matplotlib.pyplot import close as plot_close
-        >>> plot_close(fig)     # close the figure during loops
-    You can also retrieve the axis, pcolormesh, axes etc. objects from this handle as so:
-        >>> [ax] = fig.get_axes()
-        >>> QuadMeshObj = ax.get_children()[0]
-        >>> XAxisObj = ax.get_children()[5]
+    matplotlib.figure.Figure
+        The figure, e.g. to save or close it::
 
-    '''
+            fig = section.plot(mode=[0, 1], field=['Ex', 'Ey'])
+            fig.savefig('modes.png')
+            matplotlib.pyplot.close(fig)
+    """
     import matplotlib.pyplot as plt
     
     ## sanitize `field` argument, check if iterable

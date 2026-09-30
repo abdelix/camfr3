@@ -26,6 +26,11 @@ asan: FORCE
 test: FORCE
 	cd testsuite ; make
 
+# The documentation site (docs/, Sphinx), built into docs/_build/html. -W:
+# warnings are errors, as in CI.
+docs: FORCE
+	uv run --group docs sphinx-build -W --keep-going -b html docs docs/_build/html
+
 FORCE:
 
 clean:

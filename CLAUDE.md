@@ -78,6 +78,14 @@ libquadmath (wheel ≈ 13.5 MB). Each wheel is installed and the testsuite runs 
 Locally, from a clean clone (not the working tree, which has `.venv`/`build/`):
 `uvx cibuildwheel --only cp314-manylinux_x86_64` (needs Docker; ≈ 2 min).
 
+**Docs** (`docs/`, Sphinx + MyST + Furo, `docs` dependency group): `make docs` builds
+`docs/_build/html` with `-W` (warnings are errors). The API pages (`docs/api/*.md`) are
+`autoclass`/`autofunction` lists inside `{eval-rst}` blocks (MyST would otherwise parse autodoc's
+reST output as Markdown); `docs/conf.py` shortens pybind11's type names and overload
+docstrings. A new public name needs an entry there. The `docs` CI job builds the site on every
+push; `pages` deploys it to <https://abdelix.github.io/camfr3/> from `main`. The Texinfo manual
+(`docs/camfr.texi`) is separate, still unmigrated (issue #16).
+
 **CI** (`.github/workflows/ci.yml`, GitHub Actions, Ubuntu 24.04): `uv sync --locked` + `pytest`
 for Python 3.10, 3.12 and 3.14 (`UV_PYTHON` per job), and a job that runs the suite on the
 `make asan` build with UBSan `halt_on_error=1`. `uv.lock` resolves per Python version (e.g.

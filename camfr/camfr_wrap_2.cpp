@@ -412,8 +412,8 @@ left and right halves of a symmetric section.)doc")
     .def("mode",         section_get_mode,
          py::return_value_policy::reference_internal, py::arg("i"),
          "Return SectionMode i.")
-    .def("disp",         &Section::get_disp,
-         "Return the dispersion relation (SectionDisp).")
+    .def("disp",         &Section::get_disp, py::arg("kz"),
+         "Evaluate the dispersion relation at kz (zero for a mode).")
     .def("width",        section_width, "Width along x.")
     .def("height",       section_height, "Height along y.")
     .def("eps",          &Section::eps_at, py::arg("coord"),
