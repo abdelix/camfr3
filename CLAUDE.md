@@ -57,7 +57,7 @@ make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
 ## Test
 
 ```bash
-cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 47 tests, expected: OK
+cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 48 tests, expected: OK
 ```
 
 Use the venv interpreter (or `uv run`): `camfr` is installed there, not in the system Python.
@@ -170,10 +170,11 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   Not yet uploaded — see the Distribution section of `MODERNISATION.md`.
 - **Second-`Section` segfault** (see Gotchas): not yet investigated. Start with `make asan`.
 - **Memory errors found by the sanitizer build** (journal entry 37): the invalid-vptr calls on
-  `Material` objects are gone with `keep_alive` (entry 39). Still open: a heap-buffer-overflow in
-  `Expression::get_term` (`expression.h:84`, from `StackImpl::StackImpl`, `stack.cpp:116`) that
-  aborts the ASan testsuite run, and a use-after-free flagged by the compiler in
-  `polyroot.cpp:64` (roots read after `delete []`).
+  `Material` objects are gone with `keep_alive` (entry 39), the `get_term` overflow is fixed
+  (entry 40). Still open: a heap-buffer-overflow in `patterson_quad_z_n_sub`
+  (`math/calculus/croot/patterson_z_n.cpp:271`, from `Contour::get_integrals` in the
+  contour root finder), which now stops the ASan testsuite run; and a use-after-free flagged
+  by the compiler in `polyroot.cpp:64` (roots read after `delete []`).
 - **`examples/other/OLED_grating_avg.py`** was stopped before it finished (it is very long-running).
   It is not verified.
 

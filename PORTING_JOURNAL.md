@@ -1187,3 +1187,19 @@ the invalid-vptr `Material` calls from entry 37 are gone; the `Expression::get_t
 (an indexing bug in `stack.cpp`, not a lifetime problem) remains. Three `Section` solves in one
 process run fine, but also did before this change, so the second-`Section` segfault from
 `CLAUDE.md` is not reproduced by that case and stays open.
+
+### 40. Out-of-bounds read in StackImpl
+
+**Change.** `StackImpl::StackImpl` (`stack.cpp`) read `e.get_term(i+1)` on every iteration of
+its chunk loop, one past the end of the term vector on the last one. The value was only used
+behind an `i+1 < e.get_size()` check, so it was a harmless-in-practice read of a garbage
+pointer, but undefined behaviour, and ASan aborted the testsuite on it (entry 37). It is now
+read only when `i+1` is in range. The other `get_term(i+1)` sites were checked and are guarded.
+
+**Issue.** With this fixed, the ASan testsuite run gets further and stops at the next finding:
+a heap-buffer-overflow (read just past a 64-byte `vector<Complex>`) in `patterson_quad_z_n_sub`,
+`math/calculus/croot/patterson_z_n.cpp:271`, called from `Contour::get_integrals`
+(`contour.cpp:222`) in the contour-integral root finder. Not investigated; recorded in
+`CLAUDE.md` as an open item.
+
+**Verification.** Testsuite 48 tests, OK. ASan run: no report from `stack.cpp`/`expression.h`.

@@ -113,7 +113,7 @@ StackImpl::StackImpl(const Expression& e_, unsigned int no_of_periods_)
   for (unsigned int i=0; i<e.get_size(); i++)
   {
     Term* t1 = e.get_term(i);
-    Term* t2 = e.get_term(i+1);
+    Term* t2 = (i+1 < e.get_size()) ? e.get_term(i+1) : NULL; // Was read past the end.
 
     // No waveguide.
     
