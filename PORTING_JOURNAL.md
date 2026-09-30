@@ -1144,3 +1144,46 @@ array, `R12(np.int32(0), np.int64(0))`, `set_inc_field`/`fw_bw` with arrays, wro
 → `TypeError`, out-of-range index → `IndexError`, `expand_field` with a Python callback, mode
 polarisation. Tutorials 2, 3, 4, 6, 7 run to completion; 1 and 5 open interactive Tk plot
 windows (expected). Si-wire check: TE0 2.4451, TM0 1.7702, TE1 1.4925.
+
+### 39. Object lifetimes tied together with keep_alive
+
+**Change.** The C++ objects keep raw pointers to the objects they are built from, so a Python
+temporary could be freed while C++ still used it. Upstream this was a documented gotcha:
+`Stack(wg(0) + Slab(air(2))(0))` segfaults. The bindings now use `py::keep_alive`:
+
+- `Material(d)`, `BiaxialMaterial(d)`, `Waveguide(d)` → the `Term` keeps the material or
+  waveguide alive (`keep_alive<0, 1>`);
+- `+` and `*` on `Scatterer`, `Stack`, `Term`, `Expression` → the result keeps its operands;
+  `Expression.add` and `+=` keep the added term;
+- constructors that store their arguments: `Term`, `Expression`, `Stack`, `Slab`, `Section`,
+  `Circ`, `Planar`, `BlochStack`, `InfStack`, `BlochSection`, `RefSection`, `Cavity`,
+  `SlabWall_TBC`, `SlabWall_PC`, `SlabDisp`, `SectionDisp`, `SquashedScatterer`,
+  `FlippedScatterer`, `E_Wall`, `H_Wall`; `Slab.set_lower_wall`/`set_upper_wall`;
+- global setters that store a pointer (`set_gain_material`, `set_lower_wall`,
+  `set_upper_wall`) keep the object in a module attribute;
+- methods returning objects owned by `self` (`mode`, `fw_mode`, `bw_mode`, `Section.mode`,
+  `BlochStack.mode`, `BlochSection.mode`, `Stack.scatterer`) use `reference_internal`, so a
+  mode keeps its waveguide alive. `inc()`/`ext()`/`core()` stay `reference` (the objects are
+  the user's own, already kept alive by the chain above; `reference_internal` there would create
+  reference cycles).
+
+New test `testsuite/lifetime.py` (in `camfr_test.py`): a `Stack` built from temporaries inside
+a function, and a mode of a temporary `Slab`, compared with the same structures kept alive.
+
+**Issue.** With pybind11 3.1.0 the reproducer still segfaulted, now inside pybind11: ASan showed
+`keep_alive_impl` dereferencing handle `0x1`. pybind11 3.1.0 moved argument loading into
+`call_impl` but still runs the call-policy `postcall` hooks when an overload rejects its
+arguments; the "result" is then `PYBIND11_TRY_NEXT_OVERLOAD` (`(PyObject*)1`), and
+`keep_alive<0, N>` uses it as the nurse. Every overloaded function with `keep_alive<0, N>` is
+affected — here the `+` operators (`Expression + Expression` is tried first and rejects a
+`Term`). 3.0.4 and 2.13.6 load the arguments before the hooks and are fine. **Resolution:**
+`pybind11>=2.12,<3.1` in the build requirements and the `dev` group (3.0.4 installed). Worth
+reporting upstream.
+
+**Verification.** The reproducer segfaulted on every run before, and now gives
+|R12(0,0)| = 0.61885, identical to the kept-alive structure. 2000 such stacks built in a loop:
+no RSS growth (the references are released). Testsuite 48 tests, OK. ASan/UBSan testsuite run:
+the invalid-vptr `Material` calls from entry 37 are gone; the `Expression::get_term` overflow
+(an indexing bug in `stack.cpp`, not a lifetime problem) remains. Three `Section` solves in one
+process run fine, but also did before this change, so the second-`Section` segfault from
+`CLAUDE.md` is not reproduced by that case and stays open.

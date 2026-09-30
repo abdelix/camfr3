@@ -135,11 +135,18 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 
 ## Gotchas
 
-- **Keep waveguide objects alive.** `Term`/`Stack` hold raw C++ pointers, so
-  `Stack(wg(0) + Slab(air(2))(0))` segfaults when the temporary `Slab` is freed. Bind slabs to
-  variables. This is upstream behaviour, not a porting bug.
+- **Object lifetimes.** `Term`/`Expression`/`Stack`/`Slab`… hold raw C++ pointers to the objects
+  they are built from. The bindings tie those lifetimes together with `py::keep_alive` (journal
+  entry 39), so temporaries such as `Stack(wg(0) + Slab(air(2))(0))` are safe now (upstream
+  segfaulted). Any new binding that stores a pointer to an argument needs a `keep_alive` too;
+  `testsuite/lifetime.py` covers the pattern.
+- **pybind11 must stay below 3.1** (pinned in `pyproject.toml`): 3.1.0 crashes in `keep_alive`
+  on overloaded functions (entry 39). Re-run `testsuite/lifetime.py` before raising the pin.
 - **One `Section` solve per process.** Solving a second `Section` in the same interpreter
-  segfaults (not yet investigated). Scripts take solver settings as CLI arguments instead.
+  segfaulted in the demultiplexers benchmarks (not yet investigated; scripts take solver
+  settings as CLI arguments instead). Three `Section` solves with `set_estimate` in one process
+  run fine, before and after entry 39, so the trigger is something else (perhaps the
+  plane-wave estimation path).
 - **Headless runs:** `import camfr` no longer loads Matplotlib, so nothing is needed for
   computation-only scripts. `MPLBACKEND=Agg` avoids Tk when plotting. `NO_CAMFR_GRAPHICS` is
   obsolete and ignored (entry 34). `from camfr import *` still provides NumPy names (`zeros`,
@@ -162,11 +169,10 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   `import camfr`). `pyproject.toml`, the README header, `NOTICE` and `CITATION.cff` are updated.
   Not yet uploaded — see the Distribution section of `MODERNISATION.md`.
 - **Second-`Section` segfault** (see Gotchas): not yet investigated. Start with `make asan`.
-- **Memory errors found by the sanitizer build** (journal entry 37), not yet fixed: a
-  heap-buffer-overflow in `Expression::get_term` (`expression.h:84`, reached from
-  `StackImpl::StackImpl`, `stack.cpp:116`) that aborts the ASan testsuite run; calls on
-  `Material` objects with an invalid vptr (`stack.cpp:417`, `interface.cpp:90`, `slab.cpp`,
-  `circ.cpp`), i.e. likely use after free; and a use-after-free flagged by the compiler in
+- **Memory errors found by the sanitizer build** (journal entry 37): the invalid-vptr calls on
+  `Material` objects are gone with `keep_alive` (entry 39). Still open: a heap-buffer-overflow in
+  `Expression::get_term` (`expression.h:84`, from `StackImpl::StackImpl`, `stack.cpp:116`) that
+  aborts the ASan testsuite run, and a use-after-free flagged by the compiler in
   `polyroot.cpp:64` (roots read after `delete []`).
 - **`examples/other/OLED_grating_avg.py`** was stopped before it finished (it is very long-running).
   It is not verified.

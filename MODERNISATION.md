@@ -43,12 +43,15 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 
 ## 3. Replace Boost.Python with pybind11 or nanobind (1–2 weeks)
 
-- [ ] Rewrite `camfr/camfr_wrap.cpp` and `camfr/camfr_wrap_2.cpp` (~1,400 lines):
+- [x] Rewrite `camfr/camfr_wrap.cpp` and `camfr/camfr_wrap_2.cpp` (~1,400 lines):
   - removes the hardest dependency (Boost.Python for Python 3.14 had to be unpacked from
     Ubuntu packages by hand); pybind11 is header-only and pip-installable;
   - replaces the hand-written NumPy converters (broken by NumPy 2) with `py::array_t`;
   - use `py::keep_alive` to fix the "keep waveguide objects alive" segfault, e.g.
     `Stack(wg(0) + Slab(air(2))(0))`.
+
+  Done: pybind11 port in entry 38 (the NumPy casters are `type_caster`s built on `array_t`),
+  `keep_alive` in entry 39. pybind11 is pinned below 3.1 (entry 39).
 
 ## 4. Remove the Fortran dependency (optional, a few days)
 

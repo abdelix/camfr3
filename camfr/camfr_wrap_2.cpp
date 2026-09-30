@@ -159,7 +159,7 @@ void camfr_wrap_2(py::module_& m)
   // Wrap Cavity.
 
   py::class_<Cavity>(m, "Cavity")
-    .def(py::init<Stack&, Stack&>())
+    .def(py::init<Stack&, Stack&>(), py::keep_alive<1, 2>(), py::keep_alive<1, 3>())
     .def("find_mode",      &Cavity::find_mode,
          py::arg("lambda_start"), py::arg("lambda_stop"),
          py::arg("n_imag_start")=0.0, py::arg("n_imag_stop")=0.015,
@@ -185,9 +185,9 @@ void camfr_wrap_2(py::module_& m)
   // Wrap BlochStack.
 
   py::class_<BlochStack, MultiWaveguide>(m, "BlochStack")
-    .def(py::init<const Expression&>())
+    .def(py::init<const Expression&>(), py::keep_alive<1, 2>())
     .def("mode",        blochstack_get_mode,
-         py::return_value_policy::reference)
+         py::return_value_policy::reference_internal)
     .def("length",      blochstack_length)
     .def("width",       blochstack_width)
     .def("beta_vector", &BlochStack::get_beta_vector)
@@ -208,7 +208,7 @@ void camfr_wrap_2(py::module_& m)
   // Wrap InfStack.
 
   py::class_<InfStack, DenseScatterer>(m, "InfStack")
-    .def(py::init<const Expression&>())
+    .def(py::init<const Expression&>(), py::keep_alive<1, 2>())
     .def("R12", &InfStack::get_R12)
     ;
 
@@ -230,7 +230,7 @@ void camfr_wrap_2(py::module_& m)
   // Wrap Planar.
 
   py::class_<Planar, MonoWaveguide>(m, "Planar")
-    .def(py::init<Material&>())
+    .def(py::init<Material&>(), py::keep_alive<1, 2>())
     .def("set_theta", &Planar::set_theta)
     .def("set_kt",    planar_static_set_kt)
     .def("get_kt",    planar_static_get_kt)
@@ -239,8 +239,8 @@ void camfr_wrap_2(py::module_& m)
   // Wrap Circ.
 
   py::class_<Circ, MultiWaveguide>(m, "Circ")
-    .def(py::init<Term&>())
-    .def(py::init<Expression&>())
+    .def(py::init<Term&>(),       py::keep_alive<1, 2>())
+    .def(py::init<Expression&>(), py::keep_alive<1, 2>())
     ;
 
   // Wrap SlabWall.
@@ -261,27 +261,28 @@ void camfr_wrap_2(py::module_& m)
   // Wrap SlabWall_TBC.
 
   py::class_<SlabWall_TBC, SlabWall>(m, "SlabWall_TBC")
-    .def(py::init<const Complex&, const Material&>());
+    .def(py::init<const Complex&, const Material&>(), py::keep_alive<1, 3>());
 
   // Wrap SlabWall_PC.
 
   py::class_<SlabWall_PC, SlabWall>(m, "SlabWall_PC")
-    .def(py::init<const Expression&>());
+    .def(py::init<const Expression&>(), py::keep_alive<1, 2>());
 
   // Wrap SlabDisp.
 
   py::class_<SlabDisp, ComplexFunction>(m, "SlabDisp")
-    .def(py::init<Expression&, Real>())
-    .def(py::init<Expression&, Real, SlabWall*, SlabWall*>())
+    .def(py::init<Expression&, Real>(), py::keep_alive<1, 2>())
+    .def(py::init<Expression&, Real, SlabWall*, SlabWall*>(),
+         py::keep_alive<1, 2>(), py::keep_alive<1, 4>(), py::keep_alive<1, 5>())
     ;
 
   // Wrap Slab.
 
   py::class_<Slab, MultiWaveguide>(m, "Slab")
-    .def(py::init<const Term&>())
-    .def(py::init<const Expression&>())
-    .def("set_lower_wall",    &Slab::set_lower_wall)
-    .def("set_upper_wall",    &Slab::set_upper_wall)
+    .def(py::init<const Term&>(),       py::keep_alive<1, 2>())
+    .def(py::init<const Expression&>(), py::keep_alive<1, 2>())
+    .def("set_lower_wall",    &Slab::set_lower_wall, py::keep_alive<1, 2>())
+    .def("set_upper_wall",    &Slab::set_upper_wall, py::keep_alive<1, 2>())
     .def("width",             slab_width)
     //.def("disp",              &Slab::get_disp)
     .def("expand_field",      slab_expand_field)
@@ -294,21 +295,25 @@ void camfr_wrap_2(py::module_& m)
   // Wrap SectionDisp.
 
   py::class_<SectionDisp, ComplexFunction>(m, "SectionDisp")
-    .def(py::init<Stack&, Stack&, Real, int>());
+    .def(py::init<Stack&, Stack&, Real, int>(),
+         py::keep_alive<1, 2>(), py::keep_alive<1, 3>());
 
   // Wrap Section. The default M1 and M2 depend on the global settings at
   // the time of the call, so the optional arguments are overloads.
 
   py::class_<Section, MultiWaveguide>(m, "Section")
-    .def(py::init<Expression&>())
-    .def(py::init<Expression&, int>())
-    .def(py::init<Expression&, int, int>())
-    .def(py::init<Expression&, Expression&>())
-    .def(py::init<Expression&, Expression&, int>())
-    .def(py::init<Expression&, Expression&, int, int>())
-    .def(py::init<const Term&>())
+    .def(py::init<Expression&>(),           py::keep_alive<1, 2>())
+    .def(py::init<Expression&, int>(),      py::keep_alive<1, 2>())
+    .def(py::init<Expression&, int, int>(), py::keep_alive<1, 2>())
+    .def(py::init<Expression&, Expression&>(),
+         py::keep_alive<1, 2>(), py::keep_alive<1, 3>())
+    .def(py::init<Expression&, Expression&, int>(),
+         py::keep_alive<1, 2>(), py::keep_alive<1, 3>())
+    .def(py::init<Expression&, Expression&, int, int>(),
+         py::keep_alive<1, 2>(), py::keep_alive<1, 3>())
+    .def(py::init<const Term&>(),           py::keep_alive<1, 2>())
     .def("mode",         section_get_mode,
-         py::return_value_policy::reference)
+         py::return_value_policy::reference_internal)
     .def("disp",         &Section::get_disp)
     .def("width",        section_width)
     .def("height",       section_height)
@@ -322,7 +327,8 @@ void camfr_wrap_2(py::module_& m)
   // Wrap RefSection.
 
   py::class_<RefSection, MultiWaveguide>(m, "RefSection")
-    .def(py::init<Material&, const Complex&, const Complex&, int>());
+    .def(py::init<Material&, const Complex&, const Complex&, int>(),
+         py::keep_alive<1, 2>());
 
   // Wrap SectionMode.
 
@@ -333,10 +339,10 @@ void camfr_wrap_2(py::module_& m)
   // Wrap BlochSection.
 
   py::class_<BlochSection, MultiWaveguide>(m, "BlochSection")
-    .def(py::init<Expression&>())
-    .def(py::init<const Term&>())
+    .def(py::init<Expression&>(),  py::keep_alive<1, 2>())
+    .def(py::init<const Term&>(),  py::keep_alive<1, 2>())
     .def("mode",          blochsection_get_mode,
-         py::return_value_policy::reference)
+         py::return_value_policy::reference_internal)
     .def("width",         blochsection_width)
     .def("height",        blochsection_height)
     .def("eps",           &BlochSection::eps_at)

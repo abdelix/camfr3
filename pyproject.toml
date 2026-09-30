@@ -2,7 +2,12 @@
 # The extension is built with CMake (CMakeLists.txt) through scikit-build-core,
 # with pybind11 bindings (no NumPy headers needed). CMake and Ninja come from
 # PyPI when they are not installed.
-requires = ["scikit-build-core>=0.11", "setuptools-scm>=8", "pybind11>=2.12"]
+#
+# pybind11 < 3.1: 3.1.0 runs call-policy post-call hooks even when an overload
+# is rejected, so keep_alive<0, N> on an overloaded function (CAMFR's '+'
+# operators) dereferences the "try next overload" marker and crashes
+# (PORTING_JOURNAL.md entry 39; testsuite/lifetime.py catches it).
+requires = ["scikit-build-core>=0.11", "setuptools-scm>=8", "pybind11>=2.12,<3.1"]
 build-backend = "scikit_build_core.build"
 
 # Published as 'camfr3' because the PyPI name 'camfr' belongs to the original
@@ -32,7 +37,7 @@ Upstream = "https://github.com/demisjohn/CAMFR"
 [dependency-groups]
 # Installed by default with `uv sync`: SciPy, which GARCLED needs, and the
 # build tools for incremental rebuilds in .venv (`make dev`, see CLAUDE.md).
-dev = ["scipy", "scikit-build-core>=0.11", "setuptools-scm>=8", "pybind11>=2.12",
+dev = ["scipy", "scikit-build-core>=0.11", "setuptools-scm>=8", "pybind11>=2.12,<3.1",
        "cmake>=3.26", "ninja"]
 
 [tool.scikit-build]

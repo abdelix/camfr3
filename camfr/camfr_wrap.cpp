@@ -497,6 +497,16 @@ void camfr_wrap_2(py::module_& m);
 
 PYBIND11_MODULE(_camfr, m)
 {
+  // Object lifetimes. The C++ objects keep raw pointers to the objects they
+  // are built from (a Term to its Material or Waveguide, an Expression to its
+  // Terms, a Stack or Slab to its Expression, ...). keep_alive ties the
+  // lifetime of those Python objects to the new one, so that e.g.
+  // Stack(wg(0) + Slab(air(2))(0)) no longer leaves a dangling pointer to the
+  // temporary Slab. Setters that store a pointer in a global keep the object
+  // in a module attribute.
+
+  py::handle mh = m;
+
   // Wrap Limit enum.
 
   py::enum_<Limit> limit(m, "Limit", py::arithmetic());
@@ -633,7 +643,9 @@ PYBIND11_MODULE(_camfr, m)
   m.def("N",                          get_N);
   m.def("set_polarisation",           set_polarisation);
   m.def("get_polarisation",           get_polarisation);
-  m.def("set_gain_material",          set_gain_material);
+  m.def("set_gain_material",          [mh](py::object mat)
+        {mh.attr("_gain_material") = mat;
+         set_gain_material(mat.cast<Material*>());});
   m.def("set_solver",                 set_solver);
   m.def("set_stability",              set_stability);
   m.def("set_precision",              set_precision);
@@ -655,8 +667,10 @@ PYBIND11_MODULE(_camfr, m)
   m.def("set_circ_field_type",        set_circ_fieldtype);
   m.def("set_left_wall",              set_left_wall);
   m.def("set_right_wall",             set_right_wall);
-  m.def("set_upper_wall",             set_upper_wall);
-  m.def("set_lower_wall",             set_lower_wall);
+  m.def("set_upper_wall",             [mh](py::object w)
+        {mh.attr("_upper_wall") = w; set_upper_wall(w.cast<SlabWall*>());});
+  m.def("set_lower_wall",             [mh](py::object w)
+        {mh.attr("_lower_wall") = w; set_lower_wall(w.cast<SlabWall*>());});
   m.def("set_left_PML",               set_left_PML);
   m.def("set_right_PML",              set_right_PML);
   m.def("set_upper_PML",              set_upper_PML);
@@ -743,7 +757,7 @@ PYBIND11_MODULE(_camfr, m)
   py::class_<Material, BaseMaterial>(m, "Material")
     .def(py::init<const Complex&>())
     .def(py::init<const Complex&, const Complex&>())
-    .def("__call__",     material_to_term)
+    .def("__call__",     material_to_term, py::keep_alive<0, 1>())
     .def("epsr",         material_epsr)
     .def("mur",          material_mur)
     .def("eps",          &Material::eps)
@@ -765,7 +779,7 @@ PYBIND11_MODULE(_camfr, m)
   py::class_<BiaxialMaterial, BaseMaterial>(m, "BiaxialMaterial")
     .def(py::init<const Complex&, const Complex&, const Complex&,
                   const Complex&, const Complex&, const Complex&>())
-    .def("__call__", material_to_term)
+    .def("__call__", material_to_term, py::keep_alive<0, 1>())
     .def("epsr",     basematerial_epsr)
     .def("mur",      basematerial_mur)
     .def("__repr__", &BiaxialMaterial::repr)
@@ -798,14 +812,14 @@ PYBIND11_MODULE(_camfr, m)
     .def("etar",     &Waveguide::etar_at)
     .def("N",        &Waveguide::N)
     .def("mode",     waveguide_get_mode,
-         py::return_value_policy::reference)
+         py::return_value_policy::reference_internal)
     .def("fw_mode",  waveguide_get_fw_mode,
-         py::return_value_policy::reference)
+         py::return_value_policy::reference_internal)
     .def("bw_mode",  waveguide_get_bw_mode,
-         py::return_value_policy::reference)
+         py::return_value_policy::reference_internal)
     .def("calc",     &Waveguide::find_modes)
     .def("__repr__", &Waveguide::repr)
-    .def("__call__", waveguide_to_term)
+    .def("__call__", waveguide_to_term, py::keep_alive<0, 1>())
     ;
 
   // Wrap Waveguide_length.
@@ -831,8 +845,8 @@ PYBIND11_MODULE(_camfr, m)
          py::return_value_policy::reference)
     .def("ext",  &Scatterer::get_ext,
          py::return_value_policy::reference)
-    .def(py::self + Expression())
-    .def(py::self + Term())
+    .def(py::self + Expression(), py::keep_alive<0, 1>(), py::keep_alive<0, 2>())
+    .def(py::self + Term(),       py::keep_alive<0, 1>(), py::keep_alive<0, 2>())
     ;
 
   // Wrap MultiScatterer.
@@ -854,68 +868,69 @@ PYBIND11_MODULE(_camfr, m)
   // Wrap SquashedScatterer.
 
   py::class_<SquashedScatterer, DenseScatterer>(m, "SquashedScatterer")
-    .def(py::init<DenseScatterer&>());
+    .def(py::init<DenseScatterer&>(), py::keep_alive<1, 2>());
 
   // Wrap FlippedScatterer.
 
   py::class_<FlippedScatterer, MultiScatterer>(m, "FlippedScatterer")
-    .def(py::init<MultiScatterer&>());
+    .def(py::init<MultiScatterer&>(), py::keep_alive<1, 2>());
 
   // Wrap E_Wall.
 
   py::class_<E_Wall, DiagScatterer>(m, "E_Wall")
-    .def(py::init<Waveguide&>());
+    .def(py::init<Waveguide&>(), py::keep_alive<1, 2>());
 
   // Wrap H_Wall.
 
   py::class_<H_Wall, DiagScatterer>(m, "H_Wall")
-    .def(py::init<Waveguide&>());
+    .def(py::init<Waveguide&>(), py::keep_alive<1, 2>());
 
   // Wrap Expression.
 
   py::class_<Expression>(m, "Expression")
     .def(py::init<>())
-    .def(py::init<const Term&>())
-    .def(py::init<const Expression&>())
+    .def(py::init<const Term&>(),       py::keep_alive<1, 2>())
+    .def(py::init<const Expression&>(), py::keep_alive<1, 2>())
     .def("flatten",  &Expression::flatten)
     .def("inc",      &Expression::get_inc,
          py::return_value_policy::reference)
     .def("ext",      &Expression::get_ext,
          py::return_value_policy::reference)
     .def("__repr__", &Expression::repr)
-    .def("add",      &Expression::operator+=)
+    .def("add",      &Expression::operator+=, py::keep_alive<1, 2>())
     .def("__iadd__", [](py::object self, const Expression& e)
-         {self.cast<Expression&>() += e; return self;})
-    .def(py::self + py::self)
-    .def(py::self + Term())
-    .def(py::self * int())
-    .def(int() * py::self)
+         {self.cast<Expression&>() += e; return self;}, py::keep_alive<1, 2>())
+    .def(py::self + py::self, py::keep_alive<0, 1>(), py::keep_alive<0, 2>())
+    .def(py::self + Term(),   py::keep_alive<0, 1>(), py::keep_alive<0, 2>())
+    .def(py::self * int(),    py::keep_alive<0, 1>())
+    .def(int() * py::self,    py::keep_alive<0, 1>())
     ;
 
   // Wrap Term.
 
   py::class_<Term>(m, "Term")
-    .def(py::init<Scatterer&>())
-    .def(py::init<Stack&>())
-    .def(py::init<const Expression&>())
+    .def(py::init<Scatterer&>(),        py::keep_alive<1, 2>())
+    .def(py::init<Stack&>(),            py::keep_alive<1, 2>())
+    .def(py::init<const Expression&>(), py::keep_alive<1, 2>())
     .def("inc",      &Term::get_inc,
          py::return_value_policy::reference)
     .def("ext",      &Term::get_ext,
          py::return_value_policy::reference)
     .def("__repr__", &Term::repr)
-    .def(py::self + py::self)
-    .def(py::self + Expression())
-    .def(py::self * int())
-    .def(int() * py::self)
+    .def(py::self + py::self,     py::keep_alive<0, 1>(), py::keep_alive<0, 2>())
+    .def(py::self + Expression(), py::keep_alive<0, 1>(), py::keep_alive<0, 2>())
+    .def(py::self * int(),        py::keep_alive<0, 1>())
+    .def(int() * py::self,        py::keep_alive<0, 1>())
     ;
 
   // Wrap Stack.
 
   py::class_<Stack>(m, "Stack")
-    .def(py::init<const Expression&>())
-    .def(py::init<const Expression&, int>())
-    .def(py::init<const Term&>())
-    .def(py::init([](const Term& t, int n) {return new Stack(Expression(t), n);}))
+    .def(py::init<const Expression&>(),      py::keep_alive<1, 2>())
+    .def(py::init<const Expression&, int>(), py::keep_alive<1, 2>())
+    .def(py::init<const Term&>(),            py::keep_alive<1, 2>())
+    .def(py::init([](const Term& t, int n) {return new Stack(Expression(t), n);}),
+         py::keep_alive<1, 2>())
     .def("calc",                     &Stack::calcRT)
     .def("free",                     &Stack::freeRT)
     .def("inc",                      &Stack::get_inc,
@@ -923,7 +938,7 @@ PYBIND11_MODULE(_camfr, m)
     .def("ext",                      &Stack::get_ext,
          py::return_value_policy::reference)
     .def("scatterer",                &Stack::as_multi,
-         py::return_value_policy::reference)
+         py::return_value_policy::reference_internal)
     .def("length",                   stack_length)
     .def("width",                    stack_width)
     .def("set_inc_field",            stack_set_inc_field)
@@ -954,8 +969,8 @@ PYBIND11_MODULE(_camfr, m)
     .def("T21",                      stack_T21)
     .def("R12_power",                &Stack::get_R12_power)
     .def("T12_power",                &Stack::get_T12_power)
-    .def(py::self + Expression())
-    .def(py::self + Term())
+    .def(py::self + Expression(), py::keep_alive<0, 1>(), py::keep_alive<0, 2>())
+    .def(py::self + Term(),       py::keep_alive<0, 1>(), py::keep_alive<0, 2>())
     ;
 
   // Scatterers and stacks are accepted wherever a Term is expected.
