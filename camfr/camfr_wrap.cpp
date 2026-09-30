@@ -39,6 +39,7 @@
 #include "primitives/section/refsection.h"
 #include "primitives/blochsection/blochsection.h"
 #include "primitives/blochsection/blochsectionmode.h"
+#include "math/calculus/polyroot/polyroot.h"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -718,6 +719,18 @@ PYBIND11_MODULE(_camfr, m)
   m.def("set_mueller_precision",      set_mueller_precision);
   m.def("free_tmps",                  free_tmps);
   m.def("free_tmp_interfaces",        free_tmp_interfaces);
+
+  // Internal: polyroot, for testsuite/polyroot.py.
+
+  m.def("_polyroot", [](py::array_t<Complex, py::array::forcecast> c)
+  {
+    auto r = c.unchecked<1>();
+    std::vector<Complex> coef(r.data(0), r.data(0) + r.shape(0));
+    std::vector<Complex> roots = polyroot(coef);
+    py::array_t<Complex> out(roots.size());
+    std::copy(roots.begin(), roots.end(), out.mutable_data());
+    return out;
+  });
 
   // Wrap Coord.
 

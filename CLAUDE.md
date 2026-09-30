@@ -110,8 +110,9 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 
 - `camfr/` — C++/Fortran sources plus the Python package (`__init__.py`, `geometry*.py`,
   `material.py`, `RCLED.py`, `GARCLED.py`). `camfr_wrap*.cpp` are the pybind11 bindings.
-- `camfr/math/` — vendored numerics: SLATEC Bessel routines, Jenkins–Traub (ACM Algorithm 419),
-  Brent root/minimum finders. **Do not reformat or "modernise" vendored files.**
+- `camfr/math/` — vendored numerics: SLATEC Bessel routines, Brent root/minimum finders,
+  Patterson quadrature (a C++ translation of ACM algorithms). `polyroot` uses the companion
+  matrix + LAPACK since journal entry 56 (Jenkins–Traub, ACM Algorithm 419, was removed). **Do not reformat or "modernise" vendored files.**
 - `visualisation/` — only plotting examples now; the plotting modules live in `camfr/`.
 - `testsuite/`, `examples/` — run from the source tree, not installed.
 
@@ -206,8 +207,9 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 ## Licensing
 
 GPL v2 (`LICENSE`), plus an older permissive notice in `COPYRIGHT`; keep both, keep `AUTHORS`,
-and mark modified files. Vendored ACM Algorithm 419 carries ACM's own terms (free for
-non-commercial use) — check before any commercial distribution. The PyPI name `camfr` belongs to
+and mark modified files. ACM Algorithm 419 (Jenkins–Traub) is gone (entry 56). The Patterson
+quadrature is a C++ translation of ACM algorithms (CACM 468; Krogh & Snyder, TOMS 1991); whether
+ACM's licence (free for non-commercial use) covers it is unchecked — see `NOTICE`. The PyPI name `camfr` belongs to
 the original author, so a rename is planned for publication; credit Bienstman & Baets,
 *Opt. Quantum Electron.* **33**, 327–341 (2001).
 

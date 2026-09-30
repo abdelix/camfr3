@@ -1496,3 +1496,47 @@ and `repr` for the enums, so a pybind11 upgrade cannot change this silently agai
 
 **Verification.** `str()` of all enums gives the bare name; `repr(TE)` is `<Polarisation.TE: 2>`,
 `int(TE) == 2`. pytest: 52 passed, 2 xfailed.
+
+### 56. polyroot: companion matrix instead of Jenkins–Traub (ACM Algorithm 419)
+
+**Change.** `polyroot` (roots of a complex polynomial, used by the contour-integral root finder)
+now computes the eigenvalues of the companion matrix with LAPACK `zgeev` (through the existing
+`eigenvalues()` in `linalg`; `zgeev` balances first), the method of `numpy.roots` and MATLAB's
+`roots`. Leading zero coefficients are skipped; a constant polynomial has no roots.
+`jenkins_traub.f` (`cpoly`, ACM Algorithm 419, 519 lines of Fortran 77) is deleted and removed
+from `CMakeLists.txt`: 61 Fortran files remain (SLATEC), and the module has no `cpoly` symbol.
+This removes ACM's non-commercial licence term and `cpoly`'s unchecked 50-coefficient `COMMON`
+arrays. An internal hook `camfr._camfr._polyroot` exposes it to the tests.
+
+**Where `polyroot` is used** (all through `allroots`): `set_solver(ADR)` for `Slab` and `Circ`;
+the `track` solver's complex-plane stage for slabs with open walls or TBC (`slab.cpp:760`; such
+walls are then rejected by `Slab_M::build_modeset`, "Unsupported wall type", so that path ends
+in an error anyway); `Circ` `track` with `set_backward_modes(True)` (`circ.cpp:1087`).
+`allroots` limits the degree to 10 (`N_max`).
+
+**Verification.**
+
+- *Old vs new on CAMFR's own polynomials:* both methods side by side, with the coefficients
+  recorded from `ADR_solver` (145 polynomials, degree 4–10), `backward` (3), ADR on a PML slab
+  (80) and on a lossy metal film (165), and the open-slab path (7); coefficients spanning up to
+  17 decades. Roots agree to ≤ 4.5e-7 relative (mostly ≤ 3e-9; Mueller refines them
+  afterwards); backward error ≤ 1.0e-14 new vs ≤ 5.7e-13 old.
+- *Modes before/after:* `ADR_solver` bit-identical (3.5105413241431758 − 0.34986320750253014j);
+  ADR on the PML slab and metal film and `Circ` backward modes: 12, 12 and 20 modes, max relative
+  difference 6.8e-15.
+- *Independent check:* ADR against the `track` solver on the PML slab and the metal film: same
+  12 modes to 6.0e-15. Now a test, `testsuite/ADR_vs_track.py`.
+- *Unit tests* `testsuite/polyroot.py`: roots 1…10, 500 random polynomials of degree 1–10,
+  double/triple roots, roots at 0, magnitudes 1e-3…1e3, leading zeros and constants; backward
+  error < 1e-13 throughout.
+- pytest 59 passed, 2 xfailed; the root-finder tests also under ASan/UBSan.
+- Earlier benchmark (scratch, not in the repo): at degree 10 `cpoly` takes 10 µs, the companion
+  method 50 µs; an ADR solve makes ~145 calls, so ≈ 6 ms more per solve.
+
+**Issue.** A licence check while updating `NOTICE` showed that the Patterson quadrature
+(`quadrature/patterson*.cpp`, `croot/patterson_z_n.cpp`) is also a C++ translation of ACM
+algorithms (CACM Algorithm 468; Krogh & Snyder, ACM TOMS 17, 1991). Removing Jenkins–Traub
+therefore does not settle the ACM question by itself. `NOTICE` says so, and `MODERNISATION.md`
+has a new item to check it (and replace the quadrature if needed). A `Circ` ADR scenario
+(`set_circ_PML(-0.1)`) did not finish within 10 minutes, stuck in the contour integration
+(one `polyroot` call); unrelated to this change, not investigated.

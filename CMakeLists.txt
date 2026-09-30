@@ -109,7 +109,6 @@ set(CAMFR_NOOPT_SOURCES
   camfr_wrap_2.cpp)
 
 set(CAMFR_FORTRAN_SOURCES
-  math/calculus/polyroot/jenkins_traub.f
   math/bessel/slatec/dyairy.f
   math/bessel/slatec/xerhlt.f
   math/bessel/slatec/zbesh.f

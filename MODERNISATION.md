@@ -55,8 +55,11 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 
 ## 4. Remove the Fortran dependency (optional, a few days)
 
-- [ ] Replace the Jenkins–Traub root finder (`jenkins_traub.f`, ACM Algorithm 419). This also
+- [x] Replace the Jenkins–Traub root finder (`jenkins_traub.f`, ACM Algorithm 419). This also
       removes ACM's non-commercial licence restriction, useful for a clean GPL release.
+      Done in entry 56 (companion matrix + LAPACK `zgeev`). Note: the Patterson quadrature
+      (`quadrature/`, `croot/patterson_z_n.cpp`) is also a translation of ACM algorithms; its
+      licence status is unchecked (see `NOTICE`).
 - [ ] Replace the vendored SLATEC/AMOS Bessel routines with a C++ port of the same algorithms,
       dropping gfortran entirely (much easier macOS/Windows wheels). Validate carefully: the
       cylindrical (`Circ`) solver depends on them.
@@ -90,8 +93,10 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 - [ ] `metal_splitter`: R12 stays unphysical even with complete slab modes (entry 46), so
       the interface/stack stage mishandles these metal slabs. A driven 2D Palace simulation of
       the splitter would give a reference.
-- [ ] Replace the Jenkins–Traub root finder behind `polyroot` with the eigenvalues of the
-      companion matrix (LAPACK `zgeev`, already linked) — see §4; removes the ACM licence
-      question before binary releases.
+- [x] Replace the Jenkins–Traub root finder behind `polyroot` with the eigenvalues of the
+      companion matrix (LAPACK `zgeev`, already linked) — see §4. Done (entry 56).
+- [ ] Check whether ACM's software licence applies to the C++ translation of the Patterson
+      quadrature (CACM Algorithm 468; Krogh & Snyder, ACM TOMS 17, 1991) before binary releases;
+      if it does, replace it (e.g. with a Gauss–Kronrod rule).
 - [ ] Blitz++ is barely maintained; moving to Eigen is possible but a large refactor.
       Leave it unless it blocks something.

@@ -20,13 +20,13 @@
 //
 // polyroot
 //
-//   Wrapper around Netlib's Jenkins-Traub algorithm to calculate roots
-//   of a polynomial.
+//   Roots of a polynomial (eigenvalues of the companion matrix).
 //   The coefficients are ordered by decreasing powers of z.
 //
 /////////////////////////////////////////////////////////////////////////////
 
 std::vector<Complex> polyroot(const std::vector<Complex>& coef);
+
 
 
 
