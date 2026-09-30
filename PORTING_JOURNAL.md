@@ -1317,3 +1317,39 @@ longer lists it as a gotcha; the open item is closed with that caveat.
   left excluded.
 
 **Verification.** Testsuite 49 tests, OK.
+
+### 46. metal_splitter checked against Palace: CAMFR misses the metal slabs' propagating modes
+
+**Change.** An independent check of the slab modes behind `metal_splitter` (entry 45) with
+Palace (FEM, 2D `BoundaryMode`, from the demultiplexers project). Each 1D slab is a thin strip
+in (x, y) with PEC walls at y = 0 and y = h, so the y-uniform E_y modes are CAMFR's TE modes;
+x = 0 is PMC (`slab_H_wall`), x = W is PEC. Palace has no PML here, so CAMFR is compared at
+`set_upper_PML(0)` as well. Scripts: `tools/palace_metal_splitter/`. New test
+`testsuite/metal_slab_modes.py` (in `camfr_test.py`).
+
+**Validation of the setup.** The air-only slab `no_rods` (analytic) and the GaAs slab `inc_wg`
+agree with CAMFR to all printed digits (0.99656, 0.96860, 0.91011, …). Palace is mesh-converged
+(`cen`: 0.860825, 0.730098 at 4/20 nm and at 2/10 nm mesh size, order 3).
+
+**Results** (propagating n_eff; the evanescent modes, e.g. −0.189j and −1.127j, agree):
+
+| Slab | Palace | CAMFR default, PML 0 | CAMFR default, PML −0.1 (the test) | CAMFR `low_index_core` or `series` |
+|---|---|---|---|---|
+| `cen` | 0.8608, 0.7301 | none | 0.7301 | 0.8608, 0.7301 |
+| `arm` | 0.8608, 0.7301 | none | none | 0.8608, 0.7301 |
+| `ver` | 0.9767, 0.8608, 0.7656 | 0.8608, 0.7656 | 0.8631−0.020j, 0.7656 | 0.9767, 0.8608, 0.7656 |
+
+The values fit the air gaps: 0.8608 is the 1.45 µm gap between the last metal layer and the top
+wall, 0.7301 the 0.525 µm gap above the PMC (`cen`) or the 1.05 µm metal–metal gap (`arm`),
+0.9767 and 0.7656 the 1.725 µm gap of `ver`. With default settings CAMFR's slab solver misses
+propagating modes of every metal slab; `set_precision(1000)` and `set_mode_surplus(4)` do not
+help. `set_low_index_core(True)` (as `metal_coupler` uses) or `set_solver(series)` finds all of
+them, matching Palace to 7 digits.
+
+**Issue.** Complete slab modes do not fix the splitter: R12(0,0) becomes 1.828 − 0.161j with
+`low_index_core`, 0.905 − 0.243j with `series`, 1.501 − 1.478j with both (expected 0.845 +
+0.499j), still |R12| > 1 in two cases. So a second problem lies in the stack/interface stage
+(mode matching with the metal slabs), which a mode solver cannot check; a reference would need
+a driven 2D simulation of the whole splitter. `metal_splitter` stays out of the suite.
+
+**Verification.** Testsuite 50 tests, OK.

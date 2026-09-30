@@ -57,7 +57,7 @@ make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
 ## Test
 
 ```bash
-cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 49 tests, expected: OK
+cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 50 tests, expected: OK
 ```
 
 Use the venv interpreter (or `uv run`): `camfr` is installed there, not in the system Python.
@@ -173,10 +173,14 @@ the `polyroot` fix (entry 41) and is back in the suite.
   Not yet uploaded — see the Distribution section of `MODERNISATION.md`.
 - **Sanitizer status:** the testsuite, and `stack2`/`metal_splitter`, run clean under
   ASan/UBSan (entries 37–45).
-- **`stack2` and `metal_splitter`** (entry 45): numerically ill-conditioned. `metal_splitter`
-  (a metal with epsr = −100) gives |R12| ≈ 1.72 > 1 with the default solver and anything from
-  −0.08 to 0.89+0.40j with other settings; the solver does not find this structure's modes
-  reliably. Needs solver work (and reference values from an independent method).
+- **`stack2`** (entry 45): numerically ill-conditioned (result does not converge with `N`).
+- **`metal_splitter`** (entries 45–46), checked against Palace: with default settings CAMFR's
+  slab solver misses the propagating modes of the metal/air slabs (air gaps between metal,
+  epsr = −100); `set_low_index_core(True)` or `set_solver(series)` finds them, matching Palace
+  to 7 digits (`testsuite/metal_slab_modes.py`). Even with complete slab modes the splitter's
+  R12 stays unphysical (|R12| ≈ 1.83 with `low_index_core`), so a second problem sits in the
+  stack/interface stage — unresolved. **For metal structures whose light is guided in
+  low-index gaps, use `set_low_index_core(True)`.** Palace scripts: `tools/palace_metal_splitter/`.
 - **`examples/other/OLED_grating_avg.py`** was stopped before it finished (it is very long-running).
   It is not verified.
 

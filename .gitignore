@@ -16,3 +16,4 @@ camfr/_version.py
 # Machine-specific CMake settings (see local.cmake.example)
 local.cmake
 
+tools/palace_metal_splitter/run_*/
