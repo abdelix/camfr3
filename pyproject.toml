@@ -35,9 +35,10 @@ Homepage = "https://github.com/abdelix/CAMFR"
 Upstream = "https://github.com/demisjohn/CAMFR"
 
 [dependency-groups]
-# Installed by default with `uv sync`: SciPy, which GARCLED needs, and the
-# build tools for incremental rebuilds in .venv (`make dev`, see CLAUDE.md).
-dev = ["scipy", "scikit-build-core>=0.11", "setuptools-scm>=8", "pybind11>=2.12,<3.1",
+# Installed by default with `uv sync`: SciPy, which GARCLED needs, pytest
+# (with pytest-forked: one process per test), and the build tools for
+# incremental rebuilds in .venv (`make dev`, see CLAUDE.md).
+dev = ["scipy", "pytest>=8", "pytest-forked", "scikit-build-core>=0.11", "setuptools-scm>=8", "pybind11>=2.12,<3.1",
        "cmake>=3.26", "ninja"]
 
 [tool.scikit-build]
@@ -62,6 +63,18 @@ template = '''__version__ = "${version}"
 # Version from the latest git tag (vX.Y.Z); untagged commits get a .devN suffix.
 # Used when no git metadata is available (e.g. a plain source archive):
 fallback_version = "0+unknown"
+
+[tool.pytest.ini_options]
+# The testsuite modules are unittest files without a test_ prefix; see
+# testsuite/conftest.py. --forked runs each test in its own process, so a
+# segfault fails one test instead of the run, and CAMFR's global settings
+# (PML, walls, solver switches) cannot leak from one test into the next.
+testpaths = ["testsuite"]
+python_files = ["*.py"]
+# Not the default "test" prefix: 'from camfr import *' brings NumPy's test()
+# helper into every module, which pytest would try to collect.
+python_functions = ["test_*"]
+addopts = ["--forked", "--import-mode=importlib"]
 
 [tool.uv]
 # uv only rebuilds the project when a cache key changes; the defaults cover

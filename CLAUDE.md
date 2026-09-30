@@ -57,22 +57,28 @@ make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
 ## Test
 
 ```bash
-cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 50 tests, expected: OK
+uv run pytest                   # 51 passed, 2 xfailed; each test in its own process (--forked)
+uv run pytest testsuite/wg.py   # one module
+```
+
+pytest collects the existing unittest modules (`testsuite/conftest.py`; config in
+`pyproject.toml`). `--forked` isolates each test in a forked process: a segfault fails that
+test only, and CAMFR's global settings (PML, walls, solver switches) cannot leak between tests.
+`stack2` and `metal_splitter` are strict `xfail` (listed in `conftest.py`; an unexpected pass
+fails the run): both are deterministic and clean under ASan, but ill-conditioned (entries
+45–46). A new test module just needs a `unittest.TestCase`; for the old runner also add it to
+the import list and `alltests` in `camfr_test.py`.
+
+The old runner still works and runs everything in one process, so tests must restore any
+global setting they change (or later tests fail only there):
+
+```bash
+cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 51 tests, expected: OK
 ```
 
 Use the venv interpreter (or `uv run`): `camfr` is installed there, not in the system Python.
 The install is editable, so rebuild (`make dev`) only after C++/Fortran changes.
-Per-module runs are useful when a test crashes (one segfault aborts the whole suite). Each
-test module defines a `suite` and runs standalone:
-`cd testsuite && MPLBACKEND=Agg ../.venv/bin/python wg.py`.
-A new test must be added to both the import list and `alltests` in `camfr_test.py`.
 Tests compare against hard-coded reference values with tolerance `eps.testing_eps`.
-Tests share CAMFR's global settings: a test that changes PML, walls or solver switches must
-restore them (or the next test must set what it needs), or later tests fail only inside the
-suite. `stack2` and `metal_splitter` still fail and stay out of `camfr_test.py` (entry 45):
-both are deterministic and clean under ASan, but their results depend strongly on `N` and the
-solver settings, so the stored expected values cannot be reproduced. `ADR_solver` passes since
-the `polyroot` fix (entry 41) and is back in the suite.
 
 ## Repository state
 

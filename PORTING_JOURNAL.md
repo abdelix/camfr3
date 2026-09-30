@@ -1375,3 +1375,28 @@ pytest), and a future Python will reject it. It is now a raw string, with the sa
 of `camfr/`, `testsuite/` and `examples/` with `-W error::SyntaxWarning` found no other case.
 
 **Issue.** None.
+
+### 49. pytest with one process per test; known failures as strict xfail
+
+**Change.** The testsuite runs under pytest (`uv run pytest`), with `pytest` and
+`pytest-forked` in the `dev` group:
+
+- `pyproject.toml` `[tool.pytest.ini_options]`: `testpaths = ["testsuite"]`,
+  `python_files = ["*.py"]` (the modules have no `test_` prefix), `python_functions =
+  ["test_*"]` (`from camfr import *` brings NumPy's `test()` into every module, which pytest
+  otherwise tries to collect: 53 warnings), `addopts = ["--forked", "--import-mode=importlib"]`.
+- `testsuite/conftest.py`: puts `testsuite/` on `sys.path` for the `eps` helper (importlib mode
+  keeps the repository root off `sys.path`, so `import camfr` finds the installed package),
+  sets `MPLBACKEND=Agg`, ignores `camfr_test.py`/`eps.py`/`__init__.py`, and marks `stack2` and
+  `metal_splitter` as strict `xfail` with the reason.
+- The unittest modules are unchanged; `camfr_test.py` still works (51 tests, OK).
+- `PhC_splitter`, commented out of `camfr_test.py` upstream, passes (0.6 s) and is back.
+- `MODERNISATION.md` updated: §5 pytest and xfail items done; stale entries corrected
+  (`ADR_solver` passes; conda-forge needs pybind11, not Boost; the second-`Section` item is
+  closed); new open items for the `metal_splitter` interface problem and replacing Jenkins–Traub.
+
+**Issue.** None beyond the collection warnings above.
+
+**Verification.** `uv run pytest`: **51 passed, 2 xfailed**, no warnings, ~12 s (8 threads).
+A probe test that raises SIGSEGV is reported as one failure (`CRASHED with signal 11`) while
+the other tests still run.

@@ -1,8 +1,8 @@
 # Build and packaging modernisation
 
 Checklist of recommended improvements to CAMFR's build, packaging and tooling after the
-Python 3 port. Nothing here is started yet. Tick items off as they land, and record each
-change in `PORTING_JOURNAL.md` as for the port itself.
+Python 3 port. The work happens on the `modernisation` branch. Tick items off as they land,
+and record each change in `PORTING_JOURNAL.md` as for the port itself.
 
 Suggested order: **1 → 5 → 2 → 3 → 6**, with 4 whenever cross-platform wheels matter.
 Step 5 (CI) comes early so that everything after it is guarded by tests.
@@ -63,10 +63,13 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 
 ## 5. Testing and CI (2–3 days)
 
-- [ ] Convert `testsuite/` to pytest, each test module in its own process (e.g.
-      `pytest-forked`), so one segfault does not abort the run.
-- [ ] Mark `ADR_solver`, `stack2`, `metal_splitter` as `xfail` with a reason, instead of
-      silently leaving them out of `camfr_test.py`.
+- [x] Convert `testsuite/` to pytest, each test module in its own process (e.g.
+      `pytest-forked`), so one segfault does not abort the run. Entry 49: the unittest modules
+      are collected as they are (`conftest.py`), `--forked` in `pyproject.toml`.
+- [x] Mark `ADR_solver`, `stack2`, `metal_splitter` as `xfail` with a reason, instead of
+      silently leaving them out of `camfr_test.py`. `ADR_solver` passes since entry 41;
+      `stack2` and `metal_splitter` are strict `xfail` (entry 49); `PhC_splitter`, also
+      commented out upstream, passes and is back.
 - [ ] GitHub Actions on Linux and macOS: build, test, sanitizer job.
 - [ ] `cibuildwheel` to publish binary wheels (manylinux + OpenBLAS), so users never compile.
 
@@ -74,11 +77,18 @@ Step 5 (CI) comes early so that everything after it is guarded by tests.
 
 - [ ] Publish under the new name `camfr3` (the PyPI name `camfr` belongs to the original author).
       Metadata, `NOTICE` and `CITATION.cff` are done (journal entry 27); the upload is not.
-- [ ] conda-forge feedstock (Boost, Blitz++ and OpenBLAS are already on conda-forge).
+- [ ] conda-forge feedstock (Blitz++, pybind11 and OpenBLAS are already on conda-forge).
 
 ## 7. Related correctness work (not build issues)
 
-- [ ] Investigate the segfault when a second `Section` is solved in the same process — likely
-      another lifetime or cache bug like journal entries 16 and 19.
+- [x] Investigate the segfault when a second `Section` is solved in the same process — likely
+      another lifetime or cache bug like journal entries 16 and 19. Not reproducible (entry 44);
+      the only crashing multi-`Section` pattern was the lifetime bug fixed in entry 39.
+- [ ] `metal_splitter`: R12 stays unphysical even with complete slab modes (entry 46), so
+      the interface/stack stage mishandles these metal slabs. A driven 2D Palace simulation of
+      the splitter would give a reference.
+- [ ] Replace the Jenkins–Traub root finder behind `polyroot` with the eigenvalues of the
+      companion matrix (LAPACK `zgeev`, already linked) — see §4; removes the ACM licence
+      question before binary releases.
 - [ ] Blitz++ is barely maintained; moving to Eigen is possible but a large refactor.
       Leave it unless it blocks something.
