@@ -82,6 +82,55 @@ camfr/math/ contains third-party numerical code:
   licence (non-commercial use only). It was rewritten on the basis of
   MATH77 (PORTING_JOURNAL.md, entry 64); the results are bit-identical.
 
+Two vendored Python modules come with permissive licences, reproduced
+here as they require:
+
+- camfr/gifmaker.py, from the Python Imaging Library (PIL):
+
+    Copyright (c) 1997-2011 by Secret Labs AB
+    Copyright (c) 1995-2011 by Fredrik Lundh
+
+    By obtaining, using, and/or copying this software and/or its
+    associated documentation, you agree that you have read, understood,
+    and will comply with the following terms and conditions:
+
+    Permission to use, copy, modify and distribute this software and its
+    documentation for any purpose and without fee is hereby granted,
+    provided that the above copyright notice appears in all copies, and
+    that both that copyright notice and this permission notice appear in
+    supporting documentation, and that the name of Secret Labs AB or the
+    author not be used in advertising or publicity pertaining to
+    distribution of the software without specific, written prior
+    permission.
+
+    SECRET LABS AB AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO
+    THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS. IN NO EVENT SHALL SECRET LABS AB OR THE AUTHOR BE LIABLE FOR
+    ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
+    OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+- camfr/TkPlotCanvas.py, from ScientificPython 2.4 (Konrad Hinsen; later
+  ScientificPython releases changed to CeCILL, but this copy predates
+  them):
+
+    Copyright 1997-2001 by Konrad Hinsen, except as noted below.
+
+    Permission to use, copy, modify, and distribute this software and its
+    documentation for any purpose and without fee is hereby granted,
+    provided that the above copyright notice appear in all copies and
+    that both that copyright notice and this permission notice appear in
+    supporting documentation.
+
+    THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+    INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO
+    EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+    CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+    USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
+
 The Jenkins-Traub polynomial root finder (ACM Algorithm 419, under ACM's
 software licence) was removed in camfr3 and replaced by an eigenvalue
 method (PORTING_JOURNAL.md, entry 56). No code under ACM's software licence

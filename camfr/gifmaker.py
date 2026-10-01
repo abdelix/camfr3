@@ -11,6 +11,8 @@
 # Copyright (c) Fredrik Lundh 1997.
 #
 # See the README file for information on usage and redistribution.
+# (camfr3: the PIL licence is reproduced in NOTICE. Ported to Python 3,
+# PORTING_JOURNAL.md.)
 #
 
 #

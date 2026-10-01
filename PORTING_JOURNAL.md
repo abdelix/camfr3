@@ -1789,6 +1789,15 @@ the summation order was kept. Mutations of single coefficients (one each in the 
 fourth digit does not, and cannot matter numerically. pytest: 64 passed, 2 xfailed; old runner:
 64 tests, OK.
 
-**Not covered here.** `camfr/gifmaker.py` (from PIL, whose permissive licence asks for its
-notice) and `camfr/TkPlotCanvas.py` (Konrad Hinsen, no terms in the file) are vendored Python
-files whose licences are not yet recorded in `NOTICE`.
+**Vendored Python modules.** Their licences are now in `NOTICE` too, both permissive and
+GPL-compatible (they only require the copyright and permission notices in copies and in the
+documentation):
+
+- `camfr/gifmaker.py`: from PIL (Secret Labs AB / Fredrik Lundh), MIT-CMU licence (text from
+  Pillow's LICENSE, which keeps PIL's terms).
+- `camfr/TkPlotCanvas.py`: from ScientificPython 2.4 (Konrad Hinsen). The file states no
+  terms, and today's ScientificPython is CeCILL-C (since 2008; CeCILL 2.0 from 2006). CAMFR's
+  copy is older: ScientificPython 2.4.9 (orig tarball from snapshot.debian.org) contains the
+  same file with the same header ("Last revision: 2002-5-14"), and its LICENSE is a permissive
+  notice, "Copyright 1997-2001 by Konrad Hinsen" (PyPI lists 2.4.x as "BSD-like"). The file
+  now carries that copyright line.
