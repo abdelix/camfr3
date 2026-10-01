@@ -2,6 +2,32 @@
 
 <!-- version list -->
 
+## v3.0.0-alpha.4 (2026-10-01)
+
+### Bug Fixes
+
+- **quadrature**: Rebase the Patterson quadrature on MATH77 (BSD licence)
+  ([`72f2393`](https://github.com/abdelix/camfr3/commit/72f23939c7301a9965bc65d46746cda06353b837))
+
+### Build System
+
+- Publish releases to PyPI with trusted publishing
+  ([`3251e71`](https://github.com/abdelix/camfr3/commit/3251e713a34eea651890164791bd881f4928a831))
+
+### Continuous Integration
+
+- Publish an existing release tag to PyPI on a manual run
+  ([`4cb46bc`](https://github.com/abdelix/camfr3/commit/4cb46bc082a0f1620f6761388448166e5ed612a8))
+
+### Documentation
+
+- Describe camfr3 as maintained in my free time, in the first person
+  ([`f58eda6`](https://github.com/abdelix/camfr3/commit/f58eda655b33962b7c048fc97890a4621e3bea4a))
+
+- **notice**: Licences of the vendored gifmaker and TkPlotCanvas modules
+  ([`2621d0a`](https://github.com/abdelix/camfr3/commit/2621d0a84b58e2a2120192ad53cb56bfb3a4a4c3))
+
+
 ## v3.0.0-alpha.3 (2026-09-30)
 
 ### Bug Fixes
