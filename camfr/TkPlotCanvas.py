@@ -6,6 +6,10 @@
 # With contributions from RajGopal Srinivasan <raj@cherubino.med.jhmi.edu>
 # Last revision: 2002-5-14
 #
+# From ScientificPython 2.4: Copyright 1997-2001 by Konrad Hinsen. Used
+# under the ScientificPython 2.4 licence, reproduced in NOTICE. Ported to
+# Python 3 for camfr3 (PORTING_JOURNAL.md).
+#
 
 from tkinter import *
 import numpy

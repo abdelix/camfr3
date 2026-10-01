@@ -57,7 +57,7 @@ make dev     # after C++/Fortran edits: incremental rebuild in .venv (~7 s)
 ## Test
 
 ```bash
-uv run pytest                   # 61 passed, 2 xfailed; each test in its own process (--forked)
+uv run pytest                   # 64 passed, 2 xfailed; each test in its own process (--forked)
 uv run pytest testsuite/wg.py   # one module
 ```
 
@@ -96,7 +96,7 @@ The old runner still works and runs everything in one process, so tests must res
 global setting they change (or later tests fail only there):
 
 ```bash
-cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 61 tests, expected: OK
+cd testsuite && MPLBACKEND=Agg ../.venv/bin/python camfr_test.py   # 64 tests, expected: OK
 ```
 
 Use the venv interpreter (or `uv run`): `camfr` is installed there, not in the system Python.
@@ -142,7 +142,7 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 - `camfr/` — C++/Fortran sources plus the Python package (`__init__.py`, `geometry*.py`,
   `material.py`, `RCLED.py`, `GARCLED.py`). `camfr_wrap*.cpp` are the pybind11 bindings.
 - `camfr/math/` — vendored numerics: SLATEC Bessel routines, Brent root/minimum finders,
-  Patterson quadrature (a C++ translation of ACM algorithms). `polyroot` uses the companion
+  Patterson quadrature (coefficients and scheme from JPL MATH77, BSD; entry 64). `polyroot` uses the companion
   matrix + LAPACK since journal entry 56 (Jenkins–Traub, ACM Algorithm 419, was removed). **Do not reformat or "modernise" vendored files.**
 - `visualisation/` — only plotting examples now; the plotting modules live in `camfr/`.
 - `testsuite/`, `examples/` — run from the source tree, not installed.
@@ -221,8 +221,7 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 
 - **Published name is `camfr3`** (free on PyPI as of 2026-09-30; the module is still
   `import camfr`). `pyproject.toml`, the README header, `NOTICE` and `CITATION.cff` are updated.
-  Published from CI with each release since `3.0.0a3` (journal entry 63), to claim the name
-  while the ACM licence question (Patterson quadrature, issue #6) is still open.
+  Published from CI with each release since `3.0.0a3` (journal entry 63).
 - **Sanitizer status:** the testsuite, and `stack2`/`metal_splitter`, run clean under
   ASan/UBSan (entries 37–45).
 - **`stack2`** (entry 45): numerically ill-conditioned (result does not converge with `N`).
@@ -239,9 +238,11 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
 ## Licensing
 
 GPL v2 (`LICENSE`), plus an older permissive notice in `COPYRIGHT`; keep both, keep `AUTHORS`,
-and mark modified files. ACM Algorithm 419 (Jenkins–Traub) is gone (entry 56). The Patterson
-quadrature is a C++ translation of ACM algorithms (CACM 468; Krogh & Snyder, TOMS 1991); whether
-ACM's licence (free for non-commercial use) covers it is unchecked — see `NOTICE`. The PyPI name `camfr` belongs to
+and mark modified files. No code under ACM's software licence (non-commercial only) remains:
+Jenkins–Traub (Algorithm 419) was replaced in entry 56, and the Patterson quadrature (formerly a
+translation of TOMS Algorithm 699) is based on JPL's MATH77 (Caltech, 3-clause BSD) since entry
+64, whose notice must stay in `NOTICE`, `patterson_coeff.cpp` and `patterson_rule.h`. SLATEC is
+public domain; the Brent routines come from Oleg Kiselyov's public-domain library. The PyPI name `camfr` belongs to
 the original author, so a rename is planned for publication; credit Bienstman & Baets,
 *Opt. Quantum Electron.* **33**, 327–341 (2001).
 
