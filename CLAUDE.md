@@ -116,9 +116,11 @@ Tests compare against hard-coded reference values with tolerance `eps.testing_ep
   `pyproject.toml`, `release` job in `ci.yml`): on each push to `main` whose tests pass, `feat:`
   commits bump the minor version, `fix:`/`perf:` the patch, `!`/`BREAKING CHANGE:` the major;
   `docs`/`test`/`ci`/`build`/`style`/`chore` do not release. It updates `CHANGELOG.md`, commits
-  `chore(release): X`, tags `vX` and creates a GitHub release. Alpha pre-releases for now
-  (`v3.0.0-alpha.N` = PEP 440 `3.0.0aN`). Commit messages therefore decide versions: use the
-  right type. Dry run: `uvx --from python-semantic-release semantic-release --noop version --print`
+  `chore(release): X`, tags `vX` and creates a GitHub release. Stable releases since `v3.0.0`
+  (Development Status: Beta); before it, alpha pre-releases `v3.0.0-alpha.N` (= PEP 440
+  `3.0.0aN`). `v3.0.0` was tagged by hand (entry 65): with `prerelease = false`
+  semantic-release ignores pre-release tags and would have released 1.0.0. Commit messages
+  therefore decide versions: use the right type. Dry run: `uvx --from python-semantic-release semantic-release --noop version --print`
   (on `main`). **PyPI:** when a release is made, `release-wheels`/`release-sdist` rebuild at the
   new tag (the earlier CI wheels carry `.devN+g…` versions, which PyPI rejects) and `publish`
   uploads them with trusted publishing (pending publisher on PyPI: repo `abdelix/camfr3`,

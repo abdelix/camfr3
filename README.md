@@ -128,9 +128,9 @@ See the Examples directory for full examples, as some details are missing here.
 ## Installation
 CAMFR runs on Python 3. It has been tested with Python 3.14 and NumPy 2.5 on Linux. The original code base supported Python 2.7 only; `PORTING_JOURNAL.md` documents every change made for the port.
 
-On Linux (x86_64), install the pre-built wheel from PyPI. Releases are alpha versions for now, so pip needs `--pre`:
+On Linux (x86_64), install the pre-built wheel from PyPI:
 
-    python3 -m pip install --pre camfr3
+    python3 -m pip install camfr3
 
 On other platforms, or to build it yourself, you have to compile the CAMFR library. This requires a C++ and a Fortran compiler, Blitz++, BLAS and LAPACK; pybind11, which generates the Python bindings, is fetched automatically. The build uses CMake through scikit-build-core, so from a clone of the repository:
 

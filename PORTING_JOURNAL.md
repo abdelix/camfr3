@@ -1801,3 +1801,17 @@ documentation):
   same file with the same header ("Last revision: 2002-5-14"), and its LICENSE is a permissive
   notice, "Copyright 1997-2001 by Konrad Hinsen" (PyPI lists 2.4.x as "BSD-like"). The file
   now carries that copyright line.
+
+### 65. Stable release 3.0.0
+
+**Change.** Releases are no longer alpha pre-releases, so `pip install camfr3` installs camfr3
+without `--pre`: `prerelease = false` for `main` in `[tool.semantic_release]`, classifier
+"Development Status :: 4 - Beta", `--pre` removed from the README and `docs/install.md`, a
+hand-written `v3.0.0` entry in `CHANGELOG.md`.
+
+**Issue.** A dry run in a scratch clone (branch `main`, python-semantic-release 10.7.0) showed
+that with `prerelease = false` semantic-release ignores the `v3.0.0-alpha.N` tags: merging this
+change would have released **1.0.0**, and forcing a patch gives 3.0.1. **Resolution:** `v3.0.0`
+is tagged by hand on this branch's last commit and pushed before the merge; the release job then
+reports "3.0.0 has already been released", and the manual run (entry 63) publishes the tag. In
+the same simulation, a later `fix:` gives 3.0.1 and a `feat:` 3.1.0, as intended.

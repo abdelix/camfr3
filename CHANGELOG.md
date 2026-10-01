@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v3.0.0 (2026-10-01)
+
+First stable release of camfr3, the Python 3 port of CAMFR: `pip install camfr3`
+installs it without `--pre`. Same code as v3.0.0-alpha.4, plus the release
+configuration (no more alpha pre-releases; Development Status: Beta).
+
+Since the original CAMFR (Python 2, SCons, Boost.Python), see the alpha releases
+below and PORTING_JOURNAL.md: Python 3 (3.10-3.14), CMake + scikit-build-core,
+pybind11 bindings with correct object lifetimes, memory-safety fixes found with
+ASan/UBSan, a pytest testsuite run in CI, Linux wheels on PyPI, a documentation
+site (https://abdelix.com/camfr3/), and no code under ACM's non-commercial
+licence (Jenkins-Traub replaced; Patterson quadrature based on JPL MATH77).
+
 ## v3.0.0-alpha.4 (2026-10-01)
 
 ### Bug Fixes
