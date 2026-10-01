@@ -5,11 +5,10 @@ camfr3 supports CPython 3.10 to 3.14.
 ## From PyPI (Linux)
 
 On Linux x86_64, pip installs a pre-built wheel that contains everything,
-including OpenBLAS and Blitz++, so nothing needs compiling. Releases are alpha
-versions for now, which pip only installs with `--pre`:
+including OpenBLAS and Blitz++, so nothing needs compiling:
 
 ```bash
-python3 -m pip install --pre camfr3
+python3 -m pip install camfr3
 ```
 
 CI also builds wheels for every commit: the `wheel-cpXYZ-manylinux_x86_64`
